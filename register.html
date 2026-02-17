@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>สมัครสมาชิก - CareFate</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Reusing background shapes for consistency -->
+        <div class="background-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+
+        <main class="login-screen"> <!-- Reusing layout -->
+            <div class="logo-container" style="margin-bottom: 2rem;">
+                <h1 class="app-name">สร้างบัญชีใหม่</h1>
+                <p class="tagline">เข้าร่วมเพื่อค้นหาชะตาของคุณ</p>
+            </div>
+
+            <form class="login-form" id="registerForm">
+                <div class="input-group">
+                    <i class="fa-regular fa-user input-icon"></i>
+                    <input type="text" id="username" placeholder="ชื่อผู้ใช้" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-regular fa-calendar input-icon"></i>
+                    <!-- Using type="date" for simplicity, styled in CSS -->
+                    <input type="date" id="dob" required style="color: rgba(255,255,255,0.8);">
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                    <input type="email" id="email" placeholder="อีเมล" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="password" placeholder="รหัสผ่าน" required>
+                    <button type="button" class="toggle-password" id="togglePasswordBtn">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                </div>
+
+                <!-- Password Requirements Hint (Styled & Thai) -->
+                <div style="font-size: 0.8rem; color: #cbd5e1; margin: 0.5rem 0 0.2rem 0.5rem; line-height: 1.6;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
+                        <span>7-20 ตัวอักษร</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
+                        <span>ต้องมีตัวเลข, ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-xmark" style="color:var(--danger); font-size: 0.7rem;"></i>
+                        <span>ห้ามมีอักขระพิเศษ (@ # $ %)</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-check-double input-icon"></i>
+                    <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่าน" required>
+                    <button type="button" class="toggle-password" id="toggleConfirmPasswordBtn">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 1.5rem;">
+                    <span>สมัครสมาชิก</span>
+                    <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </form>
+
+            <footer class="login-footer">
+                <p>มีบัญชีอยู่แล้ว? <a href="index.html">เข้าสู่ระบบ</a></p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="register.js"></script>
+</body>
+
+</html>

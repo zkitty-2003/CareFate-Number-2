@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - บันทึกการขับถ่าย</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .type-card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .type-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .type-card.selected {
+            background: var(--primary-gradient);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .type-card.selected .poop-icon,
+        .type-card.selected div {
+            color: white !important;
+        }
+
+        /* Shape icons placeholder styles */
+        .poop-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            /* Default gray */
+            transition: color 0.2s;
+        }
+
+        /* Add spacing to label */
+        .input-label {
+            display: block;
+            margin-bottom: 1rem !important;
+            /* Force spacing */
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .color-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .color-opt {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-opt.selected {
+            transform: scale(1.2);
+            border-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <!-- Container aligned with global CSS; override padding for full-width nav -->
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+
+        <!-- Scrollable Area with Padding -->
+        <div style="flex:1; overflow-y:auto; padding: 2.5rem 2rem 2rem; display:flex; flex-direction:column;">
+
+            <!-- Header -->
+            <div style="display:flex; align-items:center; margin-bottom:1rem;">
+                <button onclick="history.back()"
+                    style="background:none; border:none; color:var(--text-color); font-size:1.2rem; cursor:pointer; padding:0.5rem;">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <h1
+                    style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                    บันทึกการขับถ่าย</h1>
+                <div style="width:35px;"></div>
+            </div>
+
+            <!-- Content -->
+
+            <!-- Type Section -->
+            <label class="input-label"><i class="fa-solid fa-shapes"></i> ลักษณะ (Shape)</label>
+            <div class="type-grid" id="typeGrid">
+                <!-- Type 1-2: Constipation -->
+                <div class="type-card" onclick="selectType(this, 'hard')">
+                    <div class="poop-icon"><i class="fa-solid fa-circle-notch"></i></div>
+                    <div style="font-size:0.85rem; color:var(--text-color);">แข็ง/ก้อนเล็ก</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted)">(ท้องผูก)</div>
+                </div>
+                <!-- Type 3-4: Healthy -->
+                <div class="type-card" onclick="selectType(this, 'normal')">
+                    <div class="poop-icon"><i class="fa-solid fa-hotdog"></i></div>
+                    <div style="font-size:0.85rem; color:var(--text-color);">นุ่ม/กล้วยหอม</div>
+                    <div style="font-size:0.7rem; color:var(--success)">(สุขภาพดี)</div>
+                </div>
+                <!-- Type 5-6: Soft/Diarrhea -->
+                <div class="type-card" onclick="selectType(this, 'soft')">
+                    <div class="poop-icon"><i class="fa-solid fa-poo"></i></div>
+                    <div style="font-size:0.85rem; color:var(--text-color);">ก้อนเละ/เหลว</div>
+                    <div style="font-size:0.7rem; color:var(--warning)">(เริ่มถ่ายเหลว)</div>
+                </div>
+                <!-- Type 7: Liquid -->
+                <div class="type-card" onclick="selectType(this, 'liquid')">
+                    <div class="poop-icon"><i class="fa-solid fa-water"></i></div>
+                    <div style="font-size:0.85rem; color:var(--text-color);">น้ำใส/ไม่มีกาก</div>
+                    <div style="font-size:0.7rem; color:var(--danger)">(ท้องเสีย)</div>
+                </div>
+            </div>
+
+            <!-- Color Section -->
+            <label class="input-label"><i class="fa-solid fa-palette"></i> สี (Color)</label>
+            <div class="color-selector">
+                <div class="color-opt" style="background:#5D4037;" onclick="selectColor(this, 'brown')"
+                    title="น้ำตาล (ปกติ)"></div>
+                <div class="color-opt" style="background:#2E7D32;" onclick="selectColor(this, 'green')" title="เขียว">
+                </div>
+                <div class="color-opt" style="background:#F57F17;" onclick="selectColor(this, 'yellow')" title="เหลือง">
+                </div>
+                <div class="color-opt" style="background:#212121;" onclick="selectColor(this, 'black')"
+                    title="ดำ (อันตราย)"></div>
+                <div class="color-opt" style="background:#C62828;" onclick="selectColor(this, 'red')"
+                    title="แดง (อันตราย)"></div>
+            </div>
+
+            <!-- Note Section -->
+            <label class="input-label"><i class="fa-solid fa-pencil"></i> หมายเหตุเพิ่มเติม</label>
+            <div class="input-group" style="margin-bottom:1.5rem;">
+                <textarea id="noteInput" rows="3" placeholder="เช่น ปวดท้อง, มีมูกเลือด, ทานยาถ่าย..."
+                    style="width:100%; background:transparent; border:none; color:var(--text-color); resize:none; outline:none; font-family:inherit; padding-top:0.8rem;"></textarea>
+            </div>
+
+            <button id="saveBtn" class="btn-primary" onclick="saveData()">
+                <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+            </button>
+
+            <!-- Recent Logs (Placeholder for now) -->
+            <div style="margin-top:2rem;">
+                <h3 style="font-size:1rem; color:var(--text-color); margin-bottom:1rem;">ประวัติล่าสุด</h3>
+                <div id="recentLogs" style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
+                    กำลังโหลดข้อมูล...
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-area"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+
+        let _supabase;
+        let selectedType = null;
+        let selectedColor = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Check Session
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Apply Theme
+            const user = session.user;
+            // Try metadata first (faster), then could fetch profile if needed
+            const theme = user.user_metadata.theme || 'working';
+
+            // Apply theme class
+            if (theme) {
+                document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                document.body.classList.add(`theme-${theme}`);
+            }
+
+            loadLogs();
+        });
+
+        function selectType(el, val) {
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedType = val;
+        }
+
+        function selectColor(el, val) {
+            document.querySelectorAll('.color-opt').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedColor = val;
+        }
+
+        async function saveData() {
+            if (!selectedType) {
+                alert('กรุณาเลือกลักษณะการขับถ่าย');
+                return;
+            }
+            if (!selectedColor) {
+                alert('กรุณาเลือกสี');
+                return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            const note = document.getElementById('noteInput').value;
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+
+                // Insert into 'excretion_logs'
+                // NOTE: You need to create this table in Supabase SQL Editor
+                const { error } = await _supabase
+                    .from('excretion_logs')
+                    .insert([{
+                        user_id: user.id,
+                        type: selectedType,
+                        color: selectedColor,
+                        note: note,
+                        created_at: new Date()
+                    }]);
+
+                if (error) throw error;
+
+                alert('บันทึกเรียบร้อย!');
+                // Reset form
+                document.getElementById('noteInput').value = '';
+                document.querySelectorAll('.selected').forEach(e => e.classList.remove('selected'));
+                selectedType = null;
+                selectedColor = null;
+
+                loadLogs(); // Refresh list
+
+            } catch (e) {
+                console.error(e);
+                alert('เกิดข้อผิดพลาด: ' + (e.message || 'Database error'));
+                // Use local storage fallback if DB fails (MVP robustness)
+                saveLocalFallback(selectedType, selectedColor, note);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Fallback mainly for demo purposes if table doesn't exist yet
+        function saveLocalFallback(type, color, note) {
+            const log = { type, color, note, date: new Date().toLocaleString() };
+            const logs = JSON.parse(localStorage.getItem('excretion_local') || '[]');
+            logs.unshift(log);
+            localStorage.setItem('excretion_local', JSON.stringify(logs));
+            loadLogs();
+        }
+
+        async function loadLogs() {
+            const container = document.getElementById('recentLogs');
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+
+                // Try fetching from DB
+                const { data, error } = await _supabase
+                    .from('excretion_logs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                renderLogList(data, container);
+
+            } catch (e) {
+                console.warn("DB Fetch failed, showing local/demo data");
+                const localLogs = JSON.parse(localStorage.getItem('excretion_local') || '[]');
+                renderLogList(localLogs, container);
+            }
+        }
+
+        function renderLogList(logs, container) {
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<p>ยังไม่มีข้อมูลการขับถ่าย</p>';
+                return;
+            }
+
+            let html = '';
+            const typeMap = { 'hard': 'แข็ง/ท้องผูก', 'normal': 'ปกติ (สุขภาพดี)', 'soft': 'เหลว', 'liquid': 'ท้องเสีย' };
+            const colorMap = { 'brown': '#5D4037', 'green': '#2E7D32', 'yellow': '#F57F17', 'black': '#000', 'red': '#C62828' };
+
+            logs.forEach(log => {
+                const date = log.created_at ? new Date(log.created_at).toLocaleString('th-TH') : log.date;
+                const colorHex = colorMap[log.color] || '#ccc';
+
+                html += `
+                    <div style="background:var(--card-bg); border-radius:10px; padding:0.8rem; margin-bottom:0.5rem; display:flex; align-items:center; justify-content:space-between; border:1px solid var(--card-border);">
+                        <div style="display:flex; align-items:center; gap:0.8rem;">
+                            <div style="width:12px; height:12px; border-radius:50%; background:${colorHex}; border:1px solid rgba(0,0,0,0.1);"></div>
+                            <div style="text-align:left;">
+                                <div style="color:var(--text-color); font-size:0.9rem;">${typeMap[log.type] || log.type}</div>
+                                <div style="color:var(--text-muted); font-size:0.75rem;">${date}</div>
+                            </div>
+                        </div>
+                        ${log.note ? '<i class="fa-regular fa-note-sticky" style="color:var(--text-muted);" title="' + log.note + '"></i>' : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+    </script>
+</body>
+
+</html>

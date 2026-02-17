@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - ตั้งเป้าหมาย</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Goals Theme - Purple/Indigo */
+        :root {
+            --goal-primary: #6366f1;
+            --goal-secondary: #4f46e5;
+            --goal-bg-gradient: radial-gradient(circle, #4338ca 0%, transparent 60%);
+        }
+
+        .goal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .goal-card.done {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--goal-primary);
+        }
+
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.8rem;
+        }
+
+        .goal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.2rem;
+        }
+
+        .goal-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .goal-status-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .goal-status-btn.done-btn:hover {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-color: #10b981;
+        }
+
+        .goal-status-btn.not-done-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .goal-card.done .goal-status-btn {
+            display: none;
+            /* Hide buttons when done */
+        }
+
+        .done-badge {
+            display: none;
+            background: var(--goal-primary);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .goal-card.done .done-badge {
+            display: flex;
+        }
+
+        /* Add Form */
+        .add-form {
+            background: #ffffff;
+            padding: 2rem 1.5rem;
+            border-radius: 24px;
+            margin-top: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 1rem;
+            color: #334155;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            background: #f1f5f9;
+            border: 2px solid #cbd5e1;
+            padding: 1rem;
+            border-radius: 12px;
+            color: #0f172a;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            background: white;
+            border-color: var(--goal-primary);
+        }
+
+        /* Type Selector */
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .type-btn {
+            padding: 0.8rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: white;
+            color: #64748b;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .type-btn.active {
+            background: var(--goal-primary);
+            color: white;
+            border-color: var(--goal-primary);
+        }
+
+        /* FAB */
+        .fab-add {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+
+        .fab-add:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1" style="background: radial-gradient(circle, #4338ca 0%, transparent 60%);"></div>
+        <div class="shape shape-2" style="background: radial-gradient(circle, #3730a3 0%, transparent 60%);"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                ตั้งเป้าหมาย
+            </h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div class="scrollable-content"
+            style="flex:1; overflow-y:auto; padding: 0 1.5rem 6rem; display:flex; flex-direction:column;">
+
+            <div id="goalsList">
+                <!-- Javascript will populate this -->
+                <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
+                    <i class="fa-solid fa-bullseye"
+                        style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted);"></i>
+                    <p style="color:var(--text-muted);">ยังไม่มีเป้าหมาย<br>กดปุ่ม + เพื่อเริ่มตั้งเป้าหมาย</p>
+                </div>
+            </div>
+
+            <!-- Add Form Overlay (Hidden default) -->
+            <div id="addGoalForm" class="add-form" style="display:none; animation: fadeIn 0.3s; margin-bottom: 2rem;">
+                <h3
+                    style="color:#0f172a; font-size:1.2rem; margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.8rem;">
+                    เป้าหมายใหม่
+                </h3>
+
+                <div class="form-group">
+                    <label class="form-label">ชื่อเป้าหมาย</label>
+                    <input type="text" id="goalName" class="form-input" placeholder="เช่น วิ่ง 30 นาที, อ่านหนังสือ">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ประเภทเป้าหมาย</label>
+                    <div class="type-grid">
+                        <div class="type-btn active" onclick="selectType(this, 'time')">เวลา</div>
+                        <div class="type-btn" onclick="selectType(this, 'count')">จำนวนครั้ง</div>
+                        <div class="type-btn" onclick="selectType(this, 'distance')">ระยะทาง</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" id="valueLabel">จำนวนเวลา (นาที)</label>
+                    <input type="number" id="goalValue" class="form-input" placeholder="เช่น 30">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ความถี่</label>
+                    <select id="goalFreq" class="form-select">
+                        <option value="daily">ทุกวัน</option>
+                        <option value="weekdays">จันทร์ - ศุกร์</option>
+                        <option value="weekends">เสาร์ - อาทิตย์</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">เวลาแจ้งเตือน</label>
+                    <input type="time" id="goalTime" class="form-input">
+                </div>
+
+                <div style="display:flex; gap:1rem; margin-top:2rem;">
+                    <button onclick="toggleAddForm()"
+                        style="flex:1; padding:1rem; background:transparent; border:1px solid #94a3b8; color:#64748b; border-radius:12px;">ยกเลิก</button>
+                    <button onclick="saveGoal()"
+                        style="flex:1; padding:1rem; background:var(--goal-primary); border:none; color:white; border-radius:12px; font-weight:600; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">บันทึก</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FAB -->
+        <div class="fab-add" onclick="toggleAddForm()">
+            <i class="fa-solid fa-plus"></i>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+        let selectedType = 'time';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Init Supabase
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Apply Theme
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.theme) {
+                    document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                    document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                }
+            } catch (e) { }
+
+            loadGoals();
+        });
+
+        function toggleAddForm() {
+            const form = document.getElementById('addGoalForm');
+            const list = document.getElementById('goalsList');
+            const fab = document.querySelector('.fab-add');
+
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                list.style.display = 'none';
+                fab.style.display = 'none';
+                setTimeout(() => form.scrollIntoView({ behavior: 'smooth' }), 100);
+            } else {
+                form.style.display = 'none';
+                list.style.display = 'block';
+                fab.style.display = 'flex';
+            }
+        }
+
+        function selectType(el, type) {
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            selectedType = type;
+
+            const label = document.getElementById('valueLabel');
+            if (type === 'time') label.innerText = 'จำนวนเวลา (นาที)';
+            if (type === 'count') label.innerText = 'จำนวนครั้ง';
+            if (type === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
+        }
+
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
+
+            // Get today's logs
+            const todayStr = new Date().toDateString();
+            const logs = JSON.parse(localStorage.getItem('goals_logs') || '{}');
+            const todayLogs = logs[todayStr] || {};
+
+            const list = document.getElementById('goalsList');
+
+            if (goals.length === 0) {
+                list.innerHTML = `
+                   <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
+                    <i class="fa-solid fa-bullseye" style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted);"></i>
+                    <p style="color:var(--text-muted);">ยังไม่มีเป้าหมาย<br>กดปุ่ม + เพื่อเริ่มตั้งเป้าหมาย</p>
+                </div>`;
+                return;
+            }
+
+            let html = '';
+            goals.forEach(goal => {
+                const isDone = todayLogs[goal.id] === true;
+
+                // Determine Unit
+                let unit = 'นาที';
+                if (goal.type === 'count') unit = 'ครั้ง';
+                if (goal.type === 'distance') unit = 'กม.';
+
+                // Icon logic
+                let icon = 'fa-clock';
+                if (goal.type === 'count') icon = 'fa-arrow-rotate-right';
+                if (goal.type === 'distance') icon = 'fa-person-running';
+
+                html += `
+                <div class="goal-card ${isDone ? 'done' : ''}" id="card-${goal.id}">
+                    <div class="goal-header">
+                        <div>
+                            <div class="goal-title">${goal.name}</div>
+                            <div class="goal-detail">
+                                <i class="fa-solid ${icon}" style="font-size:0.8rem;"></i>
+                                ${goal.value} ${unit} • ${goal.time || 'ไม่ระบุเวลา'}
+                            </div>
+                        </div>
+                        <div class="done-badge">
+                            <i class="fa-solid fa-check"></i> สำเร็จแล้ว
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                        <button class="goal-status-btn done-btn" onclick="markDone('${goal.id}', '${goal.name}', true)" style="flex:1; justify-content:center;">
+                            <i class="fa-regular fa-circle-check"></i> ทำแล้ว
+                        </button>
+                        <button class="goal-status-btn not-done-btn" onclick="if(confirm('ยืนยันว่ายังไม่ได้ทำ?')) markDone('${goal.id}', '${goal.name}', false)" style="flex:1; justify-content:center;">
+                             ยังไม่ได้ทำ
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        function saveGoal() {
+            const name = document.getElementById('goalName').value;
+            const value = document.getElementById('goalValue').value;
+            const time = document.getElementById('goalTime').value;
+            const freq = document.getElementById('goalFreq').value;
+
+            if (!name || !value) {
+                alert('กรุณาระบุชื่อเป้าหมายและจำนวน');
+                return;
+            }
+
+            const newGoal = {
+                id: Date.now().toString(),
+                name,
+                type: selectedType,
+                value,
+                time,
+                freq,
+                created_at: new Date().toISOString()
+            };
+
+            const goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
+            goals.push(newGoal);
+            localStorage.setItem('goals_schedule', JSON.stringify(goals));
+
+            // Reset
+            document.getElementById('goalName').value = '';
+            document.getElementById('goalValue').value = '';
+            document.getElementById('goalTime').value = '';
+            toggleAddForm();
+            loadGoals();
+        }
+
+        async function markDone(id, name, status) {
+            if (!status) return; // Only process 'Done' for now based on requirement to log completion
+
+            const todayStr = new Date().toDateString();
+            const logs = JSON.parse(localStorage.getItem('goals_logs') || '{}');
+
+            if (!logs[todayStr]) logs[todayStr] = {};
+
+            logs[todayStr][id] = true;
+            localStorage.setItem('goals_logs', JSON.stringify(logs));
+
+            // Visual Update
+            const card = document.getElementById(`card-${id}`);
+            card.classList.add('done');
+
+            // Save History Log
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const logData = {
+                        user_id: user.id,
+                        type: 'goal',
+                        detail: name,
+                        note: 'เป้าหมายสำเร็จ',
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Save to local storage for history.html fallback/demo
+                    const histLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
+                    histLogs.push(logData);
+                    localStorage.setItem('goal_history_logs', JSON.stringify(histLogs));
+                }
+            } catch (e) { console.error(e) }
+        }
+    </script>
+</body>
+
+</html>

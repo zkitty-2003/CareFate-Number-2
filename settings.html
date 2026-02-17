@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - ตั้งค่า</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        .settings-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .avatar-upload {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            cursor: pointer;
+        }
+
+        .avatar-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            font-size: 2.5rem;
+            color: white;
+            /* Icon inside avatar circle often better white if bg is partial gradient, but let's check */
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-edit-icon {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background: #a855f7;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            border: 2px solid #0f172a;
+        }
+
+        /* Theme Selection Mini Cards */
+        .theme-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .theme-mini-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-mini-card.active {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .theme-color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 auto 5px;
+        }
+    </style>
+</head>
+
+<body class="theme-working">
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header Container (with padding) -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; font-size:1.2rem; cursor:pointer; padding:0.5rem; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.3rem; margin:0; font-weight:600; color:var(--text-color);">
+                ตั้งค่า</h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div style="flex:1; overflow-y:auto; padding: 0 1.5rem 2rem;">
+
+            <!-- Profile Picture -->
+            <div class="avatar-upload" onclick="document.getElementById('avatarInput').click()">
+                <div class="avatar-preview" id="avatarPreview">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="avatar-edit-icon">
+                    <i class="fa-solid fa-camera"></i>
+                </div>
+                <input type="file" id="avatarInput" accept="image/*" style="display:none">
+            </div>
+
+            <!-- Profile Info -->
+            <div class="settings-section">
+                <div class="settings-header"><i class="fa-solid fa-user-pen"></i> ข้อมูลส่วนตัว</div>
+
+                <div class="input-group" style="margin-bottom:1rem;">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input type="text" id="usernameInput" placeholder="ชื่อที่แสดง (Display Name)">
+                </div>
+
+                <div class="input-group" style="margin-bottom:1rem;">
+                    <i class="fa-solid fa-envelope input-icon"></i>
+                    <input type="email" id="emailInput" placeholder="อีเมลใหม่">
+                </div>
+
+                <button id="updateProfileBtn" class="btn-primary"
+                    style="margin-top:0.5rem; font-size:0.9rem; padding:0.8rem;">
+                    บันทึกข้อมูลส่วนตัว
+                </button>
+            </div>
+
+            <!-- Theme Selection -->
+            <div class="settings-section">
+                <div class="settings-header"><i class="fa-solid fa-palette"></i> ธีมการใช้งาน</div>
+                <div class="theme-mini-grid">
+                    <div class="theme-mini-card" onclick="selectTheme('youth')" id="theme-btn-youth">
+                        <div class="theme-color-preview" style="background:linear-gradient(135deg, #f472b6, #ec4899);">
+                        </div>
+                        <div style="font-size:0.8rem;">วัยรุ่น</div>
+                    </div>
+                    <div class="theme-mini-card" onclick="selectTheme('working')" id="theme-btn-working">
+                        <div class="theme-color-preview" style="background:linear-gradient(135deg, #6366f1, #3b82f6);">
+                        </div>
+                        <div style="font-size:0.8rem;">ทำงาน</div>
+                    </div>
+                    <div class="theme-mini-card" onclick="selectTheme('elder')" id="theme-btn-elder">
+                        <div class="theme-color-preview" style="background:linear-gradient(135deg, #10b981, #059669);">
+                        </div>
+                        <div style="font-size:0.8rem;">สูงอายุ</div>
+                    </div>
+                </div>
+                <button id="saveThemeBtn" class="btn-primary"
+                    style="margin-top:0.5rem; background:linear-gradient(135deg, #a855f7, #7c3aed); font-size:0.9rem; padding:0.8rem;">
+                    บันทึกธีม
+                </button>
+            </div>
+
+            <!-- Change Password -->
+            <div class="settings-section">
+                <div class="settings-header"><i class="fa-solid fa-lock"></i> เปลี่ยนรหัสผ่าน</div>
+
+                <div class="input-group" style="margin-bottom:1rem;">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="oldPassword" placeholder="รหัสผ่านปัจจุบัน">
+                </div>
+
+                <div class="input-group" style="margin-bottom:1rem;">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่">
+                </div>
+
+                <div class="input-group" style="margin-bottom:1rem;">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="confirmNewPassword" placeholder="ยืนยันรหัสผ่านใหม่">
+                </div>
+
+                <button id="changePasswordBtn" class="btn-primary"
+                    style="margin-top:0.5rem; background:linear-gradient(135deg, #f59e0b, #d97706); font-size:0.9rem; padding:0.8rem;">
+                    เปลี่ยนรหัสผ่าน
+                </button>
+            </div>
+
+            <div style="text-align:center; padding:1rem;">
+                <button onclick="logout()"
+                    style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer; font-weight:600;">
+                    <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item active" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-area"></div>
+
+    <script src="settings.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - ประวัติสุขภาพ</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+        }
+
+        .filter-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: #a855f7;
+            color: var(--text-color);
+        }
+
+        .history-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border: 1px solid var(--card-border);
+        }
+
+        .timeline-date {
+            font-size: 0.8rem;
+            color: #a855f7;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .report-section {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 5rem;
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header Container (with padding) -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                ประวัติสุขภาพ</h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div style="padding: 0 1.5rem 2rem; flex:1; overflow-y:auto; width:100%;">
+
+            <!-- Filters (Categories) -->
+            <div class="filter-bar">
+                <div class="filter-chip active" onclick="setFilter(this, 'all')">ทั้งหมด</div>
+                <div class="filter-chip" onclick="setFilter(this, 'excretion')"><i class="fa-solid fa-toilet"></i>
+                    การขับถ่าย</div>
+                <div class="filter-chip" onclick="setFilter(this, 'medication')"><i class="fa-solid fa-pills"></i> ทานยา
+                </div>
+                <div class="filter-chip" onclick="setFilter(this, 'sleep')"><i class="fa-solid fa-bed"></i> การนอน</div>
+                <div class="filter-chip" onclick="setFilter(this, 'goal')"><i class="fa-solid fa-bullseye"></i> เป้าหมาย
+                </div>
+            </div>
+
+            <!-- List -->
+            <div id="historyList">
+                <div style="text-align:center; padding:2rem; color:var(--text-muted);">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลดข้อมูล...
+                </div>
+            </div>
+
+            <!-- Report Export -->
+            <div class="report-section">
+                <i class="fa-solid fa-file-medical" style="font-size:2rem; color:white; margin-bottom:0.5rem;"></i>
+                <h3 style="color:white; font-size:1rem; margin-bottom:0.5rem;">สรุปรายงานสุขภาพ</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">
+                    ส่งรายงานสุขภาพประจำเดือน/ปี เข้าอีเมลของคุณเพื่อใช้ปรึกษาแพทย์
+                </p>
+                <button class="btn-primary" onclick="sendReport()">
+                    <i class="fa-regular fa-envelope"></i> ส่งรายงานเข้าอีเมล
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item active" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i>
+            </div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Apply Theme Logic
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.theme) {
+                    document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                    document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                }
+            } catch (e) { console.warn("Theme load failed", e); }
+
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            const list = document.getElementById('historyList');
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+
+                // 1. Fetch Excretion Logs (Example)
+                // In real app, you would fetch from multiple tables (medication_logs, sleep_logs, etc.) and merge them.
+                const { data: excretions, error } = await _supabase
+                    .from('excretion_logs')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false });
+
+                // Fallback for demo if DB empty or error
+                let allItems = excretions || [];
+
+                // If empty log, try local storage fallback
+                if (allItems.length === 0) {
+                    const localEx = JSON.parse(localStorage.getItem('excretion_local') || '[]');
+                    // Normalize format
+                    const exItems = localEx.map(l => ({
+                        type: 'excretion',
+                        detail: l.type,
+                        note: l.note,
+                        created_at: l.date
+                    }));
+                    allItems = allItems.concat(exItems);
+                }
+
+                // FETCH SLEEP LOGS (Local Storage)
+                const sleepLogs = JSON.parse(localStorage.getItem('sleep_logs') || '[]');
+                const sleepItems = sleepLogs.map(l => ({
+                    type: 'sleep',
+                    detail: l.detail, // 'good', 'neutral', etc.
+                    note: l.note,     // Duration
+                    created_at: l.created_at,
+                    dream_note: l.dream_note // pass through
+                }));
+
+                const exLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
+                const exerciseItems = exLogs.map(l => ({
+                    type: 'exercise',
+                    detail: l.detail, // activity type (run, gym)
+                    note: l.note,     // Duration & Kcal
+                    created_at: l.created_at,
+                    calories: l.calories
+                }));
+
+                // FETCH MEDICATION LOGS (Local Storage)
+                const medLogs = JSON.parse(localStorage.getItem('medication_history_logs') || '[]');
+                const medItems = medLogs.map(l => ({
+                    type: 'medication',
+                    detail: l.detail, // Med Name
+                    note: l.note,     // 'Taken'
+                    created_at: l.created_at
+                }));
+
+                // FETCH GOAL LOGS (Local Storage)
+                const goalLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
+                const goalItems = goalLogs.map(l => ({
+                    type: 'goal',
+                    detail: l.detail,
+                    note: l.note,
+                    created_at: l.created_at
+                }));
+
+                // Merge all
+                allItems = allItems.concat(sleepItems).concat(exerciseItems).concat(medItems).concat(goalItems);
+
+                // Sort by date desc
+                allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                renderList(allItems);
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = '<p style="text-align:center; color:white;">โหลดข้อมูลไม่สำเร็จ</p>';
+            }
+        }
+
+        function renderList(items) {
+            const list = document.getElementById('historyList');
+
+            // Filter Logic
+            const filteredItems = currentFilter === 'all'
+                ? items
+                : items.filter(i => {
+                    // Normalize type for filtering
+                    const type = (i.type || i.detail || '').toLowerCase();
+                    const note = (i.note || '').toLowerCase();
+                    // Match any part
+                    return type.includes(currentFilter) || note.includes(currentFilter) || (currentFilter === 'excretion' && type.includes('hard'));
+                });
+
+            if (filteredItems.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align:center; margin-top:2rem; opacity:0.6;">
+                        <i class="fa-regular fa-folder-open" style="font-size:2rem; margin-bottom:0.5rem;"></i>
+                        <p>ไม่พบข้อมูลในหมวดนี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            filteredItems.forEach(item => {
+                // Robust Date Parsing Logic
+                let dateObj = new Date();
+                if (item.created_at) {
+                    const d = new Date(item.created_at);
+                    if (!isNaN(d.getTime())) {
+                        dateObj = d;
+                    } else {
+                        // Attempt to parse non-standard formats
+                        try {
+                            if (item.created_at.includes(',')) {
+                                const parts = item.created_at.split(',')[0].split('/');
+                                if (parts.length === 3) {
+                                    dateObj = new Date(parts[2], parts[0] - 1, parts[1]);
+                                }
+                            } else {
+                                dateObj = new Date(item.created_at);
+                            }
+                        } catch (e) {
+                            console.warn("Date parse error", item.created_at);
+                        }
+                    }
+                    if (isNaN(dateObj.getTime())) dateObj = new Date();
+                }
+
+                const dateStr = dateObj.toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                // Determine Icon & Title based on type 
+                let icon = 'fa-notes-medical';
+                let title = 'กิจกรรมทั่วไป';
+
+                // Map logical types
+                const typeStr = (item.type || item.detail || '').toLowerCase();
+
+                if (typeStr === 'excretion' || typeStr.includes('hard') || typeStr.includes('normal') || typeStr.includes('liquid')) {
+                    icon = 'fa-toilet';
+                    title = 'การขับถ่าย';
+                } else if (typeStr === 'medication') {
+                    icon = 'fa-pills';
+                    title = 'การทานยา';
+                } else if (typeStr === 'sleep') {
+                    icon = 'fa-bed';
+                    title = 'การนอนหลับ';
+                } else if (typeStr === 'exercise') {
+                    icon = 'fa-dumbbell';
+                    title = 'ออกกำลังกาย';
+                    // Custom icons for activity types
+                    if (item.detail === 'run') icon = 'fa-person-running';
+                    if (item.detail === 'yoga') icon = 'fa-spa';
+                    if (item.detail === 'sport') icon = 'fa-volleyball';
+                } else if (typeStr === 'goal') {
+                    icon = 'fa-bullseye';
+                    title = 'เป้าหมายประจำวัน';
+                }
+
+                // Map Details to Display Text
+                let detailText = item.detail || item.type || '-';
+                if (detailText === 'excretion') detailText = 'บันทึกการขับถ่าย'; // Fallback
+                if (detailText === 'sleep') detailText = 'บันทึกการนอน';
+                if (detailText === 'exercise') detailText = 'บันทึกออกกำลังกาย';
+
+                // Friendly text map
+                if (detailText.includes('hard')) detailText = 'แข็ง/ท้องผูก';
+                if (detailText.includes('normal')) detailText = 'ปกติ (สุขภาพดี)';
+                if (detailText.includes('soft')) detailText = 'เหลว';
+                if (detailText.includes('liquid')) detailText = 'ท้องเสีย';
+
+                // Sleep friendly text
+                if (detailText === 'good') detailText = 'หลับสบาย (สดชื่น)';
+                if (detailText === 'neutral') detailText = 'เฉยๆ';
+                if (detailText === 'bad') detailText = 'หลับไม่สนิท (เพลีย)';
+
+                // Exercise friendly text
+                if (detailText === 'run') detailText = 'วิ่ง / เดินเร็ว';
+                if (detailText === 'gym') detailText = 'ฟิตเนส / เวท';
+                if (detailText === 'yoga') detailText = 'โยคะ / ยืดเหยียด';
+                if (detailText === 'sport') detailText = 'เล่นกีฬา';
+
+                if (item.color) {
+                    const colorMap = { 'brown': 'น้ำตาล', 'green': 'เขียว', 'yellow': 'เหลือง', 'black': 'ดำ', 'red': 'แดง' };
+                    detailText += ` (สี: ${colorMap[item.color] || item.color})`;
+                }
+
+                html += `
+                    <div class="history-card" style="animation: fadeIn 0.3s;">
+                        <div class="timeline-date"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
+                        <div style="display:flex; align-items:center;">
+                            <div style="width:35px; height:35px; background:rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:center; justify-content:center; margin-right:1rem;">
+                                <i class="fa-solid ${icon}" style="color:var(--text-color);"></i>
+                            </div>
+                            <div>
+                                <h4 style="color:var(--text-color); font-size:0.95rem; margin:0;">${title}</h4>
+                                <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                                    ${detailText}
+                                    ${item.note ? `<br><span style="font-size:0.75rem; opacity:0.8; color:#a855f7;">หมายเหตุ: ${item.note}</span>` : ''}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        function setFilter(el, filter) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            currentFilter = filter;
+            // Reload logic to apply filter
+            loadHistory();
+        }
+
+        async function sendReport() {
+            const btn = document.querySelector('.report-section .btn-primary');
+            const originalHTML = btn.innerHTML;
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังสร้างรายงาน...';
+            btn.disabled = true;
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user || !user.email) {
+                    alert('ไม่พบข้อมูลอีเมลผู้ใช้งาน กรุณาเข้าสู่ระบบใหม่');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                    return;
+                }
+
+                const email = user.email;
+
+                // Generate detailed list from visible cards
+                let dataRows = '';
+                const uniqueCards = new Set(); // Prevent duplicates if any
+                document.querySelectorAll('.history-card').forEach(card => {
+                    const dateEl = card.querySelector('.timeline-date');
+                    const titleEl = card.querySelector('h4');
+                    const detailEl = card.querySelector('p');
+
+                    const date = dateEl ? dateEl.innerText.trim() : '-';
+                    const title = titleEl ? titleEl.innerText.trim() : '-';
+                    const detail = detailEl ? detailEl.innerText.trim() : '-';
+
+                    // Simple key to check uniqueness
+                    const key = `${date}-${title}`;
+                    if (!uniqueCards.has(key)) {
+                        uniqueCards.add(key);
+                        dataRows += `
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px;">${date}</td>
+                                <td style="padding: 10px; font-weight:bold;">${title}</td>
+                                <td style="padding: 10px; color:#666;">${detail}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                const reportContent = `
+                    <div style="font-family: 'Sarabun', sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;">
+                        <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #a855f7;">
+                            <h1 style="color: #a855f7; margin: 0;">CareFate</h1>
+                            <p style="margin-top: 5px; color: #666;">สรุปรายงานสุขภาพ</p>
+                        </div>
+                        
+                        <div style="padding: 20px 0;">
+                            <p><strong>เรียนคุณ:</strong> ${email}</p>
+                            <p>นี่คือข้อมูลบันทึกสุขภาพของคุณจากแอปพลิเคชัน CareFate</p>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                            <thead>
+                                <tr style="background-color: #f8f0fc; color: #6b21a8;">
+                                    <th style="padding: 10px; border-radius: 5px 0 0 5px;">วัน/เวลา</th>
+                                    <th style="padding: 10px;">ประเภท</th>
+                                    <th style="padding: 10px; border-radius: 0 5px 5px 0;">รายละเอียด</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${dataRows || '<tr><td colspan="3" style="padding:20px; text-align:center;">ไม่พบข้อมูลบันทึก</td></tr>'}
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999; text-align: center;">
+                            <p>ส่งจากระบบอัตโนมัติ CareFate (ดูแลชะตา)</p>
+                        </div>
+                    </div>
+                `;
+
+                const response = await fetch('/api/send-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        report_html: reportContent
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.mode === 'simulation') {
+                        alert(`[โหมดจำลอง] ระบบส่งอีเมลเสมือนไปยัง ${email} แล้ว\n(แก้ไข main.py เพื่อใส่อีเมลจริง)`);
+                    } else {
+                        alert(`ส่งรายงานสรุปไปยัง ${email} เรียบร้อยแล้ว!`);
+                    }
+                } else {
+                    // Handle FastAPI errors (detail) or custom errors (message)
+                    const errorMsg = result.message || (result.detail ? JSON.stringify(result.detail) : JSON.stringify(result));
+                    alert(`เกิดข้อผิดพลาดในการส่งอีเมล: ${errorMsg}`);
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

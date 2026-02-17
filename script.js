@@ -1,0 +1,265 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const loginForm = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const togglePasswordIcon = togglePasswordBtn.querySelector('i');
+
+    // Initialize Supabase
+    const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+    let _supabase;
+
+    try {
+        if (typeof window.supabase !== 'undefined') {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.error("Supabase library not loaded!");
+        }
+    } catch (e) { console.error("Supabase init error:", e); }
+
+    // State
+    let isPasswordVisible = false;
+
+    // Toggle Password Visibility
+    togglePasswordBtn.addEventListener('click', () => {
+        isPasswordVisible = !isPasswordVisible;
+        if (isPasswordVisible) {
+            passwordInput.type = 'text';
+            togglePasswordIcon.classList.remove('fa-eye-slash');
+            togglePasswordIcon.classList.add('fa-eye');
+        } else {
+            passwordInput.type = 'password';
+            togglePasswordIcon.classList.remove('fa-eye');
+            togglePasswordIcon.classList.add('fa-eye-slash');
+        }
+    });
+
+    // Handle Login Submission
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const btn = document.querySelector('.btn-primary');
+        const originalContent = btn.innerHTML;
+
+        if (!validateEmail(email)) {
+            showNotification('กรุณากรอกอีเมลให้ถูกต้อง', 'error');
+            return;
+        }
+
+        // Loading UI
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังเข้าสู่ระบบ...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        if (!_supabase) {
+            showNotification('ข้อผิดพลาดระบบ: Supabase ไม่ได้โหลด', 'error');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            return;
+        }
+
+        try {
+            // 1. Login with Supabase
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            console.log("Login success, checking profile...");
+            const user = data.user;
+
+            // 2. Check Profile Strategy
+            let hasTheme = false;
+            let hasFeatures = false;
+
+            try {
+                // Check profiles table
+                const { data: profile, error: profileError } = await _supabase
+                    .from('profiles')
+                    .select('theme, features')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile) {
+                    if (profile.theme) hasTheme = true;
+                    if (profile.features && Array.isArray(profile.features) && profile.features.length > 0) hasFeatures = true;
+                }
+            } catch (err) {
+                console.warn("Profile check failed", err);
+            }
+
+            // Redirect Logic
+            if (!hasTheme) {
+                window.location.href = 'theme-selection.html';
+            } else if (!hasFeatures) {
+                window.location.href = 'feature-selection.html';
+            } else {
+                showNotification(`กำลังพาไปหน้าหลัก...`, 'success');
+                window.location.href = 'dashboard.html';
+            }
+
+        } catch (error) {
+            console.error(error);
+            showNotification('เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง', 'error');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    });
+
+    // Input animation helpers
+    const inputs = [emailInput, passwordInput];
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            input.parentElement.classList.add('focused');
+        });
+        input.addEventListener('blur', () => {
+            input.parentElement.classList.remove('focused');
+        });
+    });
+
+    // --- Helper Functions ---
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    function showNotification(message, type = 'info') {
+        // Remove existing notifications first to prevent stacking
+        const existing = document.querySelector('.notification');
+        if (existing) existing.remove();
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        if (type === 'error') icon = 'fa-exclamation-circle';
+
+        notification.innerHTML = `
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        `;
+
+        // Inline styles for reliability
+        Object.assign(notification.style, {
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-20px)',
+            opacity: '0',
+            background: type === 'error' ? '#ef4444' : (type === 'success' ? '#10b981' : '#333'),
+            color: 'white',
+            padding: '12px 24px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            zIndex: '9999',
+            transition: 'all 0.3s ease',
+            fontSize: '0.9rem',
+            fontWeight: '500',
+            minWidth: '300px'
+        });
+
+        document.body.appendChild(notification);
+
+        // Animate In
+        requestAnimationFrame(() => {
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateX(-50%) translateY(0)';
+        });
+
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(-50%) translateY(-20px)';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // --- Auto-Login Check (for Email Redirect) ---
+    checkSession();
+
+    async function checkSession() {
+        if (!_supabase) return;
+
+        // 1. Check for URL Errors (e.g. Link Expired from Supabase)
+        // Supabase returns errors in the hash fragment: #error=access_denied&error_code=403...
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const errorDesc = params.get('error_description');
+
+        if (errorDesc) {
+            console.error("Auth Error:", errorDesc);
+            showNotification('เกิดข้อผิดพลาดในการยืนยันตัวตน หรือลิงก์หมดอายุ', 'error');
+            // Clean URL to avoid confusion
+            window.history.replaceState(null, '', window.location.pathname);
+            return;
+        }
+
+        // 2. Check Session
+        const { data: { session } } = await _supabase.auth.getSession();
+
+        if (session) {
+            console.log("Session found.");
+
+            // Try to check profile silently
+            let hasTheme = false;
+            try {
+                const { data: profile } = await _supabase
+                    .from('profiles')
+                    .select('theme')
+                    .eq('id', session.user.id)
+                    .single();
+                if (profile && profile.theme) hasTheme = true;
+            } catch (e) {
+                console.warn("Silent profile check failed", e);
+            }
+
+            if (!hasTheme) {
+                // --- NEW FLOW: Show "Email Verified" UI instead of Redirecting ---
+                // This gives the user the "Press to Confirm" step they wanted.
+
+                const loginScreen = document.querySelector('.login-screen');
+                // Replace the entire login form with a success message
+                loginScreen.innerHTML = `
+                    <div class="logo-container" style="text-align: center; animation: fadeIn 0.5s;">
+                        <div class="logo-icon" style="margin: 0 auto 1.5rem; background: var(--success);">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h1 class="app-name">ยืนยันอีเมลเรียบร้อย!</h1>
+                        <p class="tagline" style="margin-top: 1rem; color: #fff;">
+                            บัญชีของคุณได้รับการเปิดใช้งานแล้ว
+                        </p>
+                        
+                        <div style="margin-top: 2rem;">
+                            <button id="continueBtn" class="btn-primary" style="width: 100%;">
+                                <span>ไปที่หน้าเลือกธีม</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Add click listener to the new button
+                document.getElementById('continueBtn').addEventListener('click', () => {
+                    window.location.href = 'theme-selection.html';
+                });
+
+            } else {
+                const btn = document.querySelector('.btn-primary');
+                if (btn) btn.innerHTML = 'ยินดีต้อนรับกลับ';
+            }
+        }
+    }
+});

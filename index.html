@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CareFate</title>
+    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="background-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+
+        <main class="login-screen">
+            <div class="login-header">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <h1 class="app-name">CareFate</h1>
+                <p class="tagline">ชะตาของคุณ เราดูแล</p>
+            </div>
+
+            <form class="login-form" id="loginForm">
+                <div class="input-group">
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                    <input type="email" id="email" placeholder="อีเมล" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="password" placeholder="รหัสผ่าน" required>
+                    <button type="button" class="toggle-password" id="togglePassword">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                </div>
+
+                <div class="form-actions">
+                    <a href="#" class="forgot-password">ลืมรหัสผ่าน?</a>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    <span>เข้าสู่ระบบ</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+
+                <div class="divider">
+                    <span>หรือเข้าสู่ระบบด้วย</span>
+                </div>
+
+                <div class="social-login">
+                    <button type="button" class="btn-social google">
+                        <i class="fa-brands fa-google"></i>
+                    </button>
+                    <button type="button" class="btn-social apple">
+                        <i class="fa-brands fa-apple"></i>
+                    </button>
+                    <button type="button" class="btn-social facebook">
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </button>
+                </div>
+            </form>
+
+            <footer class="login-footer">
+                <p>ยังไม่มีบัญชี? <a href="register.html" id="createAccount">สมัครสมาชิก</a></p>
+            </footer>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

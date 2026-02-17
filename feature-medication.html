@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - แจ้งเตือนทานยา</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Medication Theme - Teal/Green */
+        :root {
+            --med-primary: #14b8a6;
+            --med-secondary: #0d9488;
+            --med-bg-gradient: radial-gradient(circle, #115e59 0%, transparent 60%);
+        }
+
+        .med-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .med-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            margin-bottom: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .med-item.taken {
+            background: rgba(20, 184, 166, 0.2);
+            border-color: var(--med-primary);
+        }
+
+        .med-time {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--med-primary);
+            font-family: monospace;
+        }
+
+        .med-info {
+            flex: 1;
+            margin-left: 1rem;
+            text-align: left;
+        }
+
+        .med-name {
+            font-size: 1rem;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .med-dose {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .check-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: transparent;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .med-item.taken .check-btn {
+            background: var(--med-primary);
+            border-color: var(--med-primary);
+            color: white;
+            box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
+        }
+
+        /* Add Form */
+        .add-form {
+            background: #ffffff;
+            /* Explicit white for max contrast */
+            padding: 2rem 1.5rem;
+            /* More vertical breathing room */
+            border-radius: 24px;
+            margin-top: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .med-input-group {
+            margin-bottom: 2rem;
+            text-align: left;
+            position: relative;
+            background: transparent !important;
+            /* Override explicit */
+            border: none !important;
+        }
+
+        .med-input-group label {
+            display: block;
+            font-size: 1.1rem;
+            /* Larger text */
+            color: #334155;
+            /* Slate-700 High Contrast */
+            margin-bottom: 0.8rem;
+            /* More space between label and box */
+            font-weight: 700;
+            /* Bolder */
+            letter-spacing: 0.5px;
+            font-family: 'Outfit', sans-serif;
+            margin-left: 0.5rem;
+            /* Slight indent */
+        }
+
+        .input-field {
+            width: 100%;
+            background: #f1f5f9 !important;
+            /* Light Slate */
+            border: 2px solid #cbd5e1 !important;
+            padding: 1.2rem 1.5rem !important;
+            /* Spacious padding inside input */
+            border-radius: 16px;
+            color: #0f172a !important;
+            /* Dark Slate Text */
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s ease;
+            box-shadow: none !important;
+        }
+
+        .input-field:focus {
+            background: #ffffff !important;
+            border-color: var(--med-primary) !important;
+            box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15) !important;
+        }
+
+        .input-field::placeholder {
+            color: #94a3b8;
+        }
+
+        /* Dark mode overrides */
+        body:not(.theme-youth) .input-field {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        .duration-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .duration-btn {
+            flex: 1;
+            padding: 0.6rem;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .duration-btn.active {
+            background: var(--med-primary);
+            color: white;
+            border-color: var(--med-primary);
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1" style="background: radial-gradient(circle, #0f766e 0%, transparent 60%);"></div>
+        <div class="shape shape-2" style="background: radial-gradient(circle, #134e4a 0%, transparent 60%);"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                ตารางทานยา
+            </h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div class="scrollable-content"
+            style="flex:1; overflow-y:auto; padding: 0 1.5rem 2rem; display:flex; flex-direction:column;">
+
+            <!-- Timeline / Schedule -->
+            <div id="scheduleContainer">
+                <!-- Javascript will populate this -->
+                <div style="text-align:center; padding:2rem; opacity:0.6;">
+                    <i class="fa-solid fa-pills" style="font-size:2rem; margin-bottom:1rem;"></i>
+                    <p>ยังไม่มีรายการยาวันนี้</p>
+                </div>
+            </div>
+
+            <!-- Add Button (Toggle) -->
+            <button onclick="toggleAddForm()"
+                style="background:rgba(255,255,255,0.1); border:1px dashed var(--text-muted); color:var(--text-muted); width:100%; padding:1rem; border-radius:16px; cursor:pointer; margin-top:1rem;">
+                <i class="fa-solid fa-plus"></i> เพิ่มรายการยา
+            </button>
+
+            <!-- Add Form (Hidden by default) -->
+            <div id="addForm" class="add-form" style="display:none; animation: fadeIn 0.3s;">
+                <h3
+                    style="color:var(--text-color); font-size:1.1rem; margin-bottom:1.5rem; border-bottom:1px solid var(--card-border); padding-bottom:0.8rem;">
+                    เพิ่มยาใหม่</h3>
+
+                <div class="med-input-group">
+                    <label>ชื่อยา</label>
+                    <input type="text" id="newMedName" class="input-field" placeholder="เช่น ยาหลังอาหารเช้า, พารา">
+                </div>
+
+                <div class="med-input-group">
+                    <label>เวลาที่ต้องทาน</label>
+                    <input type="time" id="newMedTime" class="input-field">
+                </div>
+
+                <div class="med-input-group">
+                    <label>ระยะเวลาการทาน</label>
+                    <div class="duration-options">
+                        <button class="duration-btn active" onclick="setDurationType('continuous')"
+                            id="btnContinuous">ทุกวันตลอดไป</button>
+                        <button class="duration-btn" onclick="setDurationType('limited')"
+                            id="btnLimited">กำหนดวัน</button>
+                    </div>
+                    <div id="daysInputConfig" style="display:none; margin-top:0.5rem;">
+                        <input type="number" id="newMedDuration" class="input-field" placeholder="จำนวนวัน (เช่น 7)"
+                            min="1">
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">เช่น 7 วัน, 21 วัน
+                        </div>
+                    </div>
+                </div>
+
+                <div class="med-input-group">
+                    <label>ปริมาณ / หมายเหตุ (ไม่บังคับ)</label>
+                    <input type="text" id="newMedDose" class="input-field" placeholder="เช่น 1 เม็ด">
+                </div>
+
+                <div style="display:flex; gap:0.5rem; margin-top:2rem;">
+                    <button onclick="toggleAddForm()"
+                        style="flex:1; padding:1rem; background:transparent; border:1px solid var(--text-muted); color:var(--text-muted); border-radius:12px;">ยกเลิก</button>
+                    <button onclick="saveNewMedication()"
+                        style="flex:1; padding:1rem; background:var(--med-primary); border:none; color:white; border-radius:12px; font-weight:600; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.3);">บันทึก</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Nav (Standard) -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+        let durationType = 'continuous'; // continuous | limited
+
+        // "Schedule" stores the Plan: { id, name, time, dose, startDate, durationDays (null if continuous) }
+        // "Logs" stores the Action today: { med_id: taken }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Apply Theme
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.theme) {
+                    document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                    document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                }
+            } catch (e) { }
+
+            loadSchedule();
+        });
+
+        function toggleAddForm() {
+            const form = document.getElementById('addForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            // Scroll to bottom if opening
+            if (form.style.display === 'block') {
+                setTimeout(() => form.scrollIntoView({ behavior: 'smooth' }), 100);
+            }
+        }
+
+        function setDurationType(type) {
+            durationType = type;
+            document.getElementById('btnContinuous').classList.toggle('active', type === 'continuous');
+            document.getElementById('btnLimited').classList.toggle('active', type === 'limited');
+            document.getElementById('daysInputConfig').style.display = type === 'limited' ? 'block' : 'none';
+        }
+
+        function loadSchedule() {
+            let schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
+            // Get logs for TODAY
+            const today = new Date(); // object
+            today.setHours(0, 0, 0, 0);
+            const todayStr = today.toDateString();
+
+            const logs = JSON.parse(localStorage.getItem('med_logs') || '{}');
+            const todayLogs = logs[todayStr] || {};
+
+            const container = document.getElementById('scheduleContainer');
+
+            if (schedule.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
+                        <i class="fa-solid fa-pills" style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted);"></i>
+                        <p style="color:var(--text-muted);">คุณยังไม่ได้เพิ่มรายการยา</p>
+                    </div>`;
+                return;
+            }
+
+            // FILTER: Check Duration
+            // Convert startDates and calculate difference
+            schedule = schedule.filter(item => {
+                if (!item.durationDays) return true; // Continuous
+                if (!item.startDate) return true; // Fallback
+
+                const start = new Date(item.startDate);
+                start.setHours(0, 0, 0, 0);
+
+                const diffTime = Math.abs(today - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                // diffDays starts at 0 on day 1? No.
+                // If today == start, diff is 0. That is Day 1.
+                // If today == start + 1 day, diff is 1. That is Day 2.
+
+                // So current Day Index = diffDays + 1
+                const currentDay = diffDays + 1; /* Note: this logic assumes today >= start */
+
+                // Check if started in future?
+                if (today < start) return false; // Not started yet
+
+                // Check if expired
+                if (currentDay > parseInt(item.durationDays)) return false;
+
+                // Attach Day info to item for display
+                item._displayDay = `วันที่ ${currentDay}/${item.durationDays}`;
+                return true;
+            });
+
+            if (schedule.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
+                        <i class="fa-solid fa-check-circle" style="font-size:3rem; margin-bottom:1rem; color:var(--med-primary);"></i>
+                        <p style="color:var(--text-muted);">ไม่มีรายการยาสำหรับวันนี้<br>(ยาคอร์สจบแล้ว หรือยังไม่ถึงกำหนด)</p>
+                    </div>`;
+                return;
+            }
+
+            // Sort by time
+            schedule.sort((a, b) => a.time.localeCompare(b.time));
+
+            let html = '';
+            schedule.forEach(item => {
+                const isTaken = todayLogs[item.id] === true;
+                const dayBadge = item._displayDay ?
+                    `<span style="font-size:0.7rem; background:rgba(0,0,0,0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${item._displayDay}</span>`
+                    : '';
+
+                html += `
+                <div class="med-item ${isTaken ? 'taken' : ''}" onclick="toggleTaken('${item.id}', '${item.name}', this)">
+                    <div class="med-time">${item.time}</div>
+                    <div class="med-info">
+                        <div class="med-name">${item.name} ${dayBadge}</div>
+                        <div class="med-dose">${item.dose || ''}</div>
+                    </div>
+                    <div class="check-btn">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function saveNewMedication() {
+            const name = document.getElementById('newMedName').value;
+            const time = document.getElementById('newMedTime').value;
+            const dose = document.getElementById('newMedDose').value;
+
+            let duration = null;
+            if (durationType === 'limited') {
+                duration = document.getElementById('newMedDuration').value;
+                if (!duration) {
+                    alert('กรุณาระบุจำนวนวัน');
+                    return;
+                }
+            }
+
+            if (!name || !time) {
+                alert('กรุณาระบุชื่อยาและเวลา');
+                return;
+            }
+
+            const newMed = {
+                id: Date.now().toString(),
+                name,
+                time,
+                dose,
+                startDate: new Date().toISOString(), // store creation date
+                durationDays: duration
+            };
+
+            const schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
+            schedule.push(newMed);
+            localStorage.setItem('med_schedule', JSON.stringify(schedule));
+
+            // Reset form
+            document.getElementById('newMedName').value = '';
+            document.getElementById('newMedTime').value = '';
+            document.getElementById('newMedDose').value = '';
+            document.getElementById('newMedDuration').value = '';
+            setDurationType('continuous');
+            toggleAddForm();
+            loadSchedule();
+        }
+
+        async function toggleTaken(medId, medName, el) {
+            // Animation Feedback
+            el.style.transform = 'scale(0.98)';
+            setTimeout(() => el.style.transform = 'scale(1)', 100);
+
+            // Toggle Logic
+            const todayStr = new Date().toDateString();
+            const logs = JSON.parse(localStorage.getItem('med_logs') || '{}');
+
+            if (!logs[todayStr]) logs[todayStr] = {};
+
+            const wasTaken = logs[todayStr][medId] === true;
+            const newState = !wasTaken;
+
+            logs[todayStr][medId] = newState;
+            localStorage.setItem('med_logs', JSON.stringify(logs));
+
+            // Visual Update immediately (CSS class)
+            if (newState) el.classList.add('taken');
+            else el.classList.remove('taken');
+
+            // save history only on TAKE
+            if (newState) {
+                saveHistoryLog(medName);
+            }
+        }
+
+        async function saveHistoryLog(medName) {
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const logData = {
+                        user_id: user.id,
+                        type: 'medication',
+                        detail: medName,
+                        note: 'ทานแล้ว',
+                        created_at: new Date().toISOString()
+                    };
+
+                    const histLogs = JSON.parse(localStorage.getItem('medication_history_logs') || '[]');
+                    histLogs.push(logData);
+                    localStorage.setItem('medication_history_logs', JSON.stringify(histLogs));
+                }
+            } catch (e) { console.error(e); }
+        }
+    </script>
+</body>
+
+</html>

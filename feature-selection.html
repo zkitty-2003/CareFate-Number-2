@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - เลือกฟีเจอร์</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <style>
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+            width: 100%;
+            overflow-y: auto;
+            max-height: 60vh;
+            padding-right: 5px;
+            /* For scrollbar space */
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-card.selected {
+            background: white;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+        }
+
+        .feature-icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+
+        .feature-card.selected .feature-icon {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 1;
+            transform: scale(1.1);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .feature-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.3;
+        }
+
+        .recommend-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #10b981;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .checkbox-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .feature-card.selected .checkbox-overlay {
+            background: #a855f7;
+            border-color: #a855f7;
+        }
+
+        .checkbox-overlay i {
+            color: white;
+            font-size: 0.7rem;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s;
+        }
+
+        .feature-card.selected .checkbox-overlay i {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.8);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Custom Scrollbar */
+        .feature-grid::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .feature-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .feature-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="app-container">
+        <div class="login-screen" style="padding-top: 2rem;">
+
+            <div class="logo-container"
+                style="flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; align-items: center;">
+                <div class="logo-icon" style="width: 60px; height: 60px; font-size: 1.8rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div style="text-align: center;">
+                    <h1 class="app-name" style="font-size: 1.8rem; margin-bottom: 0.2rem; color: var(--text-color);">
+                        เลือกฟีเจอร์</h1>
+                    <p class="tagline" id="ageTagline" style="color: var(--text-muted);">ปรับแต่ง CareFate ให้เข้ากับคุณ
+                    </p>
+                </div>
+            </div>
+
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                    สามารถเลือกได้มากกว่า 1 ข้อ (เลือกภายหลังได้)
+                </p>
+
+                <div class="feature-grid" id="featureGrid">
+                    <!-- Features will be injected here by JS -->
+                </div>
+            </div>
+
+            <button id="saveFeaturesBtn" class="btn-primary" style="margin-top: 1.5rem;">
+                เสร็จสิ้นการตั้งค่า <i class="fa-solid fa-check"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="notification-area"></div>
+
+    <script src="register.js"></script>
+    <script>
+        // Inline script to apply theme on load (essential for consistency)
+        document.addEventListener('DOMContentLoaded', async () => {
+            const _supabase = window.supabase.createClient('https://rjszmmogkiblqojikcow.supabase.co', 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y');
+
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                if (session && session.user) {
+                    const { user } = session;
+                    const theme = user.user_metadata.theme || 'working'; // Default if none
+
+                    // Apply theme class
+                    document.body.className = ''; // Clear default
+                    document.body.classList.add(`theme-${theme}`);
+                }
+            } catch (e) {
+                console.warn("Theme load failed in feature-selection:", e);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - บันทึกการออกกำลังกาย</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Exercise Specific Theme - Orange/Red Accents */
+        :root {
+            --exercise-primary: #f97316;
+            --exercise-secondary: #fb923c;
+        }
+
+        .exercise-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .activity-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-color);
+        }
+
+        .activity-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-btn.active {
+            background: rgba(249, 115, 22, 0.2);
+            border-color: var(--exercise-primary);
+            color: var(--exercise-primary);
+            transform: translateY(-2px);
+        }
+
+        .activity-btn i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .intensity-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 0.3rem;
+            margin-top: 1rem;
+        }
+
+        .intensity-opt {
+            flex: 1;
+            text-align: center;
+            padding: 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .intensity-opt.active {
+            background: var(--exercise-primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .kcal-display {
+            font-size: 3rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(45deg, #f97316, #eab308);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-family: monospace;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <!-- Energetic Shapes -->
+        <div class="shape shape-1" style="background: radial-gradient(circle, #c2410c 0%, transparent 60%);"></div>
+        <div class="shape shape-2" style="background: radial-gradient(circle, #ea580c 0%, transparent 60%);"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                ออกกำลังกาย
+            </h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div class="scrollable-content"
+            style="flex:1; overflow-y:auto; padding: 0 1.5rem 2rem; display:flex; flex-direction:column;">
+
+            <!-- Kcal Calculation Display -->
+            <div class="exercise-card">
+                <div style="font-size:0.9rem; color:var(--text-muted);">เผาผลาญพลังงานไป</div>
+                <div id="kcalDisplay" class="kcal-display">0</div>
+                <div style="font-size:1rem; color:var(--text-color);">Kcal (กิโลแคลอรี่)</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; opacity:0.8;">
+                    (คำนวณจาก: กิจกรรม x ความหนัก x เวลา)
+                </div>
+            </div>
+
+            <!-- Activity Selection -->
+            <label style="color:var(--text-color); margin-left:0.5rem; font-weight:500;">
+                <i class="fa-solid fa-person-running" style="margin-right:0.5rem; color:var(--exercise-primary);"></i>
+                ประเภทกิจกรรม
+            </label>
+            <div class="activity-grid">
+                <div class="activity-btn" onclick="selectActivity(this, 'run', 10)">
+                    <i class="fa-solid fa-person-running"></i>
+                    <span>วิ่ง / เดินเร็ว</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'gym', 6)">
+                    <i class="fa-solid fa-dumbbell"></i>
+                    <span>ฟิตเนส / เวท</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'yoga', 3)">
+                    <i class="fa-solid fa-spa"></i>
+                    <span>โยคะ / ยืดเหยียด</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'sport', 8)">
+                    <i class="fa-solid fa-volleyball"></i>
+                    <span>เล่นกีฬา</span>
+                </div>
+            </div>
+
+            <!-- Duration & Intensity -->
+            <div class="exercise-card" style="margin-top:1.5rem;">
+                <div style="margin-bottom:1.5rem;">
+                    <label style="display:block; text-align:left; color:var(--text-color); margin-bottom:0.5rem;">
+                        ระยะเวลา (นาที)
+                    </label>
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <input type="range" id="durationSlider" min="5" max="180" value="30" step="5"
+                            style="flex:1; accent-color:var(--exercise-primary);" oninput="updateDuration(this.value)">
+                        <span id="durationValue"
+                            style="font-size:1.5rem; font-weight:bold; color:var(--text-color); width:80px;">30</span>
+                    </div>
+                </div>
+
+                <div style="text-align:left;">
+                    <label style="color:var(--text-color);">ความเข้มข้น (Intensity)</label>
+                    <div class="intensity-selector">
+                        <div class="intensity-opt active" onclick="setIntensity(this, 0.8)">เบา</div>
+                        <div class="intensity-opt" onclick="setIntensity(this, 1.0)">ปานกลาง</div>
+                        <div class="intensity-opt" onclick="setIntensity(this, 1.2)">หนัก</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Note -->
+            <div class="exercise-card">
+                <div style="text-align:left;">
+                    <label style="color:var(--text-color); margin-bottom:0.5rem; display:block;">บันทึกเพิ่มเติม</label>
+                    <textarea id="exerciseNote" rows="2" placeholder="เช่น วิ่งรอบหมู่บ้าน, ยกเวทแขน..."
+                        style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:12px; padding:0.8rem; color:var(--text-color); font-family:var(--font-family); resize:none; outline:none; font-size:0.9rem;"></textarea>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <button class="btn-primary" id="saveBtn" onclick="saveExerciseLog()"
+                style="margin-top:1rem; margin-bottom:1rem; background: linear-gradient(135deg, #f97316, #ea580c);">
+                <i class="fa-solid fa-fire"></i> บันทึกการเผาผลาญ
+            </button>
+
+        </div>
+
+        <!-- Bottom Nav (Standard) -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+
+        let currentMet = 0; // Metabolic Equivalent of Task
+        let currentIntensityMultiplier = 0.8; // Default Low
+        let currentDuration = 30;
+        let selectedActivityName = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Apply Theme
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user && user.user_metadata && user.user_metadata.theme) {
+                    document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                    document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                }
+            } catch (e) { }
+
+            // Select default (Gym/30min/Low) for demo feel
+            // Wait for user interaction usually, but let's init vars
+        });
+
+        function updateDuration(val) {
+            currentDuration = parseInt(val);
+            document.getElementById('durationValue').innerText = currentDuration;
+            calculateCalories();
+        }
+
+        function selectActivity(el, type, baseMet) {
+            document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            currentMet = baseMet;
+            selectedActivityName = type;
+            calculateCalories();
+        }
+
+        function setIntensity(el, multiplier) {
+            document.querySelectorAll('.intensity-opt').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+
+            currentIntensityMultiplier = multiplier;
+            calculateCalories();
+        }
+
+        function calculateCalories() {
+            if (!currentMet) {
+                document.getElementById('kcalDisplay').innerText = '0';
+                return;
+            }
+
+            // Formula: MET * Weight(kg) * Duration(hr)
+            // Simplified: MET * Duration(min) * IntensityFactor (Rough Estimate)
+            // Assuming average weight ~65kg for generic calc if unknown
+
+            const rawKcal = (currentMet * currentIntensityMultiplier * currentDuration);
+            // ex: Run (10 MET) * 0.8 (Low) * 30 min = 240 ??? No formula is usually (MET * 3.5 * weight / 200) * mins
+            // Let's use simplified MVP logic: 
+            // Low Intensity = baseMet * 0.5 * mins
+            // Medium = baseMet * 0.7 * mins
+            // High = baseMet * 1.0 * mins
+
+            // Let's stick to the plan's simplified multiplier logic if preferred, or standard METs
+            // Plan said: Low: 5kcal/min, Med: 8, High: 12. Let's combine Activity + Intensity.
+
+            let kcalPerMin = 5;
+            if (currentMet >= 8) kcalPerMin = 8; // High intensity sport/run
+            if (currentMet < 5) kcalPerMin = 3; // Yoga
+
+            // Adjust by intensity selection
+            kcalPerMin = kcalPerMin * (currentIntensityMultiplier / 0.8); // Scale
+
+            const total = Math.round(kcalPerMin * currentDuration);
+            document.getElementById('kcalDisplay').innerText = total;
+
+            // Pulse animation
+            const disp = document.getElementById('kcalDisplay');
+            disp.style.transform = 'scale(1.2)';
+            setTimeout(() => disp.style.transform = 'scale(1)', 200);
+        }
+
+        async function saveExerciseLog() {
+            if (!selectedActivityName) {
+                alert('กรุณาเลือกประเภทกิจกรรม');
+                return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            const kcal = document.getElementById('kcalDisplay').innerText;
+            const note = document.getElementById('exerciseNote').value;
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const logData = {
+                        user_id: user.id,
+                        type: 'exercise',
+                        detail: selectedActivityName, // run, gym, etc.
+                        note: `${currentDuration} นาที | ${kcal} kcal ${note ? '| ' + note : ''}`,
+                        calories: parseInt(kcal),
+                        duration: currentDuration,
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Try DB
+                    try {
+                        await _supabase.from('excretion_logs').insert([logData]);
+                        // Reusing generic table. Ideally create 'exercise_logs' or 'activity_logs'
+                    } catch (err) { console.warn("DB Save failed", err); }
+
+                    // Local Storage
+                    const exLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
+                    exLogs.push(logData);
+                    localStorage.setItem('exercise_logs', JSON.stringify(exLogs));
+
+                    alert(`บันทึกการออกกำลังกายเรียบร้อย! เผาผลาญ ${kcal} kcal`);
+                    location.href = 'history.html';
+                }
+            } catch (e) {
+                console.error(e);
+                alert('เกิดข้อผิดพลาดในการบันทึก');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-fire"></i> บันทึกการเผาผลาญ';
+            }
+        }
+    </script>
+</body>
+
+</html>
