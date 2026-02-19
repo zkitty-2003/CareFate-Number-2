@@ -106,6 +106,12 @@
                 const dateStr = new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                 document.getElementById('dateDisplay').textContent = dateStr;
 
+                // Default Variables (Defined in outer scope to be accessible later)
+                let theme = 'working';
+                let username = 'User';
+                let features = [];
+                let avatarUrl = null;
+
                 // Check Supabase
                 if (window.supabase) {
                     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -124,12 +130,6 @@
                         .select('theme, username, avatar_url, features')
                         .eq('id', user.id)
                         .single();
-
-                    // Defaults
-                    let theme = 'working';
-                    let username = 'User';
-                    let features = [];
-                    let avatarUrl = null;
 
                     if (profile) {
                         theme = profile.theme || 'working';
@@ -153,27 +153,15 @@
                         avatarUrl = localStorage.getItem(`avatar_${user.id}`);
                     }
 
-                    if (avatarUrl) {
-                        const pic = document.querySelector('.profile-pic');
-                        // Force refresh image if it's the same URL (for updates)
-                        // But for Supabase Storage, the URL usually stays the same, so we might need a timestamp query if caching is aggressive.
-                        // For now, just setting src is enough.
-                        if (pic) {
+                    const pic = document.querySelector('.profile-pic');
+                    if (pic) {
+                        if (avatarUrl) {
                             pic.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                        } else {
+                            pic.innerHTML = `<i class="fa-solid fa-user"></i>`;
                         }
-                    } else {
-                        // Default Icon
-                        const pic = document.querySelector('.profile-pic');
-                        if (pic) pic.innerHTML = `<i class="fa-solid fa-user"></i>`;
                     }
-
-                    // Still check localStorage for avatar
-                    const localAvatar = localStorage.getItem(`avatar_${user.id}`);
-                    if (localAvatar) {
-                        const pic = document.querySelector('.profile-pic');
-                        if (pic) pic.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                    }
-                }
+                } // End Supabase Check
 
                 applyTheme(theme);
                 updateUserInfo(username);
@@ -181,20 +169,20 @@
 
                 // Load Horoscope
                 loadHoroscope(theme);
-            }
+
             } catch (e) {
-            console.error("Init Error", e);
-            // alert("Error loading dashboard");
-        } finally {
-            // ALWAYS Hide Loader
-            setTimeout(() => {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                const dash = document.getElementById('dashboardContent');
-                dash.style.display = 'flex';
-                dash.offsetHeight; // trigger reflow
-                dash.style.opacity = '1';
-            }, 500);
-        }
+                console.error("Init Error", e);
+                // alert("Error loading dashboard");
+            } finally {
+                // ALWAYS Hide Loader
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    const dash = document.getElementById('dashboardContent');
+                    dash.style.display = 'flex';
+                    dash.offsetHeight; // trigger reflow
+                    dash.style.opacity = '1';
+                }, 500);
+            }
         });
 
         function updateUserInfo(name) {
