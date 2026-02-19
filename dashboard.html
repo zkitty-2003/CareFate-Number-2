@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
-</head>
+
 
 <body class="theme-working page-dashboard">
     <!-- Loading Screen (Initial) -->
@@ -174,11 +174,15 @@
                 console.error("Init Error", e);
                 // alert("Error loading dashboard");
             } finally {
-                // ALWAYS Hide Loader
+                // ALWAYS Hide Loader (Remove from DOM to prevent blocking)
                 setTimeout(() => {
-                    document.getElementById('loadingOverlay').style.display = 'none';
+                    const overlay = document.getElementById('loadingOverlay');
+                    if (overlay) overlay.remove();
+
                     const dash = document.getElementById('dashboardContent');
                     dash.style.display = 'flex';
+                    dash.style.zIndex = '10'; // Ensure content is above background
+                    dash.style.position = 'relative';
                     dash.offsetHeight; // trigger reflow
                     dash.style.opacity = '1';
                 }, 500);
