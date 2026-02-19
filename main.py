@@ -222,6 +222,17 @@ async def read_history():
 async def read_settings():
     return FileResponse(os.path.join(BASE_DIR, 'settings.html'))
 
+@app.get("/debug-files")
+def debug_files():
+    import os
+    files = os.listdir(BASE_DIR)
+    return {
+        "base_dir": BASE_DIR,
+        "files_count": len(files),
+        "files": files[:20], # Show first 20 files
+        "index_exists": os.path.exists(os.path.join(BASE_DIR, "index.html"))
+    }
+
 # Mount Static Files (Catch-all for CSS, JS, Images, other HTMLs)
 app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="static")
 
@@ -229,4 +240,5 @@ if __name__ == "__main__":
     import uvicorn
     print(f"Starting CareFate FastAPI Server...")
     print(f"Serving files from: {BASE_DIR}")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    # Use 0.0.0.0 for Render/Docker compatibility
+    uvicorn.run(app, host="0.0.0.0", port=8000)
