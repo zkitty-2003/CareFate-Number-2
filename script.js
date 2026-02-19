@@ -422,9 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             } catch (error) {
                 console.error("Reset Password Error:", error);
-                // Rate limit or other errors
-                let msg = 'ไม่สามารถส่งลิงก์ได้ กรุณาลองใหม่อีกครั้ง';
-                if (error.message.includes("Rate limit")) msg = 'กรุณารอสักครู่ก่อนลองใหม่อีกครั้ง';
+
+                let msg = 'ไม่สามารถส่งลิงก์ได้: ' + (error.message || 'กรุณาลองใหม่อีกครั้ง');
+
+                // Translate common errors
+                if (error.message.includes("Rate limit")) msg = 'คุณขอรหัสผ่านบ่อยเกินไป กรุณารอสักครู่ (60 วินาที)';
+                if (error.message.includes("User not found")) msg = 'ไม่พบอีเมลนี้ในระบบ';
 
                 showNotification(msg, 'error');
             } finally {
