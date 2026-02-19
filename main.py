@@ -3,6 +3,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
@@ -23,10 +27,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 def health_check():
     return {"status": "ok"}
 
-# Email Configuration (USER MUST UPDATE THESE)
-# To use Gmail: https://myaccount.google.com/apppasswords to get an App Password
-SENDER_EMAIL = "carefate.demo@gmail.com"  # New email you created
-SENDER_PASSWORD = "hwhn subl zvyf cavs"    # App Password from User
+# Email Configuration
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "carefate.demo@gmail.com")
+SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -46,13 +49,13 @@ import urllib.error
 import random
 from datetime import datetime
 
-# PASTE YOUR OPENROUTER KEY HERE
-OPENROUTER_API_KEY = "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" 
+# Load OpenRouter Key from Environment
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENROUTER_MODEL = "google/gemma-3-27b-it:free"
 
 def call_openrouter(messages):
-    if OPENROUTER_API_KEY == "sk-or-v1-..." or not OPENROUTER_API_KEY:
-         raise Exception("Please configure OPENROUTER_API_KEY in main.py")
+    if not OPENROUTER_API_KEY:
+         raise Exception("Please configure OPENROUTER_API_KEY in .env file")
 
     payload = {
         "model": OPENROUTER_MODEL,
