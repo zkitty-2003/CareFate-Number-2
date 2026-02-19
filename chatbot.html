@@ -270,7 +270,7 @@
             if (e.key === 'Enter') sendMessage();
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
             if (!text) return;
@@ -283,12 +283,31 @@
             const typing = document.getElementById('typingIndicator');
             typing.style.display = 'block';
 
-            // 3. Simulate AI Response (Mock Logic)
-            setTimeout(() => {
+            // 3. Call Real API
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        theme: currentTheme
+                    })
+                });
+
+                const data = await response.json();
                 typing.style.display = 'none';
-                const response = generateMockResponse(text);
-                addBotMessage(response);
-            }, 1500 + Math.random() * 1000); // Random delay 1.5-2.5s
+
+                if (data.status === 'success') {
+                    addBotMessage(data.reply);
+                } else {
+                    addBotMessage('ขออภัยครับ ระบบขัดข้องชั่วคราว (' + (data.message || 'Unknown Error') + ')');
+                }
+
+            } catch (e) {
+                console.error(e);
+                typing.style.display = 'none';
+                addBotMessage('ขออภัยครับ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+            }
         }
 
         function addUserMessage(text) {

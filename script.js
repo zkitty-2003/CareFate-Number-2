@@ -211,16 +211,87 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 
+    // --- Supabase Auth State Change Listener ---
+    _supabase.auth.onAuthStateChange((event, session) => {
+        console.log("Auth Event:", event);
+
+        if (event === 'PASSWORD_RECOVERY') {
+            console.log("PASSWORD_RECOVERY event received");
+            renderResetPasswordUI();
+        }
+    });
+
+    function renderResetPasswordUI() {
+        document.body.innerHTML = `
+            <div class="app-container" style="display:flex; justify-content:center; align-items:center; min-height:100vh;">
+                <div class="login-screen" style="width:100%; max-width:400px; padding:2rem;">
+                        <div class="login-header">
+                        <h1 class="app-name">ตั้งรหัสผ่านใหม่</h1>
+                        <p class="tagline">กรุณากรอกรหัสผ่านใหม่ของคุณ</p>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd;">
+                    </div>
+                    <button id="updatePasswordBtn" class="btn-primary" style="margin-top:1rem; width:100%;">ยืนยัน</button>
+                    <div style="text-align:center; margin-top:1rem;">
+                        <a href="index.html" style="color:#666; font-size:0.9rem;">ยกเลิก</a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Re-attach listener
+        setTimeout(() => {
+            const btn = document.getElementById('updatePasswordBtn');
+            if (btn) {
+                btn.onclick = async () => {
+                    const newPwd = document.getElementById('newPassword').value;
+                    if (!newPwd) return alert('กรุณากรอกรหัสผ่าน');
+
+                    const btn = document.getElementById('updatePasswordBtn');
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังเปลี่ยน...';
+                    btn.disabled = true;
+
+                    const { error } = await _supabase.auth.updateUser({ password: newPwd });
+
+                    if (error) {
+                        alert('เกิดข้อผิดพลาด: ' + error.message);
+                        btn.innerHTML = 'ยืนยัน';
+                        btn.disabled = false;
+                    } else {
+                        alert('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่ด้วยรหัสผ่านใหม่');
+                        window.location.href = 'index.html';
+                    }
+                };
+            }
+        }, 100);
+    }
+
     // --- Auto-Login Check (for Email Redirect) ---
     checkSession();
 
     async function checkSession() {
         if (!_supabase) return;
 
-        // 1. Check for URL Errors (e.g. Link Expired from Supabase)
-        // Supabase returns errors in the hash fragment: #error=access_denied&error_code=403...
+        // 0. PRIORITY CHECK: Password Recovery
+        // Check if URL contains recovery token or identifier
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
+        if (params.get('type') === 'recovery' || params.get('reset') === 'true') {
+            console.log("Recovery flow detected from URL");
+            // Stop auto-redirect logic and let onAuthStateChange handle it, 
+            // OR handle it explicitly here if onAuthStateChange is too slow.
+
+            // Let's handle it explicitly to be safe:
+            showNotification('กรุณาตั้งรหัสผ่านใหม่', 'info');
+            renderResetPasswordUI();
+            return;
+        }
+
+        // 1. Check for URL Errors (e.g. Link Expired from Supabase)
+        // Supabase returns errors in the hash fragment: #error=access_denied&error_code=403...
+        // const hash = window.location.hash.substring(1); // Already got hash above
         const errorDesc = params.get('error_description');
 
         if (errorDesc) {
