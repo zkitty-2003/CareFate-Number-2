@@ -131,21 +131,29 @@
                         .eq('id', user.id)
                         .single();
 
-                    if (profile) {
-                        theme = profile.theme || 'working';
-                        username = profile.username || 'User';
-                        avatarUrl = profile.avatar_url;
+                    // Logic to determine Theme, Username, Features, Avatar
+                    // Priority: Profile Table > User Metadata > Default
 
-                        const rawFeatures = profile.features;
-                        if (Array.isArray(rawFeatures)) features = rawFeatures;
-                        else if (typeof rawFeatures === 'string') {
-                            try { features = JSON.parse(rawFeatures); } catch (e) { features = []; }
-                        }
-                    } else {
-                        // Fallback to Metadata if no profile row exists
-                        theme = user.user_metadata.theme || 'working';
-                        username = user.user_metadata.full_name || 'User';
-                        features = user.user_metadata.features || [];
+                    // 1. Theme
+                    if (profile && profile.theme) theme = profile.theme;
+                    else if (user.user_metadata.theme) theme = user.user_metadata.theme;
+
+                    // 2. Username (Fix: Check metadata.username NOT full_name)
+                    if (profile && profile.username) username = profile.username;
+                    else if (user.user_metadata.username) username = user.user_metadata.username;
+                    else if (user.user_metadata.full_name) username = user.user_metadata.full_name;
+
+                    // 3. Avatar
+                    if (profile && profile.avatar_url) avatarUrl = profile.avatar_url;
+
+                    // 4. Features
+                    let rawFeatures = [];
+                    if (profile && profile.features) rawFeatures = profile.features;
+                    else if (user.user_metadata.features) rawFeatures = user.user_metadata.features;
+
+                    if (Array.isArray(rawFeatures)) features = rawFeatures;
+                    else if (typeof rawFeatures === 'string') {
+                        try { features = JSON.parse(rawFeatures); } catch (e) { features = []; }
                     }
 
                     // Render Avatar (Priority: Supabase > LocalStorage > Default)
