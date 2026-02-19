@@ -398,46 +398,71 @@ async function initializeFeaturePage() {
     // Selected Set
     const selectedFeatures = new Set();
 
-    // Load existing features if available
-    let existingFeatures = [];
-    if (user.user_metadata?.features) {
-        existingFeatures = user.user_metadata.features;
+    // Load existing features
+    const savedFeatureSet = new Set();
+    const metadataFeatures = user.user_metadata?.features;
+
+    // 1. From User Metadata
+    if (Array.isArray(metadataFeatures)) {
+        metadataFeatures.forEach(f => savedFeatureSet.add(f));
     }
 
-    // Check profile table too (Best effort)
+    // 2. From Profile Table
     try {
         const { data: profile } = await _supabase
             .from('profiles')
-            .select('features')
+            .select('*')
             .eq('id', user.id)
             .single();
 
         if (profile && profile.features) {
             let parsed = profile.features;
+            // Handle various formats (JSON, Postgres Array String, etc.)
             if (typeof parsed === 'string') {
-                try { parsed = JSON.parse(parsed); }
-                catch (e) { parsed = parsed.replace(/[{}"']/g, '').split(','); }
+                try {
+                    parsed = JSON.parse(parsed);
+                } catch (e) {
+                    // Clean curly braces, quotes, then split
+                    parsed = parsed.replace(/[{}"']/g, '').split(',');
+                }
             }
-            if (Array.isArray(parsed)) existingFeatures = parsed;
+
+            if (Array.isArray(parsed)) {
+                parsed.forEach(f => {
+                    if (typeof f === 'string') savedFeatureSet.add(f.trim());
+                    else savedFeatureSet.add(f);
+                });
+            }
         }
     } catch (e) {
-        // Ignore fetch error, start fresh or use metadata
+        console.warn("Profile fetch warning:", e);
     }
 
-    if (Array.isArray(existingFeatures)) {
-        existingFeatures.forEach(f => selectedFeatures.add(f));
-    }
+    // Decision Logic: Use saved features if available OR if setup was marked complete
+    const setupCompleted = user.user_metadata?.setup_completed === true;
+    const hasSavedData = savedFeatureSet.size > 0;
+    const useSaved = setupCompleted || hasSavedData;
 
-    // Render
+    // Apply Logic
     features.forEach(feat => {
         const isRecommended = feat.recommend(age);
 
-        // Auto-select recommended ones initially?
-        // Let's auto-select recommended ones for convenience
-        if (isRecommended) selectedFeatures.add(feat.id);
+        if (useSaved) {
+            // Restore user choice
+            if (savedFeatureSet.has(feat.id)) {
+                selectedFeatures.add(feat.id);
+            }
+        } else {
+            // Default for new users
+            if (isRecommended) {
+                selectedFeatures.add(feat.id);
+            }
+        }
+
+        const isSelected = selectedFeatures.has(feat.id);
 
         const card = document.createElement('div');
-        card.className = `feature-card ${isRecommended ? 'selected' : ''}`;
+        card.className = `feature-card ${isSelected ? 'selected' : ''}`;
         card.onclick = () => toggleFeature(card, feat.id);
 
         card.innerHTML = `

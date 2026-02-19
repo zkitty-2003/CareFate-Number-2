@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         .type-grid {
@@ -82,6 +82,187 @@
             transform: scale(1.2);
             border-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* =========================================
+           THEME 1: YOUTH — Soft, Rounded, Pastel
+           ========================================== */
+        body.theme-youth .type-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #fde68a;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1);
+        }
+
+        body.theme-youth .type-card.selected {
+            background: linear-gradient(135deg, #fbbf24, #f472b6);
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+        }
+
+        body.theme-youth .poop-icon {
+            color: #d97706;
+        }
+
+        body.theme-youth .type-card.selected .poop-icon {
+            color: white !important;
+        }
+
+        body.theme-youth .color-opt {
+            border: 3px solid #fde68a;
+        }
+
+        body.theme-youth .color-opt.selected {
+            border-color: #f472b6;
+            box-shadow: 0 0 12px rgba(244, 114, 182, 0.4);
+        }
+
+        body.theme-youth .input-label {
+            color: #92400e;
+        }
+
+        body.theme-youth .input-group {
+            border: 2px solid #fde68a !important;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        body.theme-youth .btn-primary {
+            background: linear-gradient(135deg, #fbbf24, #f472b6);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+        }
+
+        /* =========================================
+           THEME 2: WORKING — Minimal, Professional
+           ========================================== */
+        body.theme-working .type-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+
+        body.theme-working .type-card:hover {
+            background: #f9fafb;
+        }
+
+        body.theme-working .type-card.selected {
+            background: #6366f1;
+            border-color: #6366f1;
+            box-shadow: none;
+            transform: none;
+        }
+
+        body.theme-working .poop-icon {
+            color: #6b7280;
+        }
+
+        body.theme-working .color-opt {
+            border: 2px solid #d1d5db;
+        }
+
+        body.theme-working .color-opt.selected {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            transform: scale(1.15);
+        }
+
+        body.theme-working .input-label {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        body.theme-working .input-group {
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        body.theme-working .btn-primary {
+            background: #6366f1;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+
+        /* =========================================
+           THEME 3: ELDER — High Contrast, Large, Simple
+           ========================================== */
+        body.theme-elder .type-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        body.theme-elder .type-card {
+            background: #ffffff;
+            border: 2px solid #059669;
+            border-radius: 12px;
+            padding: 1.3rem;
+        }
+
+        body.theme-elder .type-card.selected {
+            background: #059669;
+            border-color: #059669;
+            transform: none;
+        }
+
+        body.theme-elder .poop-icon {
+            font-size: 2.5rem;
+            color: #059669;
+        }
+
+        body.theme-elder .type-card.selected .poop-icon {
+            color: white !important;
+        }
+
+        body.theme-elder .type-card div {
+            font-size: 1rem !important;
+            font-weight: 600;
+        }
+
+        body.theme-elder .color-opt {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #059669;
+        }
+
+        body.theme-elder .color-opt.selected {
+            border-color: #000;
+            border-width: 4px;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.3);
+        }
+
+        body.theme-elder .input-label {
+            font-size: 1.3rem !important;
+            font-weight: 700;
+            color: #000;
+        }
+
+        body.theme-elder .input-group {
+            border: 2px solid #059669 !important;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        body.theme-elder .input-group textarea {
+            font-size: 1.1rem !important;
+            color: #000 !important;
+        }
+
+        body.theme-elder .btn-primary {
+            font-size: 1.2rem;
+            padding: 1.2rem;
+            background: #059669;
+            border: 2px solid #047857;
+            border-radius: 12px;
+        }
+
+        body.theme-elder h3 {
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
         }
     </style>
 </head>

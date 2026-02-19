@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 </head>
@@ -36,8 +36,20 @@
                     <h1>สวัสดี, <span id="usernameDisplay">User</span></h1>
                     <p id="dateDisplay">วันจันทร์ที่ 1 มกราคม</p>
                 </div>
-                <div class="profile-pic" onclick="location.href='settings.html'">
-                    <i class="fa-solid fa-user"></i>
+
+                <div style="display:flex; align-items:center; gap:0.8rem;">
+                    <!-- Notification Icon -->
+                    <div onclick="location.href='notification-history.html'"
+                        style="position: relative; cursor: pointer; background:var(--card-bg); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--card-border); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <i class="fa-solid fa-bell" style="font-size: 1.2rem; color: var(--text-color);"></i>
+                        <div id="notif-badge"
+                            style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; display: none;">
+                        </div>
+                    </div>
+
+                    <div class="profile-pic" onclick="location.href='settings.html'">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
                 </div>
             </div>
 
@@ -53,10 +65,8 @@
                         <h3 style="color: white; font-size: 1rem; margin: 0 0 0.4rem 0; font-weight: 600;">
                             ดวงสุขภาพวันนี้
                         </h3>
-                        <p style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">
-                            "สีมงคลคือ<span style="color:#f472b6; font-weight:600;">สีชมพู</span>..
-                            วันนี้อากาศเปลี่ยนแปลง
-                            ดูแลสุขภาพคอและจิบน้ำอุ่นบ่อยๆ นะคะ"
+                        <p id="horoscopeText" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">
+                            "กำลังโหลดดวงสุขภาพของคุณ..."
                         </p>
                     </div>
                 </div>
@@ -80,122 +90,104 @@
             <div class="nav-item active" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i>
             </div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i></div>
             <div class="nav-item"><i class="fa-solid fa-gear" onclick="location.href='settings.html'"></i></div>
         </div>
     </div>
 
     <script>
-        // Inline JS for Dashboard Logic
         const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
         let _supabase;
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                const { data: { session } } = await _supabase.auth.getSession();
+                // Update Date
+                const dateStr = new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('dateDisplay').textContent = dateStr;
 
-                if (!session) {
-                    window.location.href = 'index.html'; // Redirect if not logged in
-                    return;
-                }
+                // Check Supabase
+                if (window.supabase) {
+                    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    const { data: { session } } = await _supabase.auth.getSession();
 
-                const user = session.user;
-                // console.log("Dashboard User:", user); 
-
-                // Check Local Avatar Fallback (Immediate)
-                const localAvatar = localStorage.getItem(`avatar_${user.id}`);
-                if (localAvatar) {
-                    const picContainer = document.querySelector('.profile-pic');
-                    if (picContainer) {
-                        picContainer.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                    if (!session) {
+                        window.location.href = 'index.html';
+                        return;
                     }
-                }
 
-                // Fetch Profile for Theme & Features
-                const { data: profile } = await _supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+                    const user = session.user;
+                    const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
 
-                if (profile) {
-                    // Fallback to metadata if profile columns are empty (Robustness)
-                    const theme = profile.theme || user.user_metadata.theme || 'working';
-
-                    // Robust parsing for features (handling array or string representation)
+                    // Defaults
+                    let theme = 'working';
+                    let username = 'User';
                     let features = [];
-                    const rawFeatures = profile.features || user.user_metadata.features;
 
-                    if (Array.isArray(rawFeatures)) {
-                        features = rawFeatures;
-                    } else if (typeof rawFeatures === 'string') {
-                        try {
-                            // Try JSON parse if it's a JSON string
-                            features = JSON.parse(rawFeatures);
-                        } catch (e) {
-                            // If it's a postgres array string like {a,b,c}
-                            features = rawFeatures.replace(/[{}"']/g, '').split(',');
+                    if (profile) {
+                        theme = profile.theme || user.user_metadata.theme || 'working';
+                        username = profile.username || user.user_metadata.full_name || 'User';
+
+                        const rawFeatures = profile.features || user.user_metadata.features;
+                        if (Array.isArray(rawFeatures)) features = rawFeatures;
+                        else if (typeof rawFeatures === 'string') {
+                            try { features = JSON.parse(rawFeatures); } catch (e) { features = rawFeatures.replace(/[{}"']/g, '').split(','); }
+                        }
+
+                        // Load avatar: Supabase URL first, then localStorage fallback
+                        const avatarUrl = profile.avatar_url;
+                        const localAvatar = localStorage.getItem(`avatar_${user.id}`);
+                        const picSrc = (avatarUrl && avatarUrl.startsWith('http')) ? avatarUrl : localAvatar;
+                        if (picSrc) {
+                            const pic = document.querySelector('.profile-pic');
+                            if (pic) pic.innerHTML = `<img src="${picSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                        }
+                    } else {
+                        theme = user.user_metadata.theme || 'working';
+                        username = user.user_metadata.full_name || 'User';
+                        features = user.user_metadata.features || [];
+
+                        // Still check localStorage for avatar
+                        const localAvatar = localStorage.getItem(`avatar_${user.id}`);
+                        if (localAvatar) {
+                            const pic = document.querySelector('.profile-pic');
+                            if (pic) pic.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
                         }
                     }
-
-                    const username = profile.username || user.user_metadata.username;
 
                     applyTheme(theme);
-                    renderFeatures(features);
                     updateUserInfo(username);
+                    renderFeatures(features);
 
-                    // Supabase Avatar Logic (Wins over local if exists)
-                    if (profile.avatar_url) {
-                        const picContainer = document.querySelector('.profile-pic');
-                        if (picContainer) {
-                            picContainer.innerHTML = `<img src="${profile.avatar_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                        }
-                    }
-                } else {
-                    // Fallback fully to metadata
-                    applyTheme(user.user_metadata.theme);
-                    renderFeatures(user.user_metadata.features || []);
-                    updateUserInfo(user.user_metadata.username);
+                    // Load Horoscope
+                    loadHoroscope(theme);
                 }
-
-                // Show Dashboard
-                document.getElementById('loadingOverlay').style.display = 'none';
-                const dash = document.getElementById('dashboardContent');
-                dash.style.display = 'flex';
-                // Trigger reflow
-                dash.offsetHeight;
-                dash.style.opacity = '1';
-
             } catch (e) {
-                console.error("Dashboard Load Error:", e);
-                alert("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+                console.error("Init Error", e);
+                // alert("Error loading dashboard");
+            } finally {
+                // ALWAYS Hide Loader
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    const dash = document.getElementById('dashboardContent');
+                    dash.style.display = 'flex';
+                    dash.offsetHeight; // trigger reflow
+                    dash.style.opacity = '1';
+                }, 500);
             }
         });
 
         function updateUserInfo(name) {
-            document.getElementById('usernameDisplay').textContent = name || 'ผู้ใช้งาน';
-
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const today = new Date();
-            document.getElementById('dateDisplay').textContent = today.toLocaleDateString('th-TH', options);
+            document.getElementById('usernameDisplay').textContent = name;
         }
 
         function applyTheme(themeId) {
-            const body = document.body;
-            // Remove old theme classes
-            body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
-
+            document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
             if (themeId) {
-                body.classList.add(`theme-${themeId}`);
-
-                // Dynamic colors based on theme
-                let primaryColor;
-                if (themeId === 'youth') primaryColor = '#ec4899'; // Pink
-                else if (themeId === 'elder') primaryColor = '#10b981'; // Green
-                else primaryColor = '#6366f1'; // Blue/Purple (Default)
-
+                document.body.classList.add(`theme-${themeId}`);
+                let primaryColor = '#6366f1';
+                if (themeId === 'youth') primaryColor = '#ec4899';
+                if (themeId === 'elder') primaryColor = '#10b981';
                 document.documentElement.style.setProperty('--primary-color', primaryColor);
             }
         }
@@ -204,123 +196,77 @@
             const grid = document.getElementById('dashboardFeatures');
             grid.innerHTML = '';
 
-            if (!featureList || featureList.length === 0) {
-                grid.innerHTML = '<p style="grid-column: span 2; text-align:center; color:#94a3b8;">ยังไม่ได้เลือกฟีเจอร์</p>';
-                return;
-            }
-
-            // Feature Metadata map (Duplicate from register.js but simplified)
             const featureMap = {
-                'medication': { title: 'ทานยา', icon: 'fa-pills' },
-                'excretion': { title: 'การขับถ่าย', icon: 'fa-toilet' },
-                'sleep': { title: 'การนอน', icon: 'fa-bed' },
-                'goals': { title: 'เป้าหมาย', icon: 'fa-bullseye' },
-                'exercise': { title: 'ออกกำลังกาย', icon: 'fa-dumbbell' },
-                'period': { title: 'รอบเดือน', icon: 'fa-droplet' },
-                'vehicle': { title: 'ยานพาหนะ', icon: 'fa-motorcycle' },
-                'diet': { title: 'อาหาร', icon: 'fa-utensils' },
-                'appointment': { title: 'นัดหมอ', icon: 'fa-user-doctor' }
+                'medication': { title: 'ทานยา', icon: 'fa-pills', link: 'feature-medication.html' },
+                'excretion': { title: 'การขับถ่าย', icon: 'fa-toilet', link: 'feature-excretion.html' },
+                'sleep': { title: 'การนอน', icon: 'fa-bed', link: 'feature-sleep.html' },
+                'goals': { title: 'เป้าหมาย', icon: 'fa-bullseye', link: 'feature-goals.html' },
+                'exercise': { title: 'ออกกำลังกาย', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
+                'period': { title: 'รอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
+                'vehicle': { title: 'ยานพาหนะ', icon: 'fa-motorcycle', link: 'feature-vehicle.html' },
+                'diet': { title: 'อาหาร', icon: 'fa-utensils', link: 'feature-food.html' },
+                'appointment': { title: 'นัดหมอ', icon: 'fa-user-doctor', link: 'feature-appointment.html' }
             };
 
-            featureList.forEach(fid => {
-                const meta = featureMap[fid];
-                if (!meta) return;
-
-                const item = document.createElement('div');
-                item.className = 'feature-item';
-                if (meta.title === 'การขับถ่าย') {
-                    item.onclick = () => location.href = 'feature-excretion.html';
-                } else if (meta.title === 'การนอน') {
-                    item.onclick = () => location.href = 'feature-sleep.html';
-                } else if (meta.title === 'ออกกำลังกาย') {
-                    item.onclick = () => location.href = 'feature-exercise.html';
-                } else if (meta.title === 'ทานยา') {
-                    item.onclick = () => location.href = 'feature-medication.html';
-                } else if (meta.title === 'เป้าหมาย') {
-                    item.onclick = () => location.href = 'feature-goals.html';
-                } else {
-                    item.onclick = () => alert(`เข้าสู่เมนู: ${meta.title} (Coming Soon)`);
-                }
-                item.innerHTML = `
-                    <i class="fa-solid ${meta.icon}"></i>
-                    <span>${meta.title}</span>
-                `;
-                grid.appendChild(item);
-            });
-
+            if (!featureList || featureList.length === 0) {
+                grid.innerHTML = '<p style="grid-column: span 2; text-align:center; opacity:0.6;">เลือกฟีเจอร์ที่ต้องการใช้งานได้ที่ปุ่ม "แก้ไข"</p>';
+            } else {
+                featureList.forEach(fid => {
+                    const meta = featureMap[fid];
+                    if (!meta) return;
+                    const item = document.createElement('div');
+                    item.className = 'feature-item';
+                    item.onclick = () => location.href = meta.link;
+                    item.innerHTML = `<i class="fa-solid ${meta.icon}"></i><span>${meta.title}</span>`;
+                    grid.appendChild(item);
+                });
+            }
             // Add "More" button always
             const more = document.createElement('div');
             more.className = 'feature-item';
             more.style.opacity = '0.6';
             more.onclick = () => window.location.href = 'feature-selection.html';
-            more.innerHTML = `
-                <i class="fa-solid fa-plus"></i>
-                <span>เพิ่ม</span>
-            `;
+            more.innerHTML = `<i class="fa-solid fa-plus"></i><span>เพิ่ม</span>`;
             grid.appendChild(more);
         }
 
-        async function logout() {
-            if (confirm('ต้องการออกจากระบบ?')) {
-                await _supabase.auth.signOut();
-                window.location.href = 'index.html';
-            }
-        }
+        async function loadHoroscope(theme) {
+            const horoscopeText = document.getElementById('horoscopeText');
+            // Check cache based on date to save API costs
+            const todayKey = 'horoscope_' + new Date().toDateString();
+            const cached = localStorage.getItem(todayKey);
 
-        // --- Daily Fate Logic ---
-        function generateDailyFate() {
-            const todayStr = new Date().toDateString(); // Unique key per day
-            const savedFate = localStorage.getItem('carefate_daily_' + todayStr);
-
-            if (savedFate) {
-                renderFate(JSON.parse(savedFate));
+            if (cached) {
+                horoscopeText.innerHTML = `"${cached}"`;
                 return;
             }
 
-            // Data Pools
-            const colors = [
-                { name: 'สีชมพู', hex: '#f472b6' },
-                { name: 'สีเขียวเหนี่ยวทรัพย์', hex: '#34d399' },
-                { name: 'สีฟ้าสดใส', hex: '#60a5fa' },
-                { name: 'สีส้ม', hex: '#fb923c' },
-                { name: 'สีม่วง', hex: '#a78bfa' }
-            ];
+            horoscopeText.innerHTML = '<span style="opacity:0.7"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังถาม AI...</span>';
 
-            const tips = [
-                "วันนี้อากาศเปลี่ยนแปลง ดูแลสุขภาพคอและจิบน้ำอุ่นบ่อยๆ นะคะ",
-                "ดวงสุขภาพดีมาก! แต่อย่าลืมยืดเส้นยืดสายระหว่างวันด้วยนะ",
-                "ระวังเรื่องการทานของหวานวันนี้ อาจทำให้อ่อนเพลียได้ง่าย",
-                "วันนี้เหมาะกับการเริ่มต้นออกกำลังกายเบาๆ ลองเดินเล่นสัก 15 นาทีดูสิ",
-                "ความเครียดอาจถามหา ลองหาเวลาพักสายตาสักนิด ชีวิตจะสดใสขึ้น"
-            ];
+            try {
+                const res = await fetch('http://localhost:8000/api/horoscope', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme: theme })
+                });
+                const data = await res.json();
 
-            // Randomize
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            const randomTip = tips[Math.floor(Math.random() * tips.length)];
-
-            const fateData = {
-                colorName: randomColor.name,
-                colorHex: randomColor.hex,
-                tip: randomTip
-            };
-
-            // Save and Render
-            localStorage.setItem('carefate_daily_' + todayStr, JSON.stringify(fateData));
-            renderFate(fateData);
+                if (data.status === 'success') {
+                    // Success!
+                    horoscopeText.innerHTML = `"${data.horoscope}"`;
+                    localStorage.setItem(todayKey, data.horoscope);
+                } else {
+                    // Show API Error from Server
+                    horoscopeText.innerHTML = `<span style="color:#ef4444; font-size:0.8rem;">Error: ${data.message}</span>`;
+                }
+            } catch (e) {
+                // Show Network Error
+                console.warn("Horoscope API Failed", e);
+                horoscopeText.innerHTML = `<span style="color:#ef4444; font-size:0.8rem;">Connection Failed: ${e.message}</span>`;
+            }
         }
-
-        function renderFate(data) {
-            const container = document.getElementById('dailyFateText');
-            if (!container) return;
-
-            container.innerHTML = `
-            "สีมงคลคือ<span style="color:${data.colorHex}; font - weight: 600; ">${data.colorName}</span>.. ${data.tip}"
-            `;
-        }
-
-        // Call logic
-        generateDailyFate();
     </script>
+    <script src="notifications.js"></script>
 </body>
 
 </html>

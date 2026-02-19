@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - ประวัติการแจ้งเตือน</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=3">
+    <style>
+        .notif-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .notif-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notif-content {
+            flex: 1;
+        }
+
+        .notif-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .clear-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="theme-working">
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="history.back()"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                ประวัติการแจ้งเตือน
+            </h1>
+            <button onclick="clearHistory()" class="clear-btn">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="scrollable-content" style="flex:1; overflow-y:auto; padding: 1rem 1.5rem;">
+            <div id="notifList">
+                <!-- JS Populated -->
+            </div>
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.supabase) {
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+
+            // Sync Theme from Supabase
+            try {
+                if (_supabase) {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    if (user && user.user_metadata && user.user_metadata.theme) {
+                        applyTheme(user.user_metadata.theme);
+                    }
+                }
+            } catch (e) { }
+
+            // Also check local storage as fallback
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) applyTheme(savedTheme);
+
+            loadHistory();
+        });
+
+        function applyTheme(themeName) {
+            document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+            document.body.classList.add(`theme-${themeName}`);
+        }
+
+        function loadHistory() {
+            const list = document.getElementById('notifList');
+            const history = JSON.parse(localStorage.getItem('notification_history') || '[]');
+
+            if (history.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align:center; padding:3rem 1rem; opacity:0.8; color:var(--text-muted); display:flex; flex-direction:column; align-items:center;">
+                        <div style="width:80px; height:80px; background:var(--card-bg); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1.5rem; box-shadow:0 10px 30px rgba(0,0,0,0.1);">
+                            <i class="fa-regular fa-bell-slash" style="font-size:2.5rem; opacity:0.7;"></i>
+                        </div>
+                        <h3 style="font-size:1.1rem; margin-bottom:0.5rem;">ยังไม่มีประวัติการแจ้งเตือน</h3>
+                        <p style="font-size:0.9rem; opacity:0.7;">ระบบเพิ่งเริ่มบันทึกประวัติ<br>การแจ้งเตือนก่อนหน้านี้จะไม่แสดงครับ</p>
+                        
+                        <button onclick="testNotification()" style="margin-top:2rem; background:var(--bg-color); border:1px solid var(--text-color); color:var(--text-color); padding:0.8rem 1.5rem; border-radius:30px; cursor:pointer; font-family:var(--font-family);">
+                            <i class="fa-solid fa-volume-high"></i> ทดสอบแจ้งเตือน
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            history.forEach(item => {
+                const dateObj = new Date(item.time);
+                const dateStr = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                const timeStr = dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <div class="notif-item">
+                        <div class="notif-icon">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="notif-content">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="font-weight:600; color:var(--text-color); margin-bottom:0.2rem; font-size:1rem;">${item.title}</div>
+                                <div class="notif-time" style="white-space:nowrap; margin-left:10px;">${dateStr} ${timeStr}</div>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--text-color); opacity:0.8; line-height:1.4;">${item.body}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function clearHistory() {
+            if (confirm('ต้องการลบประวัติทั้งหมด?')) {
+                localStorage.removeItem('notification_history');
+                loadHistory();
+            }
+        }
+
+        // Helper to trigger a test notification via notifications.js logic (if loaded) 
+        // OR just simulate saving one here for immediate feedback since notifications.js isn't linked in this file separately usually.
+        function testNotification() {
+            const mockData = {
+                title: 'ทดสอบแจ้งเตือน 🔔',
+                body: 'นี่คือตัวอย่างการแจ้งเตือนที่จะถูกบันทึกในหน้านี้ครับ',
+                time: new Date().toISOString(),
+                read: false
+            };
+
+            const history = JSON.parse(localStorage.getItem('notification_history') || '[]');
+            history.unshift(mockData);
+            localStorage.setItem('notification_history', JSON.stringify(history));
+
+            loadHistory();
+        }
+    </script>
+</body>
+
+</html>

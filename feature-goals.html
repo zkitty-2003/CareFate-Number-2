@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         /* Goals Theme - Purple/Indigo */
@@ -169,6 +169,74 @@
             border-color: var(--goal-primary);
         }
 
+        /* Goal Actions (Edit/Delete) */
+        .goal-actions {
+            position: relative;
+        }
+
+        .goal-actions-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.3rem 0.5rem;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .goal-actions-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .goal-actions-menu {
+            display: none;
+            position: absolute;
+            top: -0.5rem;
+            right: calc(100% + 0.5rem);
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0.4rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+            z-index: 200;
+            min-width: 130px;
+            white-space: nowrap;
+        }
+
+        .goal-actions-menu.show {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        .goal-action-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            border: none;
+            background: none;
+            width: 100%;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-color, #333);
+            font-family: 'Outfit', sans-serif;
+            transition: background 0.15s;
+        }
+
+        .goal-action-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .goal-action-item.delete {
+            color: #ef4444;
+        }
+
+        .goal-action-item.delete:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
         /* FAB */
         .fab-add {
             position: fixed;
@@ -192,6 +260,237 @@
         .fab-add:hover {
             transform: scale(1.1);
         }
+
+        /* --- THEME SPECIFIC UX/UI --- */
+
+        /* 1. YOUTH: Playful, Gradient Borders, Bouncy */
+        body.theme-youth .app-container {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body.theme-youth .goal-card {
+            border: 2px solid transparent;
+            background: linear-gradient(rgba(255, 240, 245, 0.95), rgba(245, 230, 250, 0.95)) padding-box,
+                linear-gradient(45deg, #f472b6, #a78bfa) border-box;
+            box-shadow: 0 8px 20px -5px rgba(167, 139, 250, 0.3);
+            border-radius: 24px;
+        }
+
+        body.theme-youth .goal-title {
+            color: #1e1b4b;
+        }
+
+        body.theme-youth .goal-detail {
+            color: #6b7280;
+        }
+
+        body.theme-youth .goal-status-btn {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid #e5e7eb;
+            color: #374151;
+        }
+
+        body.theme-youth .add-form {
+            border-radius: 24px;
+            border: 2px solid #f472b6;
+            box-shadow: 0 10px 30px rgba(244, 114, 182, 0.2);
+        }
+
+        body.theme-youth .form-input,
+        body.theme-youth .form-select {
+            border-radius: 20px;
+            border: 2px solid #e2e8f0;
+            padding: 1.1rem;
+        }
+
+        body.theme-youth .form-input:focus {
+            border-color: #f472b6;
+            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.2);
+        }
+
+        body.theme-youth .type-btn {
+            border-radius: 16px;
+            font-weight: 500;
+        }
+
+        body.theme-youth .type-btn.active {
+            background: linear-gradient(135deg, #f472b6, #a78bfa);
+            border: none;
+        }
+
+        body.theme-youth .fab-add {
+            background: linear-gradient(135deg, #f472b6, #a78bfa);
+            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.5);
+            border-radius: 16px;
+            /* Squircle */
+        }
+
+
+        /* 2. WORKING: Minimal, Clean, Professional */
+        body.theme-working .goal-card {
+            border: 1px solid #334155;
+            border-left: 4px solid var(--goal-primary);
+            border-radius: 8px;
+            /* Sharper corners */
+            background: rgba(30, 41, 59, 0.8);
+            /* Slate tone */
+            box-shadow: none;
+        }
+
+        body.theme-working .add-form {
+            background: #1e293b;
+            /* Dark slate */
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        body.theme-working .form-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        body.theme-working .form-input,
+        body.theme-working .form-select {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #fff;
+            border-radius: 6px;
+            /* Square */
+        }
+
+        body.theme-working .form-input:focus {
+            border-color: #6366f1;
+            background: #0f172a;
+        }
+
+        body.theme-working .add-form h3 {
+            color: #fff !important;
+            border-color: #334155 !important;
+        }
+
+        body.theme-working .type-btn {
+            background: #0f172a;
+            border-color: #334155;
+            color: #94a3b8;
+            border-radius: 6px;
+        }
+
+        body.theme-working .type-btn.active {
+            background: #6366f1;
+            color: white;
+            border-color: #6366f1;
+        }
+
+        body.theme-working .fab-add {
+            border-radius: 8px;
+            /* Square-ish */
+            background: #475569;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+
+        /* 3. ELDER: High Contrast, Large Text, Simple */
+        body.theme-elder {
+            --card-bg: #fff;
+            --text-color: #000;
+            --text-muted: #333;
+        }
+
+        body.theme-elder .background-shapes {
+            display: none;
+        }
+
+        body.theme-elder .app-container {
+            background: #f8fafc;
+        }
+
+        body.theme-elder .add-form {
+            border: 2px solid #000;
+            box-shadow: none;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        body.theme-elder .form-label {
+            font-size: 1.2rem;
+            color: #000;
+            font-weight: 700;
+        }
+
+        body.theme-elder .form-input,
+        body.theme-elder .form-select {
+            font-size: 1.2rem;
+            padding: 1.2rem;
+            border: 2px solid #000;
+            background: #fff;
+            color: #000;
+            border-radius: 12px;
+        }
+
+        body.theme-elder .type-btn {
+            font-size: 1.1rem;
+            border: 2px solid #000;
+            color: #000;
+            font-weight: 600;
+            background: #fff;
+            padding: 1rem;
+        }
+
+        body.theme-elder .type-btn.active {
+            background: #059669;
+            color: #fff;
+            border-color: #059669;
+        }
+
+        body.theme-elder h1 {
+            font-size: 1.5rem !important;
+            color: #000 !important;
+        }
+
+        body.theme-elder .goal-card {
+            background: #ffffff;
+            border: 2px solid #000;
+            border-radius: 12px;
+            box-shadow: none;
+            padding: 1.5rem;
+        }
+
+        body.theme-elder .goal-title {
+            font-size: 1.4rem;
+            color: #000;
+            margin-bottom: 0.5rem;
+        }
+
+        body.theme-elder .goal-detail {
+            font-size: 1.1rem;
+            color: #444;
+        }
+
+        body.theme-elder .goal-status-btn {
+            padding: 1rem;
+            font-size: 1.2rem;
+            border: 2px solid #666;
+            color: #000;
+            background: #f1f5f9;
+        }
+
+        body.theme-elder .goal-status-btn.done-btn {
+            background: #dcfce7;
+            border-color: #166534;
+            color: #166534;
+        }
+
+        body.theme-elder .fab-add {
+            width: 70px;
+            height: 70px;
+            bottom: 100px;
+            font-size: 2rem;
+            background: #2563eb;
+            border: 2px solid #ffffff;
+        }
     </style>
 </head>
 
@@ -212,7 +511,10 @@
                 style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
                 ตั้งเป้าหมาย
             </h1>
-            <div style="width:35px;"></div>
+            <button onclick="requestNotificationPermission()"
+                style="background:white; border:none; border-radius:50%; width:35px; height:35px; box-shadow:0 2px 5px rgba(0,0,0,0.1); color:var(--goal-primary); cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-bell"></i>
+            </button>
         </div>
 
         <div class="scrollable-content"
@@ -229,7 +531,7 @@
 
             <!-- Add Form Overlay (Hidden default) -->
             <div id="addGoalForm" class="add-form" style="display:none; animation: fadeIn 0.3s; margin-bottom: 2rem;">
-                <h3
+                <h3 id="formTitle"
                     style="color:#0f172a; font-size:1.2rem; margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.8rem;">
                     เป้าหมายใหม่
                 </h3>
@@ -282,6 +584,12 @@
             <i class="fa-solid fa-plus"></i>
         </div>
 
+        <!-- Notification Toggle (Optional) -->
+        <button onclick="requestNotificationPermission()"
+            style="position:fixed; top:20px; right:20px; background:white; border:none; border-radius:50%; width:40px; height:40px; box-shadow:0 4px 10px rgba(0,0,0,0.1); color:var(--goal-primary); cursor:pointer; z-index:999;">
+            <i class="fa-solid fa-bell"></i>
+        </button>
+
         <!-- Bottom Nav -->
         <div class="bottom-nav">
             <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
@@ -327,6 +635,12 @@
                 form.style.display = 'none';
                 list.style.display = 'block';
                 fab.style.display = 'flex';
+                // Reset editing state on cancel
+                editingGoalId = null;
+                document.getElementById('formTitle').textContent = 'เป้าหมายใหม่';
+                document.getElementById('goalName').value = '';
+                document.getElementById('goalValue').value = '';
+                document.getElementById('goalTime').value = '';
             }
         }
 
@@ -384,8 +698,23 @@
                                 ${goal.value} ${unit} • ${goal.time || 'ไม่ระบุเวลา'}
                             </div>
                         </div>
-                        <div class="done-badge">
-                            <i class="fa-solid fa-check"></i> สำเร็จแล้ว
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <div class="done-badge">
+                                <i class="fa-solid fa-check"></i> สำเร็จแล้ว
+                            </div>
+                            <div class="goal-actions">
+                                <button class="goal-actions-btn" onclick="toggleMenu(event, '${goal.id}')">
+                                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                                </button>
+                                <div class="goal-actions-menu" id="menu-${goal.id}">
+                                    <button class="goal-action-item" onclick="editGoal('${goal.id}')">
+                                        <i class="fa-solid fa-pen"></i> แก้ไข
+                                    </button>
+                                    <button class="goal-action-item delete" onclick="deleteGoal('${goal.id}')">
+                                        <i class="fa-solid fa-trash"></i> ลบ
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -404,6 +733,8 @@
             list.innerHTML = html;
         }
 
+        let editingGoalId = null; // Track if we're editing
+
         function saveGoal() {
             const name = document.getElementById('goalName').value;
             const value = document.getElementById('goalValue').value;
@@ -415,18 +746,32 @@
                 return;
             }
 
-            const newGoal = {
-                id: Date.now().toString(),
-                name,
-                type: selectedType,
-                value,
-                time,
-                freq,
-                created_at: new Date().toISOString()
-            };
+            let goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
 
-            const goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
-            goals.push(newGoal);
+            if (editingGoalId) {
+                // Update existing goal
+                goals = goals.map(g => {
+                    if (g.id === editingGoalId) {
+                        return { ...g, name, type: selectedType, value, time, freq };
+                    }
+                    return g;
+                });
+                editingGoalId = null;
+                document.getElementById('formTitle').textContent = 'เป้าหมายใหม่';
+            } else {
+                // Create new goal
+                const newGoal = {
+                    id: Date.now().toString(),
+                    name,
+                    type: selectedType,
+                    value,
+                    time,
+                    freq,
+                    created_at: new Date().toISOString()
+                };
+                goals.push(newGoal);
+            }
+
             localStorage.setItem('goals_schedule', JSON.stringify(goals));
 
             // Reset
@@ -435,6 +780,74 @@
             document.getElementById('goalTime').value = '';
             toggleAddForm();
             loadGoals();
+        }
+
+        // --- Menu Toggle ---
+        function toggleMenu(event, goalId) {
+            event.stopPropagation();
+            // Close all other menus
+            document.querySelectorAll('.goal-actions-menu').forEach(m => m.classList.remove('show'));
+            const menu = document.getElementById(`menu-${goalId}`);
+            menu.classList.toggle('show');
+        }
+
+        // Close menus on outside click
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.goal-actions-menu').forEach(m => m.classList.remove('show'));
+        });
+
+        // --- Delete Goal ---
+        function deleteGoal(goalId) {
+            if (!confirm('ต้องการลบเป้าหมายนี้?')) return;
+
+            let goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
+            goals = goals.filter(g => g.id !== goalId);
+            localStorage.setItem('goals_schedule', JSON.stringify(goals));
+            loadGoals();
+        }
+
+        // --- Edit Goal ---
+        function editGoal(goalId) {
+            const goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
+            const goal = goals.find(g => g.id === goalId);
+            if (!goal) return;
+
+            // Close menu
+            document.querySelectorAll('.goal-actions-menu').forEach(m => m.classList.remove('show'));
+
+            // Set editing state
+            editingGoalId = goalId;
+            document.getElementById('formTitle').textContent = 'แก้ไขเป้าหมาย';
+
+            // Fill form with existing data
+            document.getElementById('goalName').value = goal.name;
+            document.getElementById('goalValue').value = goal.value;
+            document.getElementById('goalTime').value = goal.time || '';
+            document.getElementById('goalFreq').value = goal.freq || 'daily';
+
+            // Set type selection
+            selectedType = goal.type || 'time';
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            const typeButtons = document.querySelectorAll('.type-btn');
+            typeButtons.forEach(b => {
+                const typeMap = { 'เวลา': 'time', 'จำนวนครั้ง': 'count', 'ระยะทาง': 'distance' };
+                if (typeMap[b.textContent] === selectedType) b.classList.add('active');
+            });
+
+            // Update label
+            const label = document.getElementById('valueLabel');
+            if (selectedType === 'time') label.innerText = 'จำนวนเวลา (นาที)';
+            if (selectedType === 'count') label.innerText = 'จำนวนครั้ง';
+            if (selectedType === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
+
+            // Show form
+            const form = document.getElementById('addGoalForm');
+            const list = document.getElementById('goalsList');
+            const fab = document.querySelector('.fab-add');
+            form.style.display = 'block';
+            list.style.display = 'none';
+            fab.style.display = 'none';
+            setTimeout(() => form.scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
         async function markDone(id, name, status) {
@@ -464,6 +877,14 @@
                         created_at: new Date().toISOString()
                     };
 
+                    // Save to Supabase
+                    try {
+                        const { error } = await _supabase
+                            .from('goal_logs')
+                            .insert([logData]);
+                        if (error) console.error('Supabase error:', error);
+                    } catch (err) { console.error(err); }
+
                     // Save to local storage for history.html fallback/demo
                     const histLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
                     histLogs.push(logData);
@@ -472,6 +893,7 @@
             } catch (e) { console.error(e) }
         }
     </script>
+    <script src="notifications.js"></script>
 </body>
 
 </html>

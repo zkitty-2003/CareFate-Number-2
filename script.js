@@ -86,6 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     .eq('id', user.id)
                     .single();
 
+                if (profileError) {
+                    console.warn("Profile query error:", profileError.message);
+                }
+
                 if (profile) {
                     if (profile.theme) hasTheme = true;
                     if (profile.features && Array.isArray(profile.features) && profile.features.length > 0) hasFeatures = true;
@@ -93,6 +97,26 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.warn("Profile check failed", err);
             }
+
+            // Fallback 1: check user_metadata (theme-selection saves here)
+            if (!hasTheme && user.user_metadata?.theme) {
+                hasTheme = true;
+                console.log("Theme found in user_metadata:", user.user_metadata.theme);
+            }
+            if (!hasFeatures && user.user_metadata?.features && Array.isArray(user.user_metadata.features) && user.user_metadata.features.length > 0) {
+                hasFeatures = true;
+                console.log("Features found in user_metadata:", user.user_metadata.features);
+            }
+
+            // Fallback 2: check localStorage
+            if (!hasTheme && localStorage.getItem('selectedTheme')) {
+                hasTheme = true;
+            }
+            if (!hasFeatures && localStorage.getItem('selectedFeatures')) {
+                hasFeatures = true;
+            }
+
+            console.log("hasTheme:", hasTheme, "hasFeatures:", hasFeatures);
 
             // Redirect Logic
             if (!hasTheme) {
@@ -226,6 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.warn("Silent profile check failed", e);
             }
 
+            // Fallback: check user_metadata
+            if (!hasTheme && session.user.user_metadata?.theme) {
+                hasTheme = true;
+            }
+
             if (!hasTheme) {
                 // --- NEW FLOW: Show "Email Verified" UI instead of Redirecting ---
                 // This gives the user the "Press to Confirm" step they wanted.
@@ -257,9 +286,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             } else {
-                const btn = document.querySelector('.btn-primary');
-                if (btn) btn.innerHTML = 'ยินดีต้อนรับกลับ';
+                // User already has a theme — go directly to dashboard
+                window.location.href = 'dashboard.html';
             }
         }
+    }
+
+    // --- Forgot Password Logic ---
+    const forgotPasswordLink = document.querySelector('.forgot-password');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeCallbacks = document.querySelectorAll('.close-modal, .close-modal-btn');
+    const sendResetLinkBtn = document.getElementById('sendResetLinkBtn');
+    const resetEmailInput = document.getElementById('resetEmail');
+
+    // Open Modal
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.classList.add('active');
+        });
+    }
+
+    // Close Modal
+    closeCallbacks.forEach(btn => {
+        btn.addEventListener('click', () => {
+            forgotPasswordModal.classList.remove('active');
+        });
+    });
+
+    // Close on click outside
+    window.addEventListener('click', (e) => {
+        if (e.target === forgotPasswordModal) {
+            forgotPasswordModal.classList.remove('active');
+        }
+    });
+
+    // Send Reset Link
+    if (sendResetLinkBtn) {
+        sendResetLinkBtn.addEventListener('click', async () => {
+            const email = resetEmailInput.value.trim();
+            const btn = sendResetLinkBtn;
+            const originalContent = btn.innerHTML;
+
+            if (!validateEmail(email)) {
+                showNotification('กรุณากรอกอีเมลให้ถูกต้อง', 'error');
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่ง...';
+            btn.disabled = true;
+
+            try {
+                if (!_supabase) throw new Error("Supabase not initialized");
+
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/index.html#reset=true',
+                });
+
+                if (error) throw error;
+
+                showNotification('ส่งลิงก์รีเซ็ตรหัสผ่านไปยังอีเมลแล้ว', 'success');
+                forgotPasswordModal.classList.remove('active');
+                resetEmailInput.value = ''; // Clear input
+
+            } catch (error) {
+                console.error("Reset Password Error:", error);
+                // Rate limit or other errors
+                let msg = 'ไม่สามารถส่งลิงก์ได้ กรุณาลองใหม่อีกครั้ง';
+                if (error.message.includes("Rate limit")) msg = 'กรุณารอสักครู่ก่อนลองใหม่อีกครั้ง';
+
+                showNotification(msg, 'error');
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        });
     }
 });

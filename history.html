@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         .filter-bar {
@@ -86,15 +86,51 @@
         <div style="padding: 0 1.5rem 2rem; flex:1; overflow-y:auto; width:100%;">
 
             <!-- Filters (Categories) -->
-            <div class="filter-bar">
-                <div class="filter-chip active" onclick="setFilter(this, 'all')">ทั้งหมด</div>
-                <div class="filter-chip" onclick="setFilter(this, 'excretion')"><i class="fa-solid fa-toilet"></i>
-                    การขับถ่าย</div>
-                <div class="filter-chip" onclick="setFilter(this, 'medication')"><i class="fa-solid fa-pills"></i> ทานยา
-                </div>
-                <div class="filter-chip" onclick="setFilter(this, 'sleep')"><i class="fa-solid fa-bed"></i> การนอน</div>
-                <div class="filter-chip" onclick="setFilter(this, 'goal')"><i class="fa-solid fa-bullseye"></i> เป้าหมาย
-                </div>
+            <div class="filter-bar" style="overflow:visible; gap:10px; align-items:center;">
+                <span style="font-size:0.9rem; color:var(--text-color); white-space:nowrap;">แสดง:</span>
+
+                <!-- Time Filter -->
+                <select id="timeFilterSelect" onchange="setTimeFilter(this.value)" style="
+                    background: var(--card-bg);
+                    border: 1px solid var(--card-border);
+                    color: var(--text-color);
+                    padding: 0.5rem 1rem;
+                    border-radius: 12px;
+                    font-size: 0.9rem;
+                    width: auto;
+                    min-width: 120px;
+                    outline: none;
+                    cursor: pointer;
+                    font-family: 'Outfit', sans-serif;
+                ">
+                    <option value="all">ทั้งหมด</option>
+                    <option value="week">สัปดาห์นี้</option>
+                    <option value="month">เดือนนี้</option>
+                </select>
+
+                <!-- Category Filter -->
+                <select id="filterSelect" onchange="setFilter(this.value)" style="
+                    background: var(--card-bg);
+                    border: 1px solid var(--card-border);
+                    color: var(--text-color);
+                    padding: 0.5rem 1rem;
+                    border-radius: 12px;
+                    font-size: 0.9rem;
+                    width: 100%;
+                    outline: none;
+                    cursor: pointer;
+                    font-family: 'Outfit', sans-serif;
+                ">
+                    <option value="all">ทุกหมวดหมู่</option>
+                    <option value="excretion">การขับถ่าย</option>
+                    <option value="medication">ทานยา</option>
+                    <option value="sleep">การนอน</option>
+                    <option value="goal">เป้าหมาย</option>
+                    <option value="period">รอบเดือน</option>
+                    <option value="food">มื้ออาหาร</option>
+                    <option value="vehicle">การดูแลรถ</option>
+                    <option value="appointment">นัดหมายแพทย์</option>
+                </select>
             </div>
 
             <!-- List -->
@@ -179,45 +215,208 @@
                     allItems = allItems.concat(exItems);
                 }
 
-                // FETCH SLEEP LOGS (Local Storage)
-                const sleepLogs = JSON.parse(localStorage.getItem('sleep_logs') || '[]');
-                const sleepItems = sleepLogs.map(l => ({
-                    type: 'sleep',
-                    detail: l.detail, // 'good', 'neutral', etc.
-                    note: l.note,     // Duration
-                    created_at: l.created_at,
-                    dream_note: l.dream_note // pass through
-                }));
+                // FETCH SLEEP LOGS (Supabase + Local Fallback)
+                let sleepItems = [];
+                try {
+                    const { data: sData } = await _supabase.from('sleep_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (sData) sleepItems = sData.map(l => ({
+                        type: 'sleep',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        dream_note: l.dream_note
+                    }));
+                } catch (e) { }
 
-                const exLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
-                const exerciseItems = exLogs.map(l => ({
-                    type: 'exercise',
-                    detail: l.detail, // activity type (run, gym)
-                    note: l.note,     // Duration & Kcal
-                    created_at: l.created_at,
-                    calories: l.calories
-                }));
+                if (sleepItems.length === 0) {
+                    const sleepLogs = JSON.parse(localStorage.getItem('sleep_logs') || '[]');
+                    sleepItems = sleepLogs.map(l => ({
+                        type: 'sleep',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        dream_note: l.dream_note
+                    }));
+                }
 
-                // FETCH MEDICATION LOGS (Local Storage)
-                const medLogs = JSON.parse(localStorage.getItem('medication_history_logs') || '[]');
-                const medItems = medLogs.map(l => ({
-                    type: 'medication',
-                    detail: l.detail, // Med Name
-                    note: l.note,     // 'Taken'
-                    created_at: l.created_at
-                }));
+                // FETCH EXERCISE LOGS
+                let exerciseItems = [];
+                try {
+                    const { data: exData } = await _supabase.from('exercise_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (exData) exerciseItems = exData.map(l => ({
+                        type: 'exercise',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        calories: l.calories
+                    }));
+                } catch (e) { }
 
-                // FETCH GOAL LOGS (Local Storage)
-                const goalLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
-                const goalItems = goalLogs.map(l => ({
-                    type: 'goal',
-                    detail: l.detail,
-                    note: l.note,
-                    created_at: l.created_at
-                }));
+                if (exerciseItems.length === 0) {
+                    const exLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
+                    exerciseItems = exLogs.map(l => ({
+                        type: 'exercise',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        calories: l.calories
+                    }));
+                }
+
+                // FETCH MEDICATION LOGS (Supabase + Local Fallback)
+                let medItems = [];
+                try {
+                    const { data: medData, error } = await _supabase
+                        .from('medication_logs')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('created_at', { ascending: false });
+
+                    if (medData) {
+                        medItems = medData.map(l => ({
+                            type: 'medication',
+                            detail: l.detail,
+                            note: l.note,
+                            created_at: l.created_at
+                        }));
+                    }
+                } catch (e) { console.warn('Med fetch failed', e); }
+
+                if (medItems.length === 0) {
+                    const medLogs = JSON.parse(localStorage.getItem('medication_history_logs') || '[]');
+                    medItems = medLogs.map(l => ({
+                        type: 'medication',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at
+                    }));
+                }
+
+                // FETCH GOAL LOGS
+                let goalItems = [];
+                try {
+                    const { data: gData } = await _supabase.from('goal_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (gData) goalItems = gData.map(l => ({
+                        type: 'goal',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at
+                    }));
+                } catch (e) { }
+
+                if (goalItems.length === 0) {
+                    const goalLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
+                    goalItems = goalLogs.map(l => ({
+                        type: 'goal',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at
+                    }));
+                }
+
+                // FETCH PERIOD LOGS
+                let periodItems = [];
+                try {
+                    const { data: pData } = await _supabase.from('period_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (pData) periodItems = pData.map(l => ({
+                        type: 'period',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at
+                    }));
+                } catch (e) { }
+
+                if (periodItems.length === 0) {
+                    const periodLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
+                    periodItems = periodLogs.map(l => ({
+                        type: 'period',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at
+                    }));
+                }
+
+                // FETCH FOOD LOGS
+                let foodItems = [];
+                try {
+                    const { data: fData } = await _supabase.from('food_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (fData) foodItems = fData.map(l => ({
+                        type: 'food',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        images: l.images
+                    }));
+                } catch (e) { }
+
+                if (foodItems.length === 0) {
+                    const foodLogs = JSON.parse(localStorage.getItem('food_history_logs') || '[]');
+                    foodItems = foodLogs.map(l => ({
+                        type: 'food',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        images: l.images
+                    }));
+                }
+
+                // FETCH VEHICLE LOGS
+                let vehicleItems = [];
+                try {
+                    const { data: vData } = await _supabase.from('vehicle_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+                    if (vData) vehicleItems = vData.map(l => ({
+                        type: 'vehicle',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        subtype: l.subtype
+                    }));
+                } catch (e) { }
+
+                if (vehicleItems.length === 0) {
+                    const vehicleLogs = JSON.parse(localStorage.getItem('vehicle_history_logs') || '[]');
+                    vehicleItems = vehicleLogs.map(l => ({
+                        type: 'vehicle',
+                        detail: l.detail,
+                        note: l.note,
+                        created_at: l.created_at,
+                        subtype: l.subtype
+                    }));
+                }
+
+                // FETCH APPOINTMENT LOGS (Supabase + Local Fallback)
+                let appItems = [];
+                try {
+                    const { data: appData, error } = await _supabase
+                        .from('appointment_logs')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('appointment_date', { ascending: true }); // future first? or just all
+
+                    if (appData) {
+                        appItems = appData.map(l => ({
+                            type: 'appointment',
+                            detail: l.detail,
+                            note: l.note ? `${l.note} (${l.location || '-'})` : (l.location || '-'),
+                            doctor: l.doctor,
+                            created_at: l.appointment_date // Logic uses appointment date
+                        }));
+                    }
+                } catch (e) { console.warn('App fetch failed', e); }
+
+                if (appItems.length === 0) {
+                    const appLogs = JSON.parse(localStorage.getItem('appointment_logs') || '[]');
+                    appItems = appLogs.map(l => ({
+                        type: 'appointment',
+                        detail: l.detail, // Title
+                        note: l.note ? `${l.note} (${l.location || '-'})` : (l.location || '-'),
+                        doctor: l.doctor,
+                        created_at: l.appointment_date
+                    }));
+                }
 
                 // Merge all
-                allItems = allItems.concat(sleepItems).concat(exerciseItems).concat(medItems).concat(goalItems);
+                allItems = allItems.concat(sleepItems).concat(exerciseItems).concat(medItems).concat(goalItems).concat(periodItems).concat(foodItems).concat(vehicleItems).concat(appItems);
 
                 // Sort by date desc
                 allItems.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -230,13 +429,31 @@
             }
         }
 
+        let currentTimeFilter = 'all';
+
+        // ... existing loadHistory ...
+
         function renderList(items) {
             const list = document.getElementById('historyList');
 
-            // Filter Logic
+            // Time Filter Logic
+            let timeFilteredItems = items;
+            const now = new Date();
+
+            if (currentTimeFilter === 'week') {
+                const oneWeekAgo = new Date();
+                oneWeekAgo.setDate(now.getDate() - 7);
+                timeFilteredItems = items.filter(i => new Date(i.created_at) >= oneWeekAgo);
+            } else if (currentTimeFilter === 'month') {
+                const oneMonthAgo = new Date();
+                oneMonthAgo.setDate(now.getDate() - 30);
+                timeFilteredItems = items.filter(i => new Date(i.created_at) >= oneMonthAgo);
+            }
+
+            // Category Filter Logic
             const filteredItems = currentFilter === 'all'
-                ? items
-                : items.filter(i => {
+                ? timeFilteredItems
+                : timeFilteredItems.filter(i => {
                     // Normalize type for filtering
                     const type = (i.type || i.detail || '').toLowerCase();
                     const note = (i.note || '').toLowerCase();
@@ -248,7 +465,7 @@
                 list.innerHTML = `
                     <div style="text-align:center; margin-top:2rem; opacity:0.6;">
                         <i class="fa-regular fa-folder-open" style="font-size:2rem; margin-bottom:0.5rem;"></i>
-                        <p>ไม่พบข้อมูลในหมวดนี้</p>
+                        <p>ไม่พบข้อมูลในช่วงเวลานี้</p>
                     </div>
                 `;
                 return;
@@ -295,9 +512,25 @@
                 if (typeStr === 'excretion' || typeStr.includes('hard') || typeStr.includes('normal') || typeStr.includes('liquid')) {
                     icon = 'fa-toilet';
                     title = 'การขับถ่าย';
-                } else if (typeStr === 'medication') {
-                    icon = 'fa-pills';
-                    title = 'การทานยา';
+                } else if (typeStr === 'goal') {
+                    icon = 'fa-bullseye';
+                    title = 'เป้าหมายประจำวัน';
+                } else if (typeStr === 'period') {
+                    icon = 'fa-droplet';
+                    title = 'รอบเดือน';
+                } else if (typeStr === 'food') {
+                    icon = 'fa-utensils';
+                    title = 'มื้ออาหาร';
+                } else if (typeStr === 'vehicle') {
+                    // Vehicle Logic
+                    icon = 'fa-car';
+                    title = 'การดูแลรถ';
+                    if (item.subtype === 'oil') icon = 'fa-oil-can';
+                    if (item.subtype === 'fuel') icon = 'fa-gas-pump';
+                    if (item.subtype === 'maint') icon = 'fa-wrench';
+                } else if (typeStr === 'appointment') {
+                    icon = 'fa-user-doctor';
+                    title = 'นัดหมายแพทย์';
                 } else if (typeStr === 'sleep') {
                     icon = 'fa-bed';
                     title = 'การนอนหลับ';
@@ -354,6 +587,21 @@
                                     ${detailText}
                                     ${item.note ? `<br><span style="font-size:0.75rem; opacity:0.8; color:#a855f7;">หมายเหตุ: ${item.note}</span>` : ''}
                                 </p>
+                                
+                                ${(item.images && (item.images.before || item.images.after)) ? `
+                                <div style="display:flex; gap:10px; margin-top:8px;">
+                                    ${item.images.before ? `
+                                        <div style="text-align:center;">
+                                            <div style="font-size:0.6rem; color:#999; margin-bottom:2px;">ก่อนทาน</div>
+                                            <img src="${item.images.before}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid #eee; cursor:pointer;" onclick="viewImage(this.src)">
+                                        </div>` : ''}
+                                    ${item.images.after ? `
+                                        <div style="text-align:center;">
+                                            <div style="font-size:0.6rem; color:#999; margin-bottom:2px;">หลังทาน</div>
+                                            <img src="${item.images.after}" style="width:60px; height:60px; object-fit:cover; border-radius:8px; border:1px solid #eee; cursor:pointer;" onclick="viewImage(this.src)">
+                                        </div>` : ''}
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -363,11 +611,26 @@
             list.innerHTML = html;
         }
 
-        function setFilter(el, filter) {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
+        function viewImage(src) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer;
+            `;
+            modal.innerHTML = `<img src="${src}" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow:0 0 20px rgba(0,0,0,0.5);">`;
+            modal.onclick = () => modal.remove();
+            document.body.appendChild(modal);
+        }
+
+        function setFilter(filter) {
             currentFilter = filter;
-            // Reload logic to apply filter
+            loadHistory();
+        }
+
+        function setTimeFilter(filter) {
+            currentTimeFilter = filter;
             loadHistory();
         }
 
@@ -388,6 +651,14 @@
                 }
 
                 const email = user.email;
+
+                // Get Filter Names for Title
+                const timeSelect = document.getElementById('timeFilterSelect');
+                const catSelect = document.getElementById('filterSelect');
+                const timeText = timeSelect.options[timeSelect.selectedIndex].text;
+                const catText = catSelect.options[catSelect.selectedIndex].text;
+
+                const reportTitle = `สรุปรายงานสุขภาพ (${catText} - ${timeText})`;
 
                 // Generate detailed list from visible cards
                 let dataRows = '';
@@ -419,7 +690,7 @@
                     <div style="font-family: 'Sarabun', sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;">
                         <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #a855f7;">
                             <h1 style="color: #a855f7; margin: 0;">CareFate</h1>
-                            <p style="margin-top: 5px; color: #666;">สรุปรายงานสุขภาพ</p>
+                            <p style="margin-top: 5px; color: #666;">${reportTitle}</p>
                         </div>
                         
                         <div style="padding: 20px 0;">
@@ -436,7 +707,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${dataRows || '<tr><td colspan="3" style="padding:20px; text-align:center;">ไม่พบข้อมูลบันทึก</td></tr>'}
+                                ${dataRows || '<tr><td colspan="3" style="padding:20px; text-align:center;">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</td></tr>'}
                             </tbody>
                         </table>
 

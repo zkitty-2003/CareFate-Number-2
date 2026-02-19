@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - การดูแลรถ</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Base Theme - Vehicle (Gray/Blue) */
+        :root {
+            --vehicle-primary: #64748b;
+            --vehicle-accent: #3b82f6;
+        }
+
+        .vehicle-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Tabs */
+        .tab-container {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: var(--vehicle-accent);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--vehicle-accent);
+            background: white;
+        }
+
+        /* Save Button */
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            background: var(--vehicle-accent);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+        }
+
+
+        /* --- THEMES --- */
+
+        /* 1. YOUTH (Sporty/Red/Racing) */
+        body.theme-youth {
+            --vehicle-primary: #ef4444;
+            --vehicle-accent: #ef4444;
+        }
+
+        body.theme-youth .background-shapes .shape-1 {
+            background: radial-gradient(circle, #fca5a5 0%, transparent 60%);
+        }
+
+        body.theme-youth .vehicle-card {
+            border: 2px solid #fecaca;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        body.theme-youth .tab-btn.active {
+            color: #dc2626;
+            background: #fef2f2;
+        }
+
+        body.theme-youth .save-btn {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+        }
+
+        /* 2. WORKING (Dashboard/Blue/Tech) */
+        body.theme-working {
+            --vehicle-primary: #3b82f6;
+            --vehicle-accent: #2563eb;
+        }
+
+        body.theme-working .vehicle-card {
+            border: 1px solid #bfdbfe;
+            background: white;
+        }
+
+        body.theme-working .tab-btn.active {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* 3. ELDER (High Contrast) */
+        body.theme-elder {
+            --vehicle-primary: #000;
+            --vehicle-accent: #000;
+        }
+
+        body.theme-elder .vehicle-card {
+            border: 2px solid #000;
+            background: white;
+            box-shadow: none;
+        }
+
+        body.theme-elder .tab-btn {
+            border: 1px solid transparent;
+        }
+
+        body.theme-elder .tab-btn.active {
+            background: #000;
+            color: white;
+            border: 1px solid #000;
+        }
+
+        body.theme-elder .save-btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                การดูแลรถ
+            </h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div class="scrollable-content" style="flex:1; overflow-y:auto; padding: 0 1.5rem 6rem;">
+
+            <!-- Tabs -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('oil')" id="tab-oil">
+                    <i class="fa-solid fa-oil-can"></i> ถ่ายน้ำมันเครื่อง
+                </button>
+                <button class="tab-btn" onclick="switchTab('fuel')" id="tab-fuel">
+                    <i class="fa-solid fa-gas-pump"></i> เติมน้ำมัน
+                </button>
+                <button class="tab-btn" onclick="switchTab('maint')" id="tab-maint">
+                    <i class="fa-solid fa-wrench"></i> ซ่อมบำรุง
+                </button>
+            </div>
+
+            <!-- Content Forms -->
+            <div class="vehicle-card" id="form-card">
+                <h3 style="margin:0 0 1rem; font-size:1.1rem; color:var(--text-color);" id="form-title">
+                    บันทึกการถ่ายน้ำมันเครื่อง</h3>
+
+                <!-- Date & Time (Common) -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
+                    <div class="form-group">
+                        <label class="form-label">วันที่</label>
+                        <input type="date" class="form-input" id="input-date">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เวลา</label>
+                        <input type="time" class="form-input" id="input-time">
+                    </div>
+                </div>
+
+                <!-- Cost (Common) -->
+                <div class="form-group">
+                    <label class="form-label">ค่าใช้จ่าย (บาท)</label>
+                    <input type="number" class="form-input" id="input-cost" placeholder="0.00" inputmode="decimal">
+                </div>
+
+                <!-- Details (Maint/Oil Only) -->
+                <div class="form-group" id="group-detail">
+                    <label class="form-label" id="label-detail">รายละเอียดเพิ่มเติม</label>
+                    <textarea class="form-input" id="input-detail" rows="3"
+                        placeholder="ระบุยี่ห้อ ข้อมูลไส้กรอง หรืออาการเสียนอกเหนือจากรายการหลัก"></textarea>
+                </div>
+
+                <button class="save-btn" onclick="saveLog()">
+                    <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+                </button>
+            </div>
+
+            <!-- Recent History Preview -->
+            <div style="margin-top:2rem;">
+                <h4 style="color:var(--text-color); margin-bottom:1rem; opacity:0.8;">รายการล่าสุด</h4>
+                <div id="recentList">
+                    <!-- JS will populate -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+
+        let currentType = 'oil'; // oil, fuel, maint
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.supabase) {
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+
+            // Defaults
+            const now = new Date();
+            document.getElementById('input-date').value = now.toISOString().split('T')[0];
+            document.getElementById('input-time').value = now.toTimeString().slice(0, 5);
+
+            // Apply Theme
+            try {
+                if (_supabase) {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    if (user && user.user_metadata && user.user_metadata.theme) {
+                        document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                        document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                    }
+                } else {
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme) {
+                        document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                        document.body.classList.add(`theme-${savedTheme}`);
+                    }
+                }
+            } catch (e) { }
+
+            loadRecent();
+        });
+
+        function switchTab(type) {
+            currentType = type;
+            // Update Buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+
+            // Update Form UI
+            const titleEl = document.getElementById('form-title');
+            const detailGroup = document.getElementById('group-detail');
+            const detailLabel = document.getElementById('label-detail');
+            const detailInput = document.getElementById('input-detail');
+
+            if (type === 'oil') {
+                titleEl.textContent = 'บันทึกการถ่ายน้ำมันเครื่อง';
+                detailGroup.style.display = 'block';
+                detailLabel.textContent = 'รายละเอียด / ยี่ห้อน้ำมัน';
+                detailInput.placeholder = 'เช่น Shell Helix, เปลี่ยนกรอง';
+            } else if (type === 'fuel') {
+                titleEl.textContent = 'บันทึกการเติมน้ำมัน';
+                detailGroup.style.display = 'none'; // No detail needed for simple refuel usually, or maybe Location?
+                // Let's keep it defined in requirements: "Date, Time, Price" for fuel.
+                // Requirement says: "Date Time Price" for fuel. So detail is optional or hidden.
+                // "บันทึกการเติมน้ำมันโดยระบุวันที่ เวลา ราคา" -> So hide detail is correct.
+            } else if (type === 'maint') {
+                titleEl.textContent = 'บันทึกการซ่อมบำรุงอื่นๆ';
+                detailGroup.style.display = 'block';
+                detailLabel.textContent = 'รายการซ่อม / อาการ';
+                detailInput.placeholder = 'เช่น เปลี่ยนยาง, เปลี่ยนแบตเตอรี่, เบรคมีเสียง';
+            }
+        }
+
+        async function saveLog() {
+            const date = document.getElementById('input-date').value;
+            const time = document.getElementById('input-time').value;
+            const cost = document.getElementById('input-cost').value;
+            const detail = document.getElementById('input-detail').value;
+
+            if (!date || !time || !cost) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+
+            // Prepare Data
+            let typeLabel = 'Vehicle';
+            let detailData = '';
+
+            if (currentType === 'oil') {
+                typeLabel = 'ถ่ายน้ำมันเครื่อง';
+                detailData = detail || 'ถ่ายน้ำมันเครื่องทั่วไป';
+            } else if (currentType === 'fuel') {
+                typeLabel = 'เติมน้ำมัน';
+                detailData = 'เติมน้ำมัน';
+            } else if (currentType === 'maint') {
+                typeLabel = 'ซ่อมบำรุง';
+                detailData = detail || 'ซ่อมบำรุงทั่วไป';
+            }
+
+            const logData = {
+                type: 'vehicle',
+                subtype: currentType,
+                detail: typeLabel, // To show in history title
+                note: `ราคา: ${cost} บาท` + (detail && currentType !== 'fuel' ? ` (${detail})` : ''),
+                cost: parseFloat(cost),
+                created_at: `${date}T${time}:00`
+            };
+
+            // Save to Supabase
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const { error } = await _supabase
+                        .from('vehicle_logs')
+                        .insert([{
+                            user_id: user.id,
+                            ...logData
+                        }]);
+                    if (error) console.error('Supabase error:', error);
+                }
+            } catch (e) { console.error('Save failed:', e); }
+
+            // Save Local
+            const logs = JSON.parse(localStorage.getItem('vehicle_history_logs') || '[]');
+            logs.push(logData);
+            localStorage.setItem('vehicle_history_logs', JSON.stringify(logs));
+
+            showToast('บันทึกเรียบร้อย');
+
+            // Reset common fields
+            document.getElementById('input-cost').value = '';
+            document.getElementById('input-detail').value = '';
+            loadRecent();
+        }
+
+        function loadRecent() {
+            const list = document.getElementById('recentList');
+            const logs = JSON.parse(localStorage.getItem('vehicle_history_logs') || '[]');
+
+            // Sort recent first
+            const recent = logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+
+            if (recent.length === 0) {
+                list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center;">ยังไม่มีรายการ</p>';
+                return;
+            }
+
+            list.innerHTML = recent.map(l => {
+                const date = new Date(l.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                let icon = 'fa-car';
+                if (l.subtype === 'oil') icon = 'fa-oil-can';
+                if (l.subtype === 'fuel') icon = 'fa-gas-pump';
+                if (l.subtype === 'maint') icon = 'fa-wrench';
+
+                return `
+                    <div style="display:flex; align-items:center; background:rgba(255,255,255,0.5); padding:10px; border-radius:12px; margin-bottom:8px; border:1px solid var(--card-border);">
+                        <div style="width:36px; height:36px; background:var(--card-bg); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--vehicle-accent); margin-right:10px;">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.9rem; font-weight:500; color:var(--text-color);">${l.detail}</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted);">${date} - ${l.cost} ฿</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.innerText = message;
+            toast.style.cssText = `
+                position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+                background: rgba(0,0,0,0.8); color: white; padding: 10px 20px;
+                border-radius: 20px; z-index: 9999; font-size: 0.9rem;
+                animation: fadeInOut 2s ease forwards;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+    </script>
+</body>
+
+</html>

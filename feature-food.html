@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareFate - บันทึกมื้ออาหาร</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Base Theme - Orange (Default) */
+        :root {
+            --food-primary: #f97316;
+            --food-bg-gradient: radial-gradient(circle, #c2410c 0%, transparent 60%);
+        }
+
+        .food-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Meal Selector */
+        .meal-selector {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .meal-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.8rem 0.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .meal-btn.active {
+            background: var(--food-primary);
+            color: white;
+            border-color: var(--food-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
+        }
+
+        .meal-btn i {
+            font-size: 1.2rem;
+        }
+
+        .meal-btn span {
+            font-size: 0.8rem;
+        }
+
+        /* Photo Upload Areas */
+        .photo-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .photo-upload-box {
+            background: rgba(0, 0, 0, 0.05);
+            border: 2px dashed var(--card-border);
+            border-radius: 16px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .photo-upload-box:hover {
+            border-color: var(--food-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .photo-upload-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .photo-label {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 4px 0;
+            z-index: 2;
+        }
+
+        .photo-icon {
+            font-size: 2rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            z-index: 0;
+        }
+
+        /* Note Input */
+        .note-input {
+            width: 100%;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: inherit;
+            resize: none;
+            margin-top: 1rem;
+            outline: none;
+        }
+
+        .note-input:focus {
+            border-color: var(--food-primary);
+        }
+
+        /* Save Button */
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            background: var(--food-primary);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+        }
+
+
+        /* --- THEMES --- */
+
+        /* 1. YOUTH (Summer/Orange/Pastel) */
+        body.theme-youth {
+            --food-primary: #fb923c;
+            /* Orange 400 */
+        }
+
+        body.theme-youth .food-card {
+            border: 2px solid #fdba74;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        body.theme-youth .meal-btn {
+            border-radius: 16px;
+            background: white;
+            color: #7c2d12;
+            border: 1px solid #fed7aa;
+        }
+
+        body.theme-youth .meal-btn.active {
+            background: #fff7ed;
+            color: #ea580c;
+            border-color: #ea580c;
+            border-width: 2px;
+        }
+
+        body.theme-youth .photo-upload-box {
+            border-radius: 20px;
+            background: white;
+            border: 2px dashed #fed7aa;
+        }
+
+        /* 2. WORKING (Clean/Green/Healthy) */
+        body.theme-working {
+            --food-primary: #65a30d;
+            /* Lime 600 */
+        }
+
+        body.theme-working .background-shapes .shape-1 {
+            background: radial-gradient(circle, #84cc16 0%, transparent 60%);
+        }
+
+        body.theme-working .background-shapes .shape-2 {
+            background: radial-gradient(circle, #3f6212 0%, transparent 60%);
+        }
+
+        body.theme-working .food-card {
+            border: 1px solid #d9f99d;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        body.theme-working .meal-btn {
+            border-radius: 8px;
+            background: #f7fee7;
+            color: #365314;
+        }
+
+        body.theme-working .meal-btn.active {
+            background: #4d7c0f;
+            color: white;
+        }
+
+        body.theme-working .photo-upload-box {
+            border-radius: 8px;
+            border-style: solid;
+            background: #f7fee7;
+        }
+
+        body.theme-working .save-btn {
+            border-radius: 8px;
+            background: #4d7c0f;
+            box-shadow: none;
+        }
+
+        /* 3. ELDER (High Contrast) */
+        body.theme-elder {
+            --food-primary: #c2410c;
+            /* Orange 700 */
+        }
+
+        body.theme-elder .background-shapes {
+            display: none;
+        }
+
+        body.theme-elder .app-container {
+            background: #fff7ed;
+        }
+
+        body.theme-elder .food-card {
+            border: 2px solid #000;
+            background: white;
+            box-shadow: none;
+        }
+
+        body.theme-elder .meal-btn {
+            border: 2px solid #7c2d12;
+            background: white;
+            color: #000;
+            border-radius: 12px;
+        }
+
+        body.theme-elder .meal-btn.active {
+            background: #fdba74;
+            color: #000;
+            border: 2px solid #000;
+            font-weight: 700;
+        }
+
+        body.theme-elder .photo-upload-box {
+            border: 2px solid #000;
+            background: #fff;
+        }
+
+        body.theme-elder .photo-icon {
+            color: #000;
+        }
+
+        body.theme-elder .photo-label {
+            background: #000;
+            font-size: 0.9rem;
+        }
+
+        body.theme-elder .save-btn {
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+        }
+    </style>
+</head>
+
+<body class="theme-working page-feature">
+    <div class="background-shapes">
+        <div class="shape shape-1" style="background: radial-gradient(circle, #fb923c 0%, transparent 60%);"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
+        <!-- Header -->
+        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center;">
+            <button onclick="location.href='dashboard.html'"
+                style="background:none; border:none; padding:0.5rem; cursor:pointer; color:var(--text-color);">
+                <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+            </button>
+            <h1
+                style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
+                จดบันทึกอาหาร
+            </h1>
+            <div style="width:35px;"></div>
+        </div>
+
+        <div class="scrollable-content" style="flex:1; overflow-y:auto; padding: 0 1.5rem 6rem;">
+
+            <!-- 1. Meal Selection -->
+            <div class="food-card">
+                <h3 style="margin:0 0 1rem; font-size:1.1rem; color:var(--text-color);">เลือกมื้ออาหาร</h3>
+                <div class="meal-selector">
+                    <div class="meal-btn active" onclick="selectMeal(this, 'breakfast')">
+                        <i class="fa-solid fa-mug-hot"></i>
+                        <span>เช้า</span>
+                    </div>
+                    <div class="meal-btn" onclick="selectMeal(this, 'lunch')">
+                        <i class="fa-solid fa-bowl-rice"></i>
+                        <span>เที่ยง</span>
+                    </div>
+                    <div class="meal-btn" onclick="selectMeal(this, 'dinner')">
+                        <i class="fa-solid fa-utensils"></i>
+                        <span>เย็น</span>
+                    </div>
+                    <div class="meal-btn" onclick="selectMeal(this, 'snack')">
+                        <i class="fa-solid fa-cookie-bite"></i>
+                        <span>ของว่าง</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Photos -->
+            <div class="food-card">
+                <h3 style="margin:0; font-size:1.1rem; color:var(--text-color);">รูปถ่าย</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+                    ถ่ายรูปก่อนและหลังทานเพื่อเปรียบเทียบ</p>
+
+                <div class="photo-section">
+                    <!-- Before -->
+                    <div class="photo-upload-box" onclick="triggerUpload('before')">
+                        <i class="fa-solid fa-camera photo-icon"></i>
+                        <div class="photo-label">ก่อนทาน</div>
+                        <img id="img-before" style="display:none;">
+                    </div>
+                    <input type="file" id="input-before" accept="image/*" style="display:none"
+                        onchange="handleFile(this, 'before')">
+
+                    <!-- After -->
+                    <div class="photo-upload-box" onclick="triggerUpload('after')">
+                        <i class="fa-solid fa-plate-wheat photo-icon"></i>
+                        <div class="photo-label">หลังทาน</div>
+                        <img id="img-after" style="display:none;">
+                    </div>
+                    <input type="file" id="input-after" accept="image/*" style="display:none"
+                        onchange="handleFile(this, 'after')">
+                </div>
+            </div>
+
+            <!-- 3. Notes -->
+            <div class="food-card">
+                <h3 style="margin:0; font-size:1.1rem; color:var(--text-color);">บันทึกเพิ่มเติม</h3>
+                <textarea class="note-input" id="noteInput"
+                    placeholder="วันนี้ทานอะไร? รสชาติเป็นไง? (เช่น ข้าวมันไก่ อร่อยมาก)" rows="4"></textarea>
+            </div>
+
+            <button class="save-btn" onclick="saveLog()">
+                <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+            </button>
+
+        </div>
+
+        <!-- Bottom Nav -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
+        let _supabase;
+
+        let currentMeal = 'breakfast';
+        let images = { before: null, after: null };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.supabase) {
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+            // Apply Theme/Init
+            try {
+                if (_supabase) {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    if (user && user.user_metadata && user.user_metadata.theme) {
+                        document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                        document.body.classList.add(`theme-${user.user_metadata.theme}`);
+                    }
+                } else {
+                    // Fallback to local storage theme if available
+                    const savedTheme = localStorage.getItem('theme');
+                    if (savedTheme) {
+                        document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
+                        document.body.classList.add(`theme-${savedTheme}`);
+                    }
+                }
+            } catch (e) { }
+
+            // Auto Select Meal based on time?
+            const hour = new Date().getHours();
+            if (hour >= 11 && hour <= 14) setMealButton('lunch');
+            else if (hour >= 17) setMealButton('dinner');
+        });
+
+        function selectMeal(el, meal) {
+            document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            currentMeal = meal;
+        }
+
+        function setMealButton(meal) {
+            document.querySelectorAll('.meal-btn').forEach(b => {
+                if (b.onclick.toString().includes(meal)) {
+                    selectMeal(b, meal);
+                }
+            });
+        }
+
+        function triggerUpload(type) {
+            document.getElementById(`input-${type}`).click();
+        }
+
+        function handleFile(input, type) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // Compress/Resize logic (Canvas)
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        // Resize to max 600px width/height
+                        const MAX_SIZE = 600;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // To Base64 JPEG
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        images[type] = dataUrl;
+
+                        // Show Preview
+                        const imgEl = document.getElementById(`img-${type}`);
+                        imgEl.src = dataUrl;
+                        imgEl.style.display = 'block';
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveLog() {
+            const note = document.getElementById('noteInput').value;
+
+            const logData = {
+                type: 'food',
+                meal: currentMeal,
+                detail: getMealLabel(currentMeal),
+                note: note,
+                images: images,
+                created_at: new Date().toISOString()
+            };
+
+            // Save to Supabase
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const { error } = await _supabase
+                        .from('food_logs')
+                        .insert([{
+                            user_id: user.id,
+                            ...logData
+                        }]);
+                    if (error) console.error('Supabase error:', error);
+                }
+            } catch (e) { console.error('Save failed:', e); }
+
+            // Save to LocalStorage History
+            const logs = JSON.parse(localStorage.getItem('food_history_logs') || '[]');
+            logs.push(logData);
+            localStorage.setItem('food_history_logs', JSON.stringify(logs));
+
+            // Show Toast & Reset
+            showToast('บันทึกมื้ออาหารแล้ว');
+            setTimeout(() => location.reload(), 1500);
+        }
+
+        function getMealLabel(m) {
+            const map = { 'breakfast': 'อาหารเช้า', 'lunch': 'อาหารเที่ยง', 'dinner': 'อาหารเย็น', 'snack': 'ของว่าง' };
+            return map[m] || m;
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.innerText = message;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 20px;
+                z-index: 9999;
+                font-size: 0.9rem;
+                animation: fadeInOut 2s ease forwards;
+            `;
+            document.body.appendChild(toast);
+
+            // Add keyframes if not exists
+            if (!document.getElementById('toast-style')) {
+                const style = document.createElement('style');
+                style.id = 'toast-style';
+                style.innerHTML = `
+                    @keyframes fadeInOut {
+                        0% { opacity: 0; transform: translate(-50%, 20px); }
+                        15% { opacity: 1; transform: translate(-50%, 0); }
+                        85% { opacity: 1; transform: translate(-50%, 0); }
+                        100% { opacity: 0; transform: translate(-50%, -20px); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+    </script>
+</body>
+
+</html>

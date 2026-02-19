@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>สมัครสมาชิก - CareFate</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -53,7 +53,15 @@
                     </button>
                 </div>
 
-                <!-- Password Requirements Hint (Styled & Thai) -->
+                <div class="input-group">
+                    <i class="fa-solid fa-check-double input-icon"></i>
+                    <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่าน" required>
+                    <button type="button" class="toggle-password" id="toggleConfirmPasswordBtn">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                </div>
+
+                <!-- Password Requirements Hint -->
                 <div style="font-size: 0.8rem; color: #cbd5e1; margin: 0.5rem 0 0.2rem 0.5rem; line-height: 1.6;">
                     <div style="display:flex; align-items:center; gap:6px;">
                         <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
@@ -67,14 +75,6 @@
                         <i class="fa-solid fa-circle-xmark" style="color:var(--danger); font-size: 0.7rem;"></i>
                         <span>ห้ามมีอักขระพิเศษ (@ # $ %)</span>
                     </div>
-                </div>
-
-                <div class="input-group">
-                    <i class="fa-solid fa-check-double input-icon"></i>
-                    <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่าน" required>
-                    <button type="button" class="toggle-password" id="toggleConfirmPasswordBtn">
-                        <i class="fa-regular fa-eye-slash"></i>
-                    </button>
                 </div>
 
                 <button type="submit" class="btn-primary" style="margin-top: 1.5rem;">

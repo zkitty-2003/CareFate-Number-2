@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         .sleep-card {
@@ -87,6 +87,197 @@
             font-family: var(--font-family);
             color-scheme: auto;
             /* Let browser decide based on system/theme if possible, or force via CSS */
+        }
+
+        /* =========================================
+           THEME 1: YOUTH — Dreamy, Soft, Playful
+           ========================================== */
+        body.theme-youth .sleep-card {
+            background: rgba(255, 240, 250, 0.95);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            border-image: linear-gradient(45deg, #c084fc, #f9a8d4) 1;
+            border-radius: 24px;
+            border-image: none;
+            border: 2px solid #e9d5ff;
+            box-shadow: 0 8px 25px rgba(192, 132, 252, 0.15);
+        }
+
+        body.theme-youth .time-display {
+            background: -webkit-linear-gradient(45deg, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.theme-youth .quality-btn {
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #f3e8ff;
+        }
+
+        body.theme-youth .quality-btn.active {
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+        }
+
+        body.theme-youth .quality-btn span {
+            color: #7c3aed;
+        }
+
+        body.theme-youth input[type="time"] {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e9d5ff;
+            border-radius: 20px;
+        }
+
+        body.theme-youth input[type="time"]:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+        body.theme-youth .btn-primary {
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+        }
+
+        body.theme-youth textarea {
+            background: rgba(255, 255, 255, 0.8) !important;
+            border: 2px solid #e9d5ff !important;
+            border-radius: 20px !important;
+        }
+
+        /* =========================================
+           THEME 2: WORKING — Minimal, Professional
+           ========================================== */
+        body.theme-working .sleep-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #6366f1;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+
+        body.theme-working .time-display {
+            background: -webkit-linear-gradient(45deg, #6366f1, #4f46e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.theme-working .quality-btn {
+            border-radius: 8px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        body.theme-working .quality-btn.active {
+            background: #6366f1;
+            border-color: #6366f1;
+            box-shadow: none;
+        }
+
+        body.theme-working .quality-btn span {
+            color: #6b7280;
+        }
+
+        body.theme-working input[type="time"] {
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            color: #1f2937;
+        }
+
+        body.theme-working .btn-primary {
+            background: #6366f1;
+            border-radius: 8px;
+            box-shadow: none;
+        }
+
+        body.theme-working textarea {
+            background: #f9fafb !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 8px !important;
+            color: #1f2937 !important;
+        }
+
+        /* =========================================
+           THEME 3: ELDER — High Contrast, Large, Simple
+           ========================================== */
+        body.theme-elder .sleep-card {
+            background: #ffffff;
+            border: 2px solid #059669;
+            border-radius: 16px;
+            box-shadow: none;
+            padding: 1.8rem;
+        }
+
+        body.theme-elder .time-display {
+            font-size: 3.5rem;
+            color: #059669;
+            -webkit-text-fill-color: #059669;
+            background: none;
+        }
+
+        body.theme-elder .quality-btn {
+            width: 100px;
+            padding: 1rem;
+            border: 2px solid #059669;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        body.theme-elder .quality-btn i {
+            font-size: 2rem;
+        }
+
+        body.theme-elder .quality-btn span {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #000;
+        }
+
+        body.theme-elder .quality-btn.active {
+            background: #059669;
+            border-color: #059669;
+        }
+
+        body.theme-elder .quality-btn.active span {
+            color: white !important;
+        }
+
+        body.theme-elder input[type="time"] {
+            font-size: 1.5rem;
+            padding: 1rem;
+            border: 2px solid #059669;
+            border-radius: 12px;
+            background: #fff;
+            color: #000;
+        }
+
+        body.theme-elder .btn-primary {
+            font-size: 1.2rem;
+            padding: 1.2rem;
+            background: #059669;
+            border-radius: 12px;
+            border: 2px solid #047857;
+        }
+
+        body.theme-elder textarea {
+            background: #fff !important;
+            border: 2px solid #059669 !important;
+            border-radius: 12px !important;
+            color: #000 !important;
+            font-size: 1.1rem !important;
+        }
+
+        body.theme-elder h3,
+        body.theme-elder label {
+            font-size: 1.2rem !important;
+            font-weight: 700 !important;
         }
     </style>
 </head>
@@ -340,11 +531,10 @@
                     };
 
                     // Try saving to generic log or specialized if available
-                    // For safety in this demo, let's assume we save to a generic table or fail gracefully to local
                     try {
-                        await _supabase.from('excretion_logs').insert([logData]); // Reusing table for demo
+                        await _supabase.from('sleep_logs').insert([logData]);
                     } catch (err) {
-                        console.warn("DB save failed, using local", err);
+                        console.warn("DB save failed", err);
                     }
 
                     // 2. Local Storage Backup (Reliable for demo)

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CareFate</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -54,27 +54,37 @@
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>
 
-                <div class="divider">
-                    <span>หรือเข้าสู่ระบบด้วย</span>
-                </div>
 
-                <div class="social-login">
-                    <button type="button" class="btn-social google">
-                        <i class="fa-brands fa-google"></i>
-                    </button>
-                    <button type="button" class="btn-social apple">
-                        <i class="fa-brands fa-apple"></i>
-                    </button>
-                    <button type="button" class="btn-social facebook">
-                        <i class="fa-brands fa-facebook-f"></i>
-                    </button>
-                </div>
             </form>
 
             <footer class="login-footer">
                 <p>ยังไม่มีบัญชี? <a href="register.html" id="createAccount">สมัครสมาชิก</a></p>
             </footer>
         </main>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ลืมรหัสผ่าน?</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>กรุณากรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน</p>
+                <div class="input-group">
+                    <i class="fa-regular fa-envelope input-icon"></i>
+                    <input type="email" id="resetEmail" placeholder="อีเมลของคุณ" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary close-modal-btn">ยกเลิก</button>
+                <button class="btn-primary" id="sendResetLinkBtn">
+                    <span>ส่งลิงก์</span>
+                    <i class="fa-regular fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
