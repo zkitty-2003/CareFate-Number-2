@@ -117,64 +117,84 @@
                     }
 
                     const user = session.user;
-                    const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
+
+                    // Fetch Profile Data
+                    let { data: profile, error } = await _supabase
+                        .from('profiles')
+                        .select('theme, username, avatar_url, features')
+                        .eq('id', user.id)
+                        .single();
 
                     // Defaults
                     let theme = 'working';
                     let username = 'User';
                     let features = [];
+                    let avatarUrl = null;
 
                     if (profile) {
-                        theme = profile.theme || user.user_metadata.theme || 'working';
-                        username = profile.username || user.user_metadata.full_name || 'User';
+                        theme = profile.theme || 'working';
+                        username = profile.username || 'User';
+                        avatarUrl = profile.avatar_url;
 
-                        const rawFeatures = profile.features || user.user_metadata.features;
+                        const rawFeatures = profile.features;
                         if (Array.isArray(rawFeatures)) features = rawFeatures;
                         else if (typeof rawFeatures === 'string') {
-                            try { features = JSON.parse(rawFeatures); } catch (e) { features = rawFeatures.replace(/[{}"']/g, '').split(','); }
-                        }
-
-                        // Load avatar: Supabase URL first, then localStorage fallback
-                        const avatarUrl = profile.avatar_url;
-                        const localAvatar = localStorage.getItem(`avatar_${user.id}`);
-                        const picSrc = (avatarUrl && avatarUrl.startsWith('http')) ? avatarUrl : localAvatar;
-                        if (picSrc) {
-                            const pic = document.querySelector('.profile-pic');
-                            if (pic) pic.innerHTML = `<img src="${picSrc}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                            try { features = JSON.parse(rawFeatures); } catch (e) { features = []; }
                         }
                     } else {
+                        // Fallback to Metadata if no profile row exists
                         theme = user.user_metadata.theme || 'working';
                         username = user.user_metadata.full_name || 'User';
                         features = user.user_metadata.features || [];
-
-                        // Still check localStorage for avatar
-                        const localAvatar = localStorage.getItem(`avatar_${user.id}`);
-                        if (localAvatar) {
-                            const pic = document.querySelector('.profile-pic');
-                            if (pic) pic.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                        }
                     }
 
-                    applyTheme(theme);
-                    updateUserInfo(username);
-                    renderFeatures(features);
+                    // Render Avatar (Priority: Supabase > LocalStorage > Default)
+                    if (!avatarUrl) {
+                        avatarUrl = localStorage.getItem(`avatar_${user.id}`);
+                    }
 
-                    // Load Horoscope
-                    loadHoroscope(theme);
+                    if (avatarUrl) {
+                        const pic = document.querySelector('.profile-pic');
+                        // Force refresh image if it's the same URL (for updates)
+                        // But for Supabase Storage, the URL usually stays the same, so we might need a timestamp query if caching is aggressive.
+                        // For now, just setting src is enough.
+                        if (pic) {
+                            pic.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                        }
+                    } else {
+                        // Default Icon
+                        const pic = document.querySelector('.profile-pic');
+                        if (pic) pic.innerHTML = `<i class="fa-solid fa-user"></i>`;
+                    }
+
+                    // Still check localStorage for avatar
+                    const localAvatar = localStorage.getItem(`avatar_${user.id}`);
+                    if (localAvatar) {
+                        const pic = document.querySelector('.profile-pic');
+                        if (pic) pic.innerHTML = `<img src="${localAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                    }
                 }
-            } catch (e) {
-                console.error("Init Error", e);
-                // alert("Error loading dashboard");
-            } finally {
-                // ALWAYS Hide Loader
-                setTimeout(() => {
-                    document.getElementById('loadingOverlay').style.display = 'none';
-                    const dash = document.getElementById('dashboardContent');
-                    dash.style.display = 'flex';
-                    dash.offsetHeight; // trigger reflow
-                    dash.style.opacity = '1';
-                }, 500);
+
+                applyTheme(theme);
+                updateUserInfo(username);
+                renderFeatures(features);
+
+                // Load Horoscope
+                loadHoroscope(theme);
             }
+            } catch (e) {
+            console.error("Init Error", e);
+            // alert("Error loading dashboard");
+        } finally {
+            // ALWAYS Hide Loader
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                const dash = document.getElementById('dashboardContent');
+                dash.style.display = 'flex';
+                dash.offsetHeight; // trigger reflow
+                dash.style.opacity = '1';
+            }, 500);
+        }
         });
 
         function updateUserInfo(name) {
