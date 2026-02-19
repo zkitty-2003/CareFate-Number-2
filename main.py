@@ -222,6 +222,52 @@ async def read_history():
 async def read_settings():
     return FileResponse(os.path.join(BASE_DIR, 'settings.html'))
 
+# Explicit Static File Routes (Fix for Render/Deployment issues)
+@app.get("/style.css")
+async def read_css():
+    return FileResponse(os.path.join(BASE_DIR, 'style.css'))
+
+@app.get("/script.js")
+async def read_script():
+    return FileResponse(os.path.join(BASE_DIR, 'script.js'))
+
+@app.get("/register.js")
+async def read_register_js():
+    return FileResponse(os.path.join(BASE_DIR, 'register.js'))
+
+@app.get("/settings.js")
+async def read_settings_js():
+    return FileResponse(os.path.join(BASE_DIR, 'settings.js'))
+
+@app.get("/notifications.js")
+async def read_notifications_js():
+    return FileResponse(os.path.join(BASE_DIR, 'notifications.js'))
+
+@app.get("/manifest.json")
+async def read_manifest():
+    return FileResponse(os.path.join(BASE_DIR, 'manifest.json'))
+
+# Explicit HTML Routes
+@app.get("/register.html")
+async def read_register():
+    return FileResponse(os.path.join(BASE_DIR, 'register.html'))
+
+@app.get("/theme-selection.html")
+async def read_theme_selection():
+    return FileResponse(os.path.join(BASE_DIR, 'theme-selection.html'))
+
+@app.get("/feature-selection.html")
+async def read_feature_selection():
+    return FileResponse(os.path.join(BASE_DIR, 'feature-selection.html'))
+
+# Generic route for all feature pages
+@app.get("/feature-{name}.html")
+async def read_feature_page(name: str):
+    file_path = os.path.join(BASE_DIR, f"feature-{name}.html")
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    return {"status": "error", "message": "Feature page not found"}
+
 @app.get("/debug-files")
 def debug_files():
     import os
