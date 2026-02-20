@@ -229,13 +229,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h1 class="app-name">ตั้งรหัสผ่านใหม่</h1>
                         <p class="tagline">กรุณากรอกรหัสผ่านใหม่ของคุณ</p>
                     </div>
-                    <div class="input-group">
+                    
+                    <div class="input-group" style="margin-bottom: 1rem;">
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd;">
+                        <input type="password" id="oldPassword" placeholder="รหัสผ่านเก่า" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
                     </div>
-                    <button id="updatePasswordBtn" class="btn-primary" style="margin-top:1rem; width:100%;">ยืนยัน</button>
+
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fa-solid fa-circle-check input-icon"></i>
+                        <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: #ffcccc; margin-top: 0.5rem; line-height: 1.4; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
+                        <strong>เงื่อนไขรหัสผ่าน:</strong><br>
+                        • ความยาว 7-20 ตัวอักษร<br>
+                        • ต้องมีตัวเลข, ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่<br>
+                        • ห้ามมีอักขระพิเศษ (@ # $ %)
+                    </div>
+
+                    <button id="updatePasswordBtn" class="btn-primary" style="margin-top:1.5rem; width:100%;">ยืนยัน</button>
                     <div style="text-align:center; margin-top:1rem;">
-                        <a href="index.html" style="color:#666; font-size:0.9rem;">ยกเลิก</a>
+                        <a href="index.html" style="color:#aaa; font-size:0.9rem;">ยกเลิก</a>
                     </div>
                 </div>
             </div>
@@ -246,8 +265,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const btn = document.getElementById('updatePasswordBtn');
             if (btn) {
                 btn.onclick = async () => {
+                    const oldPwd = document.getElementById('oldPassword').value;
                     const newPwd = document.getElementById('newPassword').value;
-                    if (!newPwd) return alert('กรุณากรอกรหัสผ่าน');
+                    const confirmPwd = document.getElementById('confirmPassword').value;
+
+                    // Basic Empty Check
+                    if (!oldPwd) return alert('กรุณากรอกรหัสผ่านเก่า');
+                    if (!newPwd) return alert('กรุณากรอกรหัสผ่านใหม่');
+                    if (!confirmPwd) return alert('กรุณายืนยันรหัสผ่านใหม่');
+
+                    // Match Check
+                    if (newPwd !== confirmPwd) {
+                        return alert('รหัสผ่านใหม่กับยืนยันรหัสผ่านไม่ตรงกัน');
+                    }
+
+                    // Validation Rules: 7-20 chars, A-Z, a-z, 0-9, No Special Chars
+                    const lengthValid = newPwd.length >= 7 && newPwd.length <= 20;
+                    const hasNumber = /\d/.test(newPwd);
+                    const hasLower = /[a-z]/.test(newPwd);
+                    const hasUpper = /[A-Z]/.test(newPwd);
+                    // Ensure only alphanumeric (bans special chars including @ # $ %)
+                    const isAlphanumeric = /^[a-zA-Z0-9]+$/.test(newPwd);
+
+                    if (!lengthValid) return alert('รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร');
+                    if (!hasNumber) return alert('รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว');
+                    if (!hasLower) return alert('รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
+                    if (!hasUpper) return alert('รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
+                    if (!isAlphanumeric) return alert('รหัสผ่านห้ามมีอักขระพิเศษ (@ # $ %)');
 
                     const btn = document.getElementById('updatePasswordBtn');
                     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังเปลี่ยน...';
