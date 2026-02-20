@@ -29,45 +29,114 @@ function playNotificationSound() {
 }
 
 // ─── In-App Toast Notification ───
+// ─── In-App Toast Notification ───
 function showInAppNotification(title, body) {
     // Play sound
     playNotificationSound();
 
-    // Create overlay
+    // 1. Find the best container (Mobile Frame)
+    const appFrame = document.querySelector('.app-container') ||
+        document.querySelector('.dashboard-container') ||
+        document.querySelector('.login-screen') ||
+        document.body;
+
+    // Ensure parent is relative if it's not body (so absolute positioning works inside it)
+    if (appFrame !== document.body) {
+        const style = window.getComputedStyle(appFrame);
+        if (style.position === 'static') {
+            appFrame.style.position = 'relative';
+        }
+    }
+
+    // 2. Create toast container if not exists
+    let container = document.getElementById('carefate-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'carefate-toast-container';
+
+        // Strategy: Absolute if inside a frame, Fixed if body
+        // We want it at the TOP of the frame.
+        const posType = (appFrame === document.body) ? 'fixed' : 'absolute';
+
+        container.style.cssText = `
+            position: ${posType}; 
+            top: 20px; 
+            left: 0; 
+            width: 100%; 
+            z-index: 99999;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; /* Center horizontally */
+            gap: 10px;
+            pointer-events: none; /* Let clicks pass through gaps */
+        `;
+        appFrame.appendChild(container);
+    } else {
+        // Safe check: if container exists but isn't in the current appFrame, move it.
+        if (container.parentElement !== appFrame) {
+            appFrame.appendChild(container);
+        }
+    }
+
+    // 3. Create toast element (Mobile Banner Style)
     const toast = document.createElement('div');
-    toast.id = 'carefate-notification';
+    toast.className = 'carefate-toast';
+    toast.style.cssText = `
+        background: rgba(255, 255, 255, 0.95); 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px; 
+        padding: 12px 16px;
+        width: 90%; 
+        max-width: 360px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        display: flex; 
+        align-items: center; 
+        gap: 12px;
+        animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: auto;
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        font-family: 'Outfit', sans-serif;
+        overflow: hidden;
+    `;
+
     toast.innerHTML = `
         <div style="
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 99999;
-            display: flex; align-items: center; justify-content: center;
-            animation: fadeIn 0.3s ease;
+            width: 38px; height: 38px; background: linear-gradient(135deg, #f472b6, #ec4899);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 2px 5px rgba(236, 72, 153, 0.3);
         ">
-            <div style="
-                background: white; border-radius: 20px; padding: 2rem 1.5rem;
-                max-width: 320px; width: 90%; text-align: center;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                animation: slideUp 0.4s ease;
-            ">
-                <div style="
-                    width: 60px; height: 60px; background: linear-gradient(135deg, #f472b6, #a78bfa);
-                    border-radius: 50%; margin: 0 auto 1rem;
-                    display: flex; align-items: center; justify-content: center;
-                ">
-                    <i class="fa-solid fa-bell" style="color: white; font-size: 1.5rem;"></i>
-                </div>
-                <h3 style="margin: 0 0 0.5rem; color: #1e293b; font-size: 1.1rem;">${title}</h3>
-                <p style="margin: 0 0 1.5rem; color: #64748b; font-size: 0.9rem; line-height: 1.5;">${body}</p>
-                <button onclick="this.closest('#carefate-notification').remove()" style="
-                    background: linear-gradient(135deg, #6366f1, #4f46e5);
-                    color: white; border: none; border-radius: 12px;
-                    padding: 0.8rem 2rem; font-size: 1rem; cursor: pointer;
-                    font-family: 'Outfit', sans-serif; font-weight: 600;
-                    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-                ">รับทราบ</button>
+            <i class="fa-solid fa-bell" style="color: white; font-size: 1.1rem;"></i>
+        </div>
+        
+        <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px;">
+                <h4 style="margin: 0; color: #1e293b; font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    ${title}
+                </h4>
+                <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 400;">เมื่อสักครู่</span>
             </div>
+            <p style="margin: 0; color: #475569; font-size: 0.85rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                ${body}
+            </p>
         </div>
     `;
+
+    // Remove logic
+    const close = () => {
+        toast.style.animation = 'slideUpFade 0.4s ease forwards';
+        setTimeout(() => toast.remove(), 400);
+    };
+
+    // Click to dismiss
+    toast.onclick = close;
+
+    // Auto dismiss after 5 seconds
+    setTimeout(close, 5000);
+
+    container.appendChild(toast);
+
     // Save to History
     try {
         const history = JSON.parse(localStorage.getItem('notification_history') || '[]');
@@ -85,9 +154,7 @@ function showInAppNotification(title, body) {
         window.dispatchEvent(new Event('notification-updated'));
     } catch (e) { console.warn('Failed to save log', e); }
 
-    document.body.appendChild(toast);
-
-    // Also try browser notification as a bonus (may or may not show)
+    // Desktop/Browser Notification (Bonus)
     try {
         if (Notification.permission === 'granted') {
             new Notification(title, { body, icon: 'https://cdn-icons-png.flaticon.com/512/869/869869.png' });
@@ -293,8 +360,9 @@ function checkAppointmentNotifications() {
 // ─── Inject CSS Animations ───
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideDown { from { transform: translateY(-150%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideUpFade { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-150%); opacity: 0; } }
+    @keyframes progress { from { width: 100%; } to { width: 0%; } }
 `;
 document.head.appendChild(style);
 

@@ -806,6 +806,25 @@ body.theme-youth label {
     color: #8b86a3 !important;
 }
 
+/* Fix Input Visibility for Youth Theme */
+body.theme-youth .input-group {
+    background: rgba(255, 255, 255, 0.5) !important;
+    border: 1px solid rgba(233, 206, 242, 0.5) !important;
+}
+
+body.theme-youth .input-group input {
+    color: #5d5b6a !important;
+    /* Dark Text */
+}
+
+body.theme-youth .input-group input::placeholder {
+    color: #8b86a3 !important;
+}
+
+body.theme-youth .input-icon {
+    color: #B3D1E7 !important;
+}
+
 
 
 

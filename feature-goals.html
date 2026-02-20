@@ -327,43 +327,62 @@
 
 
         /* 2. WORKING: Minimal, Clean, Professional */
+        body.theme-working {
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-border: #334155;
+            background-color: #0f172a;
+            /* Main bg */
+        }
+
         body.theme-working .goal-card {
-            border: 1px solid #334155;
+            border: 1px solid var(--card-border);
             border-left: 4px solid var(--goal-primary);
             border-radius: 8px;
             /* Sharper corners */
-            background: rgba(30, 41, 59, 0.8);
-            /* Slate tone */
-            box-shadow: none;
+            background: #1e293b;
+            /* Solid slate */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            color: var(--text-color);
+        }
+
+        body.theme-working .goal-title {
+            color: #f1f5f9;
+            /* Extra bright */
+        }
+
+        body.theme-working .goal-detail {
+            color: #cbd5e1;
         }
 
         body.theme-working .add-form {
             background: #1e293b;
-            /* Dark slate */
             border: 1px solid #334155;
             border-radius: 8px;
             color: #fff;
         }
 
         body.theme-working .form-label {
-            color: #94a3b8;
+            color: #cbd5e1;
+            /* Light text */
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         body.theme-working .form-input,
         body.theme-working .form-select {
             background: #0f172a;
-            border: 1px solid #334155;
+            border: 1px solid #475569;
             color: #fff;
             border-radius: 6px;
-            /* Square */
         }
 
         body.theme-working .form-input:focus {
             border-color: #6366f1;
             background: #0f172a;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
         }
 
         body.theme-working .add-form h3 {
@@ -373,8 +392,8 @@
 
         body.theme-working .type-btn {
             background: #0f172a;
-            border-color: #334155;
-            color: #94a3b8;
+            border-color: #475569;
+            color: #cbd5e1;
             border-radius: 6px;
         }
 
@@ -385,10 +404,25 @@
         }
 
         body.theme-working .fab-add {
-            border-radius: 8px;
-            /* Square-ish */
-            background: #475569;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            background: #6366f1;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            color: white;
+        }
+
+        /* Adjust action menu for dark theme */
+        body.theme-working .goal-actions-menu {
+            background: #1e293b;
+            border-color: #475569;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        body.theme-working .goal-action-item {
+            color: #e2e8f0;
+        }
+
+        body.theme-working .goal-action-item:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
 
@@ -594,7 +628,7 @@
         <div class="bottom-nav">
             <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i></div>
             <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
         </div>
     </div>
@@ -893,7 +927,7 @@
             } catch (e) { console.error(e) }
         }
     </script>
-    <script src="notifications.js"></script>
+    <script src="notifications.js?v=8"></script>
 </body>
 
 </html>

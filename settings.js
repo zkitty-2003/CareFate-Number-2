@@ -107,11 +107,11 @@ async function saveTheme() {
         await _supabase.auth.updateUser({ data: { theme: selectedThemeToSave } });
 
         console.log("Theme saved successfully.");
-        alert("บันทึกธีมเรียบร้อยแล้ว");
+        showInAppNotification('สำเร็จ', 'บันทึกธีมเรียบร้อยแล้ว');
 
     } catch (e) {
         console.error("Failed to save theme:", e);
-        alert("ไม่สามารถบันทึกธีมได้: " + e.message);
+        showInAppNotification('ข้อผิดพลาด', "ไม่สามารถบันทึกธีมได้: " + e.message);
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -142,7 +142,7 @@ async function uploadAvatar(e) {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) { // 2MB Limit
-        alert("ขนาดไฟล์ต้องไม่เกิน 2MB");
+        showInAppNotification('ข้อผิดพลาด', "ขนาดไฟล์ต้องไม่เกิน 2MB");
         return;
     }
 
@@ -170,7 +170,7 @@ async function uploadAvatar(e) {
                 if (uploadError.message.includes('Bucket not found') || uploadError.error === 'Bucket not found') {
                     console.warn("Avatars bucket missing, using LocalStorage fallback.");
                     saveAvatarToLocal(base64String);
-                    alert("บันทึกรูปโปรไฟล์เรียบร้อย (บันทึกในเครื่อง)");
+                    showInAppNotification('สำเร็จ', "บันทึกรูปโปรไฟล์เรียบร้อย (บันทึกในเครื่อง)");
                 } else {
                     throw uploadError;
                 }
@@ -185,7 +185,7 @@ async function uploadAvatar(e) {
                     id: currentUser.id,
                     avatar_url: publicUrl
                 });
-                alert('อัปโหลดรูปโปรไฟล์เรียบร้อย');
+                showInAppNotification('สำเร็จ', 'อัปโหลดรูปโปรไฟล์เรียบร้อย');
             }
 
         } catch (error) {
@@ -193,7 +193,7 @@ async function uploadAvatar(e) {
             // General Fallback
             console.warn("Upload failed, falling back to LocalStorage");
             saveAvatarToLocal(base64String);
-            alert("อัปโหลดไม่สำเร็จ บันทึกรูปลงในเครื่องแทน");
+            showInAppNotification('แจ้งเตือน', "อัปโหลดไม่สำเร็จ บันทึกรูปลงในเครื่องแทน");
         }
     };
     reader.readAsDataURL(file);
@@ -209,7 +209,7 @@ async function saveAvatarToLocal(base64) {
         // We will store a special 'local' marker or just rely on the frontend to check LS
     } catch (e) {
         console.error("LocalStorage Error (Quota?)", e);
-        alert("ไม่สามารถบันทึกรูปได้ (ความจำเต็ม)");
+        showInAppNotification('ข้อผิดพลาด', "ไม่สามารถบันทึกรูปได้ (ความจำเต็ม)");
     }
 }
 
@@ -238,14 +238,14 @@ async function updateProfile() {
         if (newEmail && newEmail !== currentUser.email) {
             const { error } = await _supabase.auth.updateUser({ email: newEmail });
             if (error) throw error;
-            alert(`กรุณาตรวจสอบอีเมล ${newEmail} เพื่อยืนยันการเปลี่ยนแปลง`);
+            showInAppNotification('สำเร็จ', `กรุณาตรวจสอบอีเมล ${newEmail} เพื่อยืนยันการเปลี่ยนแปลง`);
         }
 
-        alert('บันทึกข้อมูลเรียบร้อย');
+        showInAppNotification('สำเร็จ', 'บันทึกข้อมูลเรียบร้อย');
 
     } catch (error) {
         console.error(error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
+        showInAppNotification('ข้อผิดพลาด', 'เกิดข้อผิดพลาด: ' + error.message);
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -259,24 +259,24 @@ async function changePassword() {
     const confirmPass = document.getElementById('confirmNewPassword').value;
 
     if (!oldPass || !newPass || !confirmPass) {
-        alert('กรุณากรอกข้อมูลให้ครบ');
+        showInAppNotification('ข้อผิดพลาด', 'กรุณากรอกข้อมูลให้ครบ');
         return;
     }
 
     if (newPass !== confirmPass) {
-        alert('รหัสผ่านใหม่ไม่ตรงกัน');
+        showInAppNotification('ข้อผิดพลาด', 'รหัสผ่านใหม่ไม่ตรงกัน');
         return;
     }
 
     if (newPass === oldPass) {
-        alert('รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
+        showInAppNotification('ข้อผิดพลาด', 'รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านเดิม');
         return;
     }
 
     // Complexity Check (Reuse logic)
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{7,20}$/;
     if (!passwordRegex.test(newPass)) {
-        alert("รหัสผ่านใหม่ต้องมีความยาว 7-20 ตัวอักษร มีตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก");
+        showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านใหม่ต้องมีความยาว 7-20 ตัวอักษร มีตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก");
         return;
     }
 
@@ -305,7 +305,7 @@ async function changePassword() {
 
         if (updateError) throw updateError;
 
-        alert('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่');
+        showInAppNotification('สำเร็จ', 'เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่');
         await _supabase.auth.signOut();
         window.location.href = 'index.html';
 
@@ -322,5 +322,20 @@ async function logout() {
     if (confirm('ยืนยันการออกจากระบบ?')) {
         await _supabase.auth.signOut();
         window.location.href = 'index.html';
+    }
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
     }
 }

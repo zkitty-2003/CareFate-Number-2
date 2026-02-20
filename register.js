@@ -6,7 +6,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
 // Helper to check Supabase status
 function getSupabase() {
     if (typeof window.supabase === 'undefined') {
-        alert("ข้อผิดพลาด: ไม่สามารถโหลด Supabase ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+        // Fallback for critical init error
+        console.error("Supabase not loaded");
+        // alert("ข้อผิดพลาด: ไม่สามารถโหลด Supabase ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
         throw new Error("Supabase not loaded");
     }
     return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -59,7 +61,7 @@ function initializeRegisterPage() {
     // Validation
     const validateDate = (input) => {
         if (input.value > today) {
-            alert("วันเกิดไม่สามารถอยู่ในอนาคตได้");
+            showInAppNotification('ข้อผิดพลาด', "วันเกิดไม่สามารถอยู่ในอนาคตได้");
             input.value = today;
         }
     };
@@ -78,7 +80,7 @@ function initializeRegisterPage() {
 
         // Validation 1: Date
         if (dob > today) {
-            alert("วันเกิดไม่สามารถอยู่ในอนาคตได้");
+            showInAppNotification('ข้อผิดพลาด', "วันเกิดไม่สามารถอยู่ในอนาคตได้");
             return;
         }
 
@@ -86,13 +88,13 @@ function initializeRegisterPage() {
         const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{7,20}$/;
 
         if (!passwordRegex.test(password)) {
-            alert("รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
+            showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
             return;
         }
 
         // Validation 3: Confirm Match
         if (password !== confirmPassword) {
-            alert("รหัสผ่านไม่ตรงกัน!");
+            showInAppNotification('ข้อผิดพลาด', "รหัสผ่านไม่ตรงกัน!");
             return;
         }
 
@@ -514,7 +516,7 @@ async function initializeFeaturePage() {
             });
 
             // Success redirect to dashboard
-            alert('ตั้งค่าสำเร็จ! เริ่มต้นใช้งาน CareFate');
+            // alert('ตั้งค่าสำเร็จ! เริ่มต้นใช้งาน CareFate'); // Redirecting anyway
             window.location.href = 'dashboard.html';
 
         } catch (error) {

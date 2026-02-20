@@ -394,6 +394,39 @@
             background: #059669;
             border-color: #059669;
         }
+
+        /* Action Buttons */
+        .action-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .edit-btn {
+            color: var(--med-primary);
+            background: rgba(var(--med-primary-rgb), 0.1);
+        }
+
+        .delete-btn {
+            color: #ef4444;
+            margin-left: 5px;
+        }
+
+        .edit-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
     </style>
 </head>
 
@@ -492,7 +525,7 @@
         <div class="bottom-nav">
             <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i></div>
             <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
         </div>
     </div>
@@ -537,6 +570,8 @@
             document.getElementById('daysInputConfig').style.display = type === 'limited' ? 'block' : 'none';
         }
 
+        let editingId = null; // Track if we are editing
+
         function loadSchedule() {
             let schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
             // Get logs for TODAY
@@ -558,8 +593,7 @@
                 return;
             }
 
-            // FILTER: Check Duration
-            // Convert startDates and calculate difference
+            // FILTER: Check Duration (Same logic)
             schedule = schedule.filter(item => {
                 if (!item.durationDays) return true; // Continuous
                 if (!item.startDate) return true; // Fallback
@@ -569,20 +603,11 @@
 
                 const diffTime = Math.abs(today - start);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                // diffDays starts at 0 on day 1? No.
-                // If today == start, diff is 0. That is Day 1.
-                // If today == start + 1 day, diff is 1. That is Day 2.
+                const currentDay = diffDays + 1;
 
-                // So current Day Index = diffDays + 1
-                const currentDay = diffDays + 1; /* Note: this logic assumes today >= start */
-
-                // Check if started in future?
-                if (today < start) return false; // Not started yet
-
-                // Check if expired
+                if (today < start) return false;
                 if (currentDay > parseInt(item.durationDays)) return false;
 
-                // Attach Day info to item for display
                 item._displayDay = `วันที่ ${currentDay}/${item.durationDays}`;
                 return true;
             });
@@ -612,6 +637,16 @@
                     <div class="med-info">
                         <div class="med-name">${item.name} ${dayBadge}</div>
                         <div class="med-dose">${item.dose || ''}</div>
+                        
+                        <!-- Actions -->
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <button class="action-btn edit-btn" onclick="event.stopPropagation(); editMedication('${item.id}')">
+                                <i class="fa-solid fa-pen"></i> แก้ไข
+                            </button>
+                            <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteMedication('${item.id}')">
+                                <i class="fa-solid fa-trash"></i> ลบ
+                            </button>
+                        </div>
                     </div>
                     <div class="check-btn">
                         <i class="fa-solid fa-check"></i>
@@ -620,6 +655,46 @@
                 `;
             });
             container.innerHTML = html;
+        }
+
+        function deleteMedication(id) {
+            if (!confirm('คุณต้องการลบรายการยานี้ใช่หรือไม่?')) return;
+
+            let schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
+            schedule = schedule.filter(item => item.id !== id);
+            localStorage.setItem('med_schedule', JSON.stringify(schedule));
+
+            showInAppNotification('สำเร็จ', 'ลบรายการยาเรียบร้อยแล้ว');
+            loadSchedule();
+        }
+
+        function editMedication(id) {
+            const schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
+            const item = schedule.find(i => i.id === id);
+            if (!item) return;
+
+            // Populate Form
+            document.getElementById('newMedName').value = item.name;
+            document.getElementById('newMedTime').value = item.time;
+            document.getElementById('newMedNotifyTime').value = item.notifyTime || '';
+            document.getElementById('newMedDose').value = item.dose || '';
+
+            if (item.durationDays) {
+                setDurationType('limited');
+                document.getElementById('newMedDuration').value = item.durationDays;
+            } else {
+                setDurationType('continuous');
+            }
+
+            // Set Edit Mode
+            editingId = id;
+            const saveBtn = document.querySelector('#addForm button[onclick="saveNewMedication()"]');
+            saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกการแก้ไข';
+
+            // Show Form
+            const form = document.getElementById('addForm');
+            form.style.display = 'block';
+            form.scrollIntoView({ behavior: 'smooth' });
         }
 
         function saveNewMedication() {
@@ -632,28 +707,47 @@
             if (durationType === 'limited') {
                 duration = document.getElementById('newMedDuration').value;
                 if (!duration) {
-                    alert('กรุณาระบุจำนวนวัน');
+                    showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุจำนวนวัน');
                     return;
                 }
             }
 
             if (!name || !time) {
-                alert('กรุณาระบุชื่อยาและเวลา');
+                showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุชื่อยาและเวลา');
                 return;
             }
 
-            const newMed = {
-                id: Date.now().toString(),
-                name,
-                time,
-                notifyTime: notifyTime || time, // Default to time if not set
-                dose,
-                startDate: new Date().toISOString(), // store creation date
-                durationDays: duration
-            };
-
             const schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
-            schedule.push(newMed);
+
+            if (editingId) {
+                // UPDATE Existing
+                const index = schedule.findIndex(i => i.id === editingId);
+                if (index !== -1) {
+                    schedule[index] = {
+                        ...schedule[index], // keep startDate? yes
+                        name,
+                        time,
+                        notifyTime: notifyTime || time,
+                        dose,
+                        durationDays: duration
+                    };
+                    showInAppNotification('สำเร็จ', 'แก้ไขรายการยาเรียบร้อยแล้ว');
+                }
+            } else {
+                // CREATE New
+                const newMed = {
+                    id: Date.now().toString(),
+                    name,
+                    time,
+                    notifyTime: notifyTime || time, // Default to time if not set
+                    dose,
+                    startDate: new Date().toISOString(), // store creation date
+                    durationDays: duration
+                };
+                schedule.push(newMed);
+                showInAppNotification('สำเร็จ', 'เพิ่มรายการยาเรียบร้อยแล้ว');
+            }
+
             localStorage.setItem('med_schedule', JSON.stringify(schedule));
 
             // Reset form
@@ -663,7 +757,13 @@
             document.getElementById('newMedDose').value = '';
             document.getElementById('newMedDuration').value = '';
             setDurationType('continuous');
-            toggleAddForm();
+
+            // Reset Edit Mode
+            editingId = null;
+            const saveBtn = document.querySelector('#addForm button[onclick="saveNewMedication()"]');
+            saveBtn.innerHTML = 'บันทึก';
+
+            toggleAddForm(); // Close form
             loadSchedule();
         }
 
@@ -737,7 +837,7 @@
             } catch (e) { console.error('Save error:', e); }
         }
     </script>
-    <script src="notifications.js"></script>
+    <script src="notifications.js?v=8"></script>
 </body>
 
 </html>

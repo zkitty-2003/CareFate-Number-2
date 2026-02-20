@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         .settings-section {
@@ -190,22 +190,49 @@
                 <div class="input-group" style="margin-bottom:1rem;">
                     <i class="fa-solid fa-key input-icon"></i>
                     <input type="password" id="oldPassword" placeholder="รหัสผ่านปัจจุบัน">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('oldPassword')">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
                 </div>
 
                 <div class="input-group" style="margin-bottom:1rem;">
                     <i class="fa-solid fa-key input-icon"></i>
                     <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่">
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword')">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
                 </div>
 
                 <div class="input-group" style="margin-bottom:1rem;">
                     <i class="fa-solid fa-key input-icon"></i>
                     <input type="password" id="confirmNewPassword" placeholder="ยืนยันรหัสผ่านใหม่">
+                    <button type="button" class="toggle-password"
+                        onclick="togglePasswordVisibility('confirmNewPassword')">
+                        <i class="fa-regular fa-eye-slash"></i>
+                    </button>
                 </div>
 
                 <button id="changePasswordBtn" class="btn-primary"
                     style="margin-top:0.5rem; background:linear-gradient(135deg, #f59e0b, #d97706); font-size:0.9rem; padding:0.8rem;">
                     เปลี่ยนรหัสผ่าน
                 </button>
+
+                <!-- Password Requirements Hint -->
+                <div
+                    style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; line-height: 1.6; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
+                        <span>7-20 ตัวอักษร</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
+                        <span>ต้องมีตัวเลข, ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-circle-xmark" style="color:var(--danger); font-size: 0.7rem;"></i>
+                        <span>ห้ามมีอักขระพิเศษ (@ # $ %)</span>
+                    </div>
+                </div>
             </div>
 
             <div style="text-align:center; padding:1rem;">
@@ -221,7 +248,7 @@
         <div class="bottom-nav">
             <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i></div>
             <div class="nav-item active" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
         </div>
     </div>
@@ -229,7 +256,10 @@
     <!-- Notification Container -->
     <div id="notification-area"></div>
 
-    <script src="settings.js"></script>
+    <div id="notification-area"></div>
+
+    <script src="notifications.js?v=8"></script>
+    <script src="settings.js?v=4"></script>
 </body>
 
 </html>
