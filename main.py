@@ -183,7 +183,7 @@ async def send_report(request: ReportRequest):
 
         # Connect to server
         # Note: This is wrapped in try/except to catch auth errors clearly
-        if SENDER_EMAIL == "carefatedemo@gmail.com":
+        if SENDER_EMAIL == "carefate.demo@gmail.com" or not SENDER_PASSWORD:
              # Simulation mode if credentials aren't set
              print(f"SIMULATION EMAIL TO: {request.email}")
              print(f"CONTENT: {request.report_html[:100]}...")
