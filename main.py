@@ -28,10 +28,15 @@ def health_check():
     return {"status": "ok"}
 
 # Email Configuration
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "carefate.demo@gmail.com")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
+
+if SENDER_EMAIL and SENDER_PASSWORD:
+    print(f"✅ Email Credentials loaded: {SENDER_EMAIL[:3]}***@{SENDER_EMAIL.split('@')[-1]}")
+else:
+    print("⚠️  Email Credentials MISSING. Running in Simulation Mode.")
 
 from pydantic import BaseModel
 import smtplib
@@ -80,6 +85,7 @@ def call_openrouter(messages):
 class ChatRequest(BaseModel):
     message: str
     theme: str # 'youth', 'working', 'elder'
+    history_context: str = "" # Optional historical data summary
 
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
@@ -92,9 +98,14 @@ async def chat_with_ai(request: ChatRequest):
     
     system_content = system_prompts.get(request.theme, system_prompts['working'])
 
+    # Personalization Logic
+    context_instruction = ""
+    if request.history_context:
+        context_instruction = f"\n\nHere is some recent health data for this user:\n{request.history_context}\nUse this data to provide specific, personalized advice if relevant to the user's message."
+
     try:
         reply = call_openrouter([
-            {"role": "system", "content": system_content},
+            {"role": "system", "content": system_content + context_instruction},
             {"role": "user", "content": request.message}
         ])
         return {"status": "success", "reply": reply}
@@ -103,6 +114,7 @@ async def chat_with_ai(request: ChatRequest):
 
 class HoroscopeRequest(BaseModel):
     theme: str
+    history_context: str = ""
 
 @app.post("/api/horoscope")
 async def get_horoscope(request: HoroscopeRequest):
@@ -118,6 +130,11 @@ async def get_horoscope(request: HoroscopeRequest):
     
     specific_instruction = persona_guide.get(request.theme, persona_guide['working'])
 
+    # Personalization Logic
+    context_instruction_horo = ""
+    if request.history_context:
+        context_instruction_horo = f"\n\nRECENT USER DATA:\n{request.history_context}\nIf the data shows any issues (like poor sleep or digestive problems), include a gentle reminder or protective advice in the 'advice' section of the horoscope."
+
     # System prompt for horoscope
     system_prompt = f"""
     You are a mystical but scientific health fortune teller backend for 'CareFate'.
@@ -129,7 +146,8 @@ async def get_horoscope(request: HoroscopeRequest):
     1. Start by predicting a 'Lucky Color' for health today.
     2. Give a short, 1-2 sentence health advice based on general wellness or weather (assume tropical/Thai context).
     3. IMPORTANT: {specific_instruction}
-    4. Output format MUST be simple text. 
+    4. {context_instruction_horo}
+    5. Output format MUST be simple text. 
     
     Language: Thai.
     """
@@ -189,15 +207,25 @@ async def send_report(request: ReportRequest):
              print(f"CONTENT: {request.report_html[:100]}...")
              return {"status": "success", "mode": "simulation", "message": "Email simulated (Configure credentials in main.py)"}
 
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        print(f"[Email] Attempting to connect to {SMTP_SERVER}:{SMTP_PORT}...")
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=15)
+        print("[Email] Starting TLS...")
         server.starttls()
+        print(f"[Email] Logging in as {SENDER_EMAIL}...")
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         text = msg.as_string()
+        print(f"[Email] Sending email to {request.email}...")
         server.sendmail(SENDER_EMAIL, request.email, text)
         server.quit()
+        print("[Email] ✅ Sent successfully.")
 
         return {"status": "success", "message": "Email sent successfully"}
+    except smtplib.SMTPAuthenticationError:
+        print("[Email] ❌ Auth Error: Check SENDER_EMAIL/PASSWORD.")
+        return {"status": "error", "message": "SMTP Authentication failed. Check credentials."}
     except Exception as e:
+        print(f"[Email] ❌ Error: {str(e)}")
+        return {"status": "error", "message": f"Server error: {str(e)}"}
         print(f"Email Error: {e}")
         return {"status": "error", "message": str(e)}
 

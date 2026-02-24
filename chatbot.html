@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="ai-logic.js"></script>
     <style>
         /* Chat Specific Styles */
         .chat-container {
@@ -283,14 +284,18 @@
             const typing = document.getElementById('typingIndicator');
             typing.style.display = 'block';
 
-            // 3. Call Real API
+            // 3. Get Health Context (RAG)
+            const healthContext = await window.getAIHealthContext(_supabase, 3);
+
+            // 4. Call Real API
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: text,
-                        theme: currentTheme
+                        theme: currentTheme,
+                        history_context: healthContext
                     })
                 });
 

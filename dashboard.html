@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="ai-logic.js"></script>
 </head>
 
 
@@ -264,10 +265,16 @@
             horoscopeText.innerHTML = '<span style="opacity:0.7"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังถาม AI...</span>';
 
             try {
+                // Get Health Context for personalized horoscope
+                const healthContext = await window.getAIHealthContext(_supabase, 3);
+
                 const res = await fetch('http://localhost:8000/api/horoscope', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ theme: theme })
+                    body: JSON.stringify({
+                        theme: theme,
+                        history_context: healthContext
+                    })
                 });
                 const data = await res.json();
 
