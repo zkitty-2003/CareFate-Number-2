@@ -3,293 +3,719 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CareFate - Dashboard</title>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=6">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="ai-logic.js"></script>
+
+    <style>
+        /* ===== Outer area (body) stays WHITE on all themes ===== */
+        body.theme-youth,
+        body.theme-working,
+        body.theme-elder {
+            background: #ffffff !important;
+        }
+
+        /* ===== DASHBOARD CARD — same size as history.html ===== */
+        .dashboard-container {
+            /* inherits from style.css: max-width:420px, height:90vh, max-height:850px */
+            border-radius: 28px !important;
+        }
+
+        /* Theme-specific card backgrounds */
+        body.theme-youth .dashboard-container {
+            background: rgba(255, 240, 255, 0.75) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.7) !important;
+            box-shadow: 0 20px 60px rgba(200, 150, 220, 0.2) !important;
+        }
+
+        body.theme-working .dashboard-container,
+        body.theme-elder .dashboard-container {
+            background: #f2f4f8 !important;
+            backdrop-filter: none !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        /* Fix horo-card on non-gradient background */
+        body.theme-working .horo-card,
+        body.theme-elder .horo-card {
+            background: #ffffff !important;
+            backdrop-filter: none !important;
+            border: 1px solid #ede9fe !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        /* Fix notif-btn on non-gradient background */
+        body.theme-working .notif-btn,
+        body.theme-elder .notif-btn {
+            background: #f3f4f6 !important;
+            border: 1px solid #e5e7eb !important;
+        }
+
+        /* ===== HEADER ===== */
+        .dash-top {
+            padding: 2rem 1.4rem 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .dash-greeting h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #2d2d3a;
+            line-height: 1.2;
+        }
+
+        .dash-greeting p {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.15rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notif-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+            position: relative;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            background: #f87171;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: none;
+        }
+
+        .avatar-ring {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f9a8d4, #c084fc);
+            padding: 2px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.13);
+        }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f3e8ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .avatar-inner i {
+            color: #9333ea;
+            font-size: 1rem;
+        }
+
+        .avatar-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== SCROLLABLE CONTENT ===== */
+        .dash-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 0 80px;
+            /* bottom space for nav */
+        }
+
+        .dash-scroll::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .dash-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        /* ===== HOROSCOPE CARD ===== */
+        .horo-card {
+            margin: 0.6rem 1.1rem 0.8rem;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            border-radius: 18px;
+            padding: 0.9rem 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .horo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        body.theme-youth .horo-icon {
+            background: rgba(244, 114, 182, 0.12);
+        }
+
+        body.theme-working .horo-icon {
+            background: rgba(99, 102, 241, 0.10);
+        }
+
+        body.theme-elder .horo-icon {
+            background: rgba(16, 185, 129, 0.10);
+        }
+
+        .horo-title {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.2rem;
+        }
+
+        .horo-text {
+            font-size: 0.76rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .sect-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding: 0.8rem 1.2rem 0.4rem;
+        }
+
+        /* ===== FEATURE GRID — 4 columns ===== */
+        .feat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.55rem;
+            padding: 0 1.1rem 0.2rem;
+        }
+
+        .feat-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.15s ease;
+        }
+
+        .feat-tile:active {
+            transform: scale(0.88);
+        }
+
+        .feat-icon-box {
+            width: 58px;
+            height: 58px;
+            border-radius: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.55rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .feat-label {
+            font-size: 0.64rem;
+            font-weight: 600;
+            text-align: center;
+            color: #374151;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        /* Edit tile */
+        .feat-tile-edit .feat-icon-box {
+            background: rgba(255, 255, 255, 0.7) !important;
+            border: 1.5px dashed #d1d5db;
+            box-shadow: none;
+        }
+
+        .feat-tile-edit .feat-label {
+            color: #9ca3af;
+        }
+
+        /* ===== CLASSIC FEATURE CARDS (working / elder) ===== */
+        .classic-feat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            padding: 0 1.2rem 1rem;
+        }
+
+        .classic-feat-card {
+            background: #ffffff;
+            border: 1px solid #f0f0f0;
+            border-radius: 18px;
+            padding: 1.25rem 0.8rem 1rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: transform 0.15s, box-shadow 0.15s;
+            text-align: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .classic-feat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.09);
+        }
+
+        .classic-feat-card:active {
+            transform: scale(0.95);
+        }
+
+        .classic-feat-card i {
+            font-size: 2rem;
+            color: #1f2937;
+            line-height: 1;
+        }
+
+        .classic-feat-card .cf-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.3;
+        }
+
+        .add-card {
+            background: #ffffff !important;
+            border: 1.5px dashed #d1d5db !important;
+            box-shadow: none !important;
+        }
+
+        .add-card i,
+        .add-card .cf-label {
+            color: #9ca3af !important;
+        }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border-radius: 0 0 28px 28px;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.18s;
+        }
+
+        .nav-btn i {
+            font-size: 1.15rem;
+            color: #9ca3af;
+            transition: color 0.18s;
+        }
+
+        .nav-btn.active i {
+            color: var(--nav-color, #f472b6);
+        }
+
+        .nav-btn.active {
+            background: rgba(var(--nav-rgb, 244, 114, 182), 0.1);
+        }
+
+        body.theme-youth {
+            --nav-color: #f472b6;
+            --nav-rgb: 244, 114, 182;
+        }
+
+        body.theme-working {
+            --nav-color: #6366f1;
+            --nav-rgb: 99, 102, 241;
+        }
+
+        body.theme-elder {
+            --nav-color: #10b981;
+            --nav-rgb: 16, 185, 129;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeUp 0.35s ease both;
+        }
+    </style>
 </head>
 
+<body class="theme-youth page-dashboard">
 
-<body class="theme-working page-dashboard">
-    <!-- Loading Screen (Initial) -->
+    <!-- Loading Overlay -->
     <div id="loadingOverlay"
-        style="position:fixed; inset:0; background:#0f172a; z-index:9999; display:flex; justify-content:center; align-items:center;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem; color:#6366f1;"></i>
+        style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.9);backdrop-filter:blur(10px);">
+        <div
+            style="width:44px;height:44px;border:3px solid #e9d5ff;border-top-color:#a78bfa;border-radius:50%;animation:spin 0.8s linear infinite;">
+        </div>
+        <style>
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg)
+                }
+            }
+        </style>
     </div>
 
-    <!-- Background -->
-    <div class="background-shapes">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-    </div>
+    <!-- Dashboard Card -->
+    <div class="dashboard-container" id="dashboardContent" style="display:none;opacity:0;transition:opacity 0.4s;">
 
-    <div class="dashboard-container" id="dashboardContent" style="display:none; opacity:0; transition: opacity 0.5s;">
-
-        <!-- Scrollable Area -->
-        <div class="scrollable-content">
-            <!-- Header -->
-            <div class="dash-header">
-                <div class="user-info">
-                    <h1>สวัสดี, <span id="usernameDisplay">User</span></h1>
-                    <p id="dateDisplay">วันจันทร์ที่ 1 มกราคม</p>
+        <!-- ---- Header ---- -->
+        <div class="dash-top">
+            <div class="dash-greeting">
+                <h1>สวัสดี, <span id="usernameDisplay">User</span> 👋</h1>
+                <p id="dateDisplay">กำลังโหลด...</p>
+            </div>
+            <div class="header-right">
+                <div class="notif-btn" onclick="location.href='notification-history.html'">
+                    <i class="fa-solid fa-bell" style="font-size:0.9rem;color:#6b7280;"></i>
+                    <div class="notif-dot" id="notif-badge"></div>
                 </div>
-
-                <div style="display:flex; align-items:center; gap:0.8rem;">
-                    <!-- Notification Icon -->
-                    <div onclick="location.href='notification-history.html'"
-                        style="position: relative; cursor: pointer; background:var(--card-bg); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--card-border); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <i class="fa-solid fa-bell" style="font-size: 1.2rem; color: var(--text-color);"></i>
-                        <div id="notif-badge"
-                            style="position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; display: none;">
-                        </div>
-                    </div>
-
-                    <div class="profile-pic" onclick="location.href='settings.html'">
+                <div class="avatar-ring" onclick="location.href='settings.html'">
+                    <div class="avatar-inner" id="avatarEl">
                         <i class="fa-solid fa-user"></i>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Daily Insight (Fate) -->
-            <div style="padding: 1rem 1.5rem 0.5rem;">
-                <div
-                    style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 1.2rem; display: flex; align-items: flex-start; gap: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                    <div
-                        style="background: rgba(168, 85, 247, 0.2); width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #d8b4fe; font-size: 1.2rem;"></i>
-                    </div>
-                    <div>
-                        <h3 style="color: white; font-size: 1rem; margin: 0 0 0.4rem 0; font-weight: 600;">
-                            ดวงสุขภาพวันนี้
-                        </h3>
-                        <p id="horoscopeText" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5; margin: 0;">
-                            "กำลังโหลดดวงสุขภาพของคุณ..."
-                        </p>
-                    </div>
+        <!-- ---- Scroll Area ---- -->
+        <div class="dash-scroll">
+
+            <!-- Horoscope -->
+            <div class="horo-card fade-in">
+                <div class="horo-icon">✨</div>
+                <div>
+                    <div class="horo-title">ดวงสุขภาพวันนี้</div>
+                    <div class="horo-text" id="horoscopeText">กำลังโหลด...</div>
                 </div>
             </div>
 
-            <!-- Features Section -->
-            <div class="section-title">
-                บริการของคุณ
-                <span style="font-size:0.8rem; color:var(--text-muted); cursor:pointer;"
-                    onclick="window.location.href='feature-selection.html'"><i class="fa-solid fa-pen"></i> แก้ไข</span>
-            </div>
+            <!-- Feature Sections -->
+            <div id="featuresRoot"></div>
 
-            <div class="features-grid" id="dashboardFeatures">
-                <!-- Dynamic Features will be loaded here -->
-            </div>
         </div>
-        <!-- End Scrollable Area -->
+        <!-- /scroll -->
 
-        <!-- Bottom Nav -->
+        <!-- ---- Bottom Nav ---- -->
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i>
-            </div>
-            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i></div>
-            <div class="nav-item"><i class="fa-solid fa-gear" onclick="location.href='settings.html'"></i></div>
+            <button class="nav-btn active" onclick="location.href='dashboard.html'">
+                <i class="fa-solid fa-house"></i>
+            </button>
+            <button class="nav-btn" onclick="location.href='history.html'">
+                <i class="fa-solid fa-chart-pie"></i>
+            </button>
+            <button class="nav-btn" onclick="location.href='chatbot.html'">
+                <i class="fa-solid fa-comment-dots"></i>
+            </button>
+            <button class="nav-btn" onclick="location.href='settings.html'">
+                <i class="fa-solid fa-gear"></i>
+            </button>
         </div>
+
     </div>
+    <!-- /dashboard-container -->
 
     <script>
         const SUPABASE_URL = 'https://rjszmmogkiblqojikcow.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
         let _supabase;
 
+        const featureMeta = {
+            medication: { title: 'ยา', emoji: '💊', bg: '#FFF3DC', link: 'feature-medication.html', group: 'สุขภาพ' },
+            excretion: { title: 'ขับถ่าย', emoji: '🚽', bg: '#DCF4FF', link: 'feature-excretion.html', group: 'สุขภาพ' },
+            sleep: { title: 'นอนหลับ', emoji: '😴', bg: '#FFF9C4', link: 'feature-sleep.html', group: 'สุขภาพ' },
+            exercise: { title: 'ออกกำลังกาย', emoji: '🏃', bg: '#DCF0FF', link: 'feature-exercise.html', group: 'สุขภาพ' },
+            period: { title: 'ประจำเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html', group: 'สุขภาพ' },
+            diet: { title: 'มื้ออาหาร', emoji: '🍳', bg: '#FFE8D0', link: 'feature-food.html', group: 'ชีวิตประจำวัน' },
+            vehicle: { title: 'ยานพาหนะ', emoji: '🛵', bg: '#FFD6D6', link: 'feature-vehicle.html', group: 'ชีวิตประจำวัน' },
+            appointment: { title: 'นัดหมายแพทย์', emoji: '🗓️', bg: '#DCE8FF', link: 'feature-appointment.html', group: 'ชีวิตประจำวัน' },
+            goals: { title: 'ตั้งเป้าหมาย', emoji: '⭐', bg: '#FFF9C4', link: 'feature-goals.html', group: 'พิเศษ/ส่วนตัว' },
+        };
+
+        const GROUP_ORDER = ['สุขภาพ', 'ชีวิตประจำวัน', 'พิเศษ/ส่วนตัว'];
+
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Update Date
-                const dateStr = new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                document.getElementById('dateDisplay').textContent = dateStr;
+                document.getElementById('dateDisplay').textContent =
+                    new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-                // Default Variables (Defined in outer scope to be accessible later)
-                let theme = 'working';
-                let username = 'User';
-                let features = [];
-                let avatarUrl = null;
+                let theme = 'youth', username = 'User', features = [], avatarUrl = null;
 
-                // Check Supabase
                 if (window.supabase) {
                     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     const { data: { session } } = await _supabase.auth.getSession();
-
-                    if (!session) {
-                        window.location.href = 'index.html';
-                        return;
-                    }
-
+                    if (!session) { location.href = 'index.html'; return; }
                     const user = session.user;
 
-                    // Fetch Profile Data
-                    let { data: profile, error } = await _supabase
-                        .from('profiles')
-                        .select('theme, username, avatar_url, features')
-                        .eq('id', user.id)
-                        .single();
+                    const { data: profile } = await _supabase.from('profiles')
+                        .select('theme,username,avatar_url,features').eq('id', user.id).single();
 
-                    // Logic to determine Theme, Username, Features, Avatar
-                    // Priority: Profile Table > User Metadata > Default
+                    if (profile?.theme) theme = profile.theme;
+                    else if (user.user_metadata?.theme) theme = user.user_metadata.theme;
 
-                    // 1. Theme
-                    if (profile && profile.theme) theme = profile.theme;
-                    else if (user.user_metadata.theme) theme = user.user_metadata.theme;
+                    if (profile?.username) username = profile.username;
+                    else if (user.user_metadata?.username) username = user.user_metadata.username;
+                    else if (user.user_metadata?.full_name) username = user.user_metadata.full_name;
 
-                    // 2. Username (Fix: Check metadata.username NOT full_name)
-                    if (profile && profile.username) username = profile.username;
-                    else if (user.user_metadata.username) username = user.user_metadata.username;
-                    else if (user.user_metadata.full_name) username = user.user_metadata.full_name;
+                    avatarUrl = profile?.avatar_url || localStorage.getItem(`avatar_${user.id}`);
 
-                    // 3. Avatar
-                    if (profile && profile.avatar_url) avatarUrl = profile.avatar_url;
-
-                    // 4. Features
-                    let rawFeatures = [];
-                    if (profile && profile.features) rawFeatures = profile.features;
-                    else if (user.user_metadata.features) rawFeatures = user.user_metadata.features;
-
-                    if (Array.isArray(rawFeatures)) features = rawFeatures;
-                    else if (typeof rawFeatures === 'string') {
-                        try { features = JSON.parse(rawFeatures); } catch (e) { features = []; }
-                    }
-
-                    // Render Avatar (Priority: Supabase > LocalStorage > Default)
-                    if (!avatarUrl) {
-                        avatarUrl = localStorage.getItem(`avatar_${user.id}`);
-                    }
-
-                    const pic = document.querySelector('.profile-pic');
-                    if (pic) {
-                        if (avatarUrl) {
-                            pic.innerHTML = `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                        } else {
-                            pic.innerHTML = `<i class="fa-solid fa-user"></i>`;
-                        }
-                    }
-                } // End Supabase Check
+                    let raw = profile?.features || user.user_metadata?.features || [];
+                    features = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
+                }
 
                 applyTheme(theme);
-                updateUserInfo(username);
-                renderFeatures(features);
+                document.getElementById('usernameDisplay').textContent = username;
 
-                // Load Horoscope
+                if (avatarUrl) {
+                    document.getElementById('avatarEl').innerHTML =
+                        `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+                }
+
+                renderFeatures(features);
                 loadHoroscope(theme);
 
-            } catch (e) {
-                console.error("Init Error", e);
-                // alert("Error loading dashboard");
-            } finally {
-                // ALWAYS Hide Loader (Remove from DOM to prevent blocking)
+            } catch (e) { console.error(e); }
+            finally {
                 setTimeout(() => {
                     const overlay = document.getElementById('loadingOverlay');
                     if (overlay) overlay.remove();
-
                     const dash = document.getElementById('dashboardContent');
                     dash.style.display = 'flex';
-                    dash.style.zIndex = '10'; // Ensure content is above background
-                    dash.style.position = 'relative';
-                    dash.offsetHeight; // trigger reflow
+                    dash.style.flexDirection = 'column';
+                    dash.offsetHeight;
                     dash.style.opacity = '1';
-                }, 500);
+                }, 350);
             }
         });
 
-        function updateUserInfo(name) {
-            document.getElementById('usernameDisplay').textContent = name;
+        function applyTheme(t) {
+            document.body.className = `theme-${t} page-dashboard`;
         }
 
-        function applyTheme(themeId) {
-            document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
-            if (themeId) {
-                document.body.classList.add(`theme-${themeId}`);
-                let primaryColor = '#6366f1';
-                if (themeId === 'youth') primaryColor = '#ec4899';
-                if (themeId === 'elder') primaryColor = '#10b981';
-                document.documentElement.style.setProperty('--primary-color', primaryColor);
-            }
-        }
+        /* ---- Classic feature metadata (working/elder) ---- */
+        const featureMetaClassic = {
+            medication: { title: 'ทานยา', icon: 'fa-pills', link: 'feature-medication.html' },
+            excretion: { title: 'การขับถ่าย', icon: 'fa-toilet', link: 'feature-excretion.html' },
+            sleep: { title: 'การนอน', icon: 'fa-bed', link: 'feature-sleep.html' },
+            goals: { title: 'เป้าหมาย', icon: 'fa-bullseye', link: 'feature-goals.html' },
+            exercise: { title: 'ออกกำลังกาย', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
+            period: { title: 'รอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
+            vehicle: { title: 'ยานพาหนะ', icon: 'fa-motorcycle', link: 'feature-vehicle.html' },
+            diet: { title: 'อาหาร', icon: 'fa-utensils', link: 'feature-food.html' },
+            appointment: { title: 'นัดหมอ', icon: 'fa-user-doctor', link: 'feature-appointment.html' },
+        };
 
-        function renderFeatures(featureList) {
-            const grid = document.getElementById('dashboardFeatures');
-            grid.innerHTML = '';
+        function renderFeatures(list) {
+            const root = document.getElementById('featuresRoot');
+            root.innerHTML = '';
+            const isYouth = document.body.classList.contains('theme-youth');
 
-            const featureMap = {
-                'medication': { title: 'ทานยา', icon: 'fa-pills', link: 'feature-medication.html' },
-                'excretion': { title: 'การขับถ่าย', icon: 'fa-toilet', link: 'feature-excretion.html' },
-                'sleep': { title: 'การนอน', icon: 'fa-bed', link: 'feature-sleep.html' },
-                'goals': { title: 'เป้าหมาย', icon: 'fa-bullseye', link: 'feature-goals.html' },
-                'exercise': { title: 'ออกกำลังกาย', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
-                'period': { title: 'รอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
-                'vehicle': { title: 'ยานพาหนะ', icon: 'fa-motorcycle', link: 'feature-vehicle.html' },
-                'diet': { title: 'อาหาร', icon: 'fa-utensils', link: 'feature-food.html' },
-                'appointment': { title: 'นัดหมอ', icon: 'fa-user-doctor', link: 'feature-appointment.html' }
-            };
-
-            if (!featureList || featureList.length === 0) {
-                grid.innerHTML = '<p style="grid-column: span 2; text-align:center; opacity:0.6;">เลือกฟีเจอร์ที่ต้องการใช้งานได้ที่ปุ่ม "แก้ไข"</p>';
+            if (isYouth) {
+                renderYouthTiles(root, list);
             } else {
-                featureList.forEach(fid => {
-                    const meta = featureMap[fid];
-                    if (!meta) return;
-                    const item = document.createElement('div');
-                    item.className = 'feature-item';
-                    item.onclick = () => location.href = meta.link;
-                    item.innerHTML = `<i class="fa-solid ${meta.icon}"></i><span>${meta.title}</span>`;
-                    grid.appendChild(item);
-                });
+                renderClassicCards(root, list);
             }
-            // Add "More" button always
-            const more = document.createElement('div');
-            more.className = 'feature-item';
-            more.style.opacity = '0.6';
-            more.onclick = () => window.location.href = 'feature-selection.html';
-            more.innerHTML = `<i class="fa-solid fa-plus"></i><span>เพิ่ม</span>`;
-            grid.appendChild(more);
         }
+
+        /* ---- Youth: colorful emoji 4-col grid ---- */
+        function renderYouthTiles(root, list) {
+            const ids = list.length > 0 ? list : Object.keys(featureMeta);
+            const grouped = {};
+            GROUP_ORDER.forEach(g => grouped[g] = []);
+            ids.forEach(id => {
+                const m = featureMeta[id]; if (!m) return;
+                if (!grouped[m.group]) grouped[m.group] = [];
+                grouped[m.group].push(id);
+            });
+
+            GROUP_ORDER.forEach((grp, gi) => {
+                const items = grouped[grp] || [];
+                if (items.length === 0) return;
+
+                const sec = document.createElement('div');
+                sec.className = 'fade-in';
+                sec.style.animationDelay = `${gi * 0.07 + 0.1}s`;
+
+                const title = document.createElement('div');
+                title.className = 'sect-title';
+                title.textContent = grp;
+                sec.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'feat-grid';
+
+                items.forEach(id => {
+                    const m = featureMeta[id];
+                    const tile = document.createElement('button');
+                    tile.className = 'feat-tile';
+                    tile.onclick = () => location.href = m.link;
+                    tile.innerHTML = `
+                        <div class="feat-icon-box" style="background:${m.bg};">${m.emoji}</div>
+                        <div class="feat-label">${m.title}</div>
+                    `;
+                    grid.appendChild(tile);
+                });
+
+                if (gi === 0) {
+                    const edit = document.createElement('button');
+                    edit.className = 'feat-tile feat-tile-edit';
+                    edit.onclick = () => location.href = 'feature-selection.html';
+                    edit.innerHTML = `<div class="feat-icon-box">✏️</div><div class="feat-label">แก้ไข</div>`;
+                    grid.appendChild(edit);
+                }
+
+                sec.appendChild(grid);
+                root.appendChild(sec);
+            });
+        }
+
+        /* ---- Working / Elder: classic 2-col card (matches deployed screenshots) ---- */
+        function renderClassicCards(root, list) {
+            const ids = list.length > 0 ? list : Object.keys(featureMetaClassic);
+
+            // Section header
+            const hdr = document.createElement('div');
+            hdr.style.cssText = 'padding:0.8rem 1.3rem 0.5rem; display:flex; justify-content:space-between; align-items:center;';
+            hdr.innerHTML = `
+                <span style="font-size:1rem;font-weight:700;color:#1f2937;">บริการของคุณ</span>
+                <span style="font-size:0.78rem;color:#9ca3af;cursor:pointer;" onclick="location.href='feature-selection.html'">
+                    <i class="fa-solid fa-pen" style="font-size:0.72rem;"></i> แก้ไข
+                </span>
+            `;
+            root.appendChild(hdr);
+
+            const grid = document.createElement('div');
+            grid.className = 'classic-feat-grid';
+
+            ids.forEach((id, i) => {
+                const meta = featureMetaClassic[id];
+                if (!meta) return;
+
+                const card = document.createElement('div');
+                card.className = 'classic-feat-card fade-in';
+                card.style.animationDelay = `${i * 0.04}s`;
+                card.onclick = () => location.href = meta.link;
+                card.innerHTML = `
+                    <i class="fa-solid ${meta.icon}"></i>
+                    <div class="cf-label">${meta.title}</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // "+" add card
+            const addCard = document.createElement('div');
+            addCard.className = 'classic-feat-card add-card fade-in';
+            addCard.style.animationDelay = `${ids.length * 0.04}s`;
+            addCard.onclick = () => location.href = 'feature-selection.html';
+            addCard.innerHTML = `
+                <i class="fa-solid fa-plus"></i>
+                <div class="cf-label">เพิ่ม</div>
+            `;
+            grid.appendChild(addCard);
+
+            root.appendChild(grid);
+        }
+
+
 
         async function loadHoroscope(theme) {
-            const horoscopeText = document.getElementById('horoscopeText');
-            // Check cache based on date to save API costs
-            const todayKey = 'horoscope_' + new Date().toDateString();
-            const cached = localStorage.getItem(todayKey);
+            const el = document.getElementById('horoscopeText');
+            // Cache by date + theme + version to ensure it switches when theme changes
+            const key = `horoscope_v3_${theme}_${new Date().toDateString()}`;
+            const cached = localStorage.getItem(key);
+            if (cached) { el.textContent = `"${cached}"`; return; }
 
-            if (cached) {
-                horoscopeText.innerHTML = `"${cached}"`;
-                return;
-            }
-
-            horoscopeText.innerHTML = '<span style="opacity:0.7"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังถาม AI...</span>';
-
+            el.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังถาม AI...';
             try {
-                // Get Health Context for personalized horoscope
-                const healthContext = await window.getAIHealthContext(_supabase, 3);
-
-                const res = await fetch('http://localhost:8000/api/horoscope', {
+                const ctx = typeof window.getAIHealthContext === 'function'
+                    ? await window.getAIHealthContext(_supabase, 3) : '';
+                const res = await fetch('/api/horoscope', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        theme: theme,
-                        history_context: healthContext
-                    })
+                    body: JSON.stringify({ theme, history_context: ctx })
                 });
                 const data = await res.json();
-
                 if (data.status === 'success') {
-                    // Success!
-                    horoscopeText.innerHTML = `"${data.horoscope}"`;
-                    localStorage.setItem(todayKey, data.horoscope);
+                    el.textContent = `"${data.horoscope}"`;
+                    localStorage.setItem(key, data.horoscope);
                 } else {
-                    // Show API Error from Server
-                    horoscopeText.innerHTML = `<span style="color:#ef4444; font-size:0.8rem;">Error: ${data.message}</span>`;
+                    el.textContent = 'ไม่สามารถโหลดดวงได้ในขณะนี้';
                 }
             } catch (e) {
-                // Show Network Error
-                console.warn("Horoscope API Failed", e);
-                horoscopeText.innerHTML = `<span style="color:#ef4444; font-size:0.8rem;">Connection Failed: ${e.message}</span>`;
+                el.textContent = 'ไม่สามารถเชื่อมต่อ AI ได้';
             }
         }
     </script>

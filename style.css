@@ -289,13 +289,23 @@ body {
     background: transparent;
     border: none;
     padding: 1.4rem 1.4rem 1.4rem 3.5rem;
-    color: white;
+    color: var(--text-color);
+    /* Use theme text color */
     font-size: 1.05rem;
     outline: none;
 }
 
 .input-group input::placeholder {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.input-group input:disabled,
+.input-group input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-color);
 }
 
 /* Hide native password toggle in Edge/IE */
@@ -708,9 +718,9 @@ body.theme-youth {
     /* Milky Glass */
     --card-border: rgba(233, 206, 242, 0.5);
     /* Soft Purple Border */
-    --text-color: #5d5b6a;
-    /* Soft Dark Gray/Purple */
-    --text-muted: #8b86a3;
+    --text-color: #3d3b4a;
+    /* Darker for better contrast */
+    --text-muted: #6b6683;
 
     background: #ffffff !important;
 }
@@ -808,8 +818,9 @@ body.theme-youth label {
 
 /* Fix Input Visibility for Youth Theme */
 body.theme-youth .input-group {
-    background: rgba(255, 255, 255, 0.5) !important;
-    border: 1px solid rgba(233, 206, 242, 0.5) !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(233, 206, 242, 0.8) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
 }
 
 body.theme-youth .input-group input {
@@ -1086,40 +1097,46 @@ body.theme-elder .dashboard-container {
     box-shadow: none !important;
 }
 
-/* Elder: Typography (MUCH BIGGER) */
+/* Elder: Typography (MUCH BIGGER & THEME GREEN CONTRAST) */
 body.theme-elder h1,
 body.theme-elder .app-name {
-    font-size: 2.2rem !important;
-    font-weight: 800;
+    font-size: 2.5rem !important;
+    font-weight: 900;
     color: #064e3b !important;
+    /* Dark green for theme consistency */
     letter-spacing: 0.5px;
 }
 
 body.theme-elder p,
 body.theme-elder span,
 body.theme-elder div,
-body.theme-elder label {
-    font-size: 1.1rem !important;
-    font-weight: 500;
+body.theme-elder label,
+body.theme-elder .message {
+    font-size: 1.3rem !important;
+    /* Base size 1.3rem */
+    font-weight: 700;
+    /* Bold for clarity */
     color: #022c22 !important;
+    /* Very dark green (high contrast) */
+    line-height: 1.6 !important;
 }
 
 body.theme-elder .tagline {
-    font-size: 1.1rem !important;
-    color: #166534 !important;
-    /* Darker green */
-}
-
-body.theme-elder .stat-value {
-    font-size: 2.5rem !important;
-    color: #047857 !important;
+    font-size: 1.3rem !important;
+    color: #064e3b !important;
     font-weight: 700;
 }
 
+body.theme-elder .stat-value {
+    font-size: 3rem !important;
+    color: #059669 !important;
+    font-weight: 800;
+}
+
 body.theme-elder .stat-label {
-    font-size: 1.1rem !important;
-    font-weight: 600;
-    color: #065f46 !important;
+    font-size: 1.3rem !important;
+    font-weight: 700;
+    color: #064e3b !important;
 }
 
 body.theme-elder .section-title {
@@ -1188,7 +1205,8 @@ body.theme-elder .bottom-nav {
 }
 
 body.theme-elder .nav-item {
-    color: #9ca3af !important;
+    color: #4b5563 !important;
+    /* Darker grey for better contrast */
     font-size: 1rem;
 }
 

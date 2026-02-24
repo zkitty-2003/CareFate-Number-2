@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="ai-logic.js"></script>
     <style>
@@ -59,18 +59,24 @@
             color: white;
         }
 
-        body.theme-elder .message.user {
-            background: black;
-            color: white;
-            border: 1px solid white;
+        body.theme-elder .message.bot {
+            background: #ffffff !important;
+            color: #022c22 !important;
+            /* Very dark green text */
+            border: 3px solid #059669 !important;
+            /* Thicker green border */
+            font-size: 1.4rem !important;
+            font-weight: 700 !important;
         }
 
-        .message.bot {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.15);
-            color: var(--text-color);
-            border-bottom-left-radius: 4px;
-            border: 1px solid var(--card-border);
+        body.theme-elder .message.user {
+            background: #059669 !important;
+            /* Theme green bubble */
+            color: #ffffff !important;
+            /* White text for contrast */
+            border: 2px solid #047857 !important;
+            font-size: 1.4rem !important;
+            font-weight: 700 !important;
         }
 
         .chat-input-area {
@@ -131,6 +137,24 @@
             transform: scale(0.9);
         }
 
+        body.theme-elder .chat-input {
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+            border: 2px solid #000000 !important;
+        }
+
+        body.theme-elder .chat-input::placeholder {
+            color: #666666 !important;
+        }
+
+        body.theme-elder .typing-indicator {
+            color: #000000 !important;
+            font-weight: 700 !important;
+            font-size: 1rem !important;
+        }
+
         .typing-indicator {
             font-size: 0.8rem;
             color: var(--text-muted);
@@ -138,6 +162,89 @@
             margin-bottom: 0.5rem;
             font-style: italic;
             display: none;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 100;
+            /* Ensure header is above chat area */
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000000;
+            /* Extremely high to be above header */
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            padding: 1.5rem;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1rem;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .history-list-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--card-border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-list-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .history-timestamp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .history-preview {
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -150,7 +257,7 @@
 
     <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden;">
         <!-- Header -->
-        <div style="padding: 1rem 1.5rem; display:flex; align-items:center; background:rgba(0,0,0,0.1);">
+        <div class="chat-header" style="position: relative; z-index: 99999 !important;">
             <div
                 style="width:40px; height:40px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:1rem;">
                 <img src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" style="width:24px; height:24px;">
@@ -161,6 +268,16 @@
                 <div style="font-size:0.8rem; color:var(--text-muted); display:flex; align-items:center; gap:5px;">
                     <div style="width:8px; height:8px; background:#22c55e; border-radius:50%;"></div> ออนไลน์
                 </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-left:auto; align-items:center;">
+                <button onclick="startNewChat()" title="แชทใหม่"
+                    style="background:rgba(255,255,255,0.25); border:2px solid rgba(255,255,255,0.4); color:var(--text-color); width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:999999; pointer-events: auto; position: relative;">
+                    <i class="fa-solid fa-plus" style="font-size: 1.3rem; pointer-events: none;"></i>
+                </button>
+                <button onclick="openChatHistoryModal()" id="historyBtn" class="history-btn" title="ประวัติการคุย"
+                    style="background:rgba(255,255,255,0.25); border:2px solid rgba(255,255,255,0.4); color:var(--text-color); width:44px; height:44px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:999999; pointer-events: auto; position: relative;">
+                    <i class="fa-solid fa-clock-rotate-left" style="font-size: 1.3rem; pointer-events: none;"></i>
+                </button>
             </div>
         </div>
 
@@ -185,8 +302,22 @@
         <div class="bottom-nav">
             <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
-            <div class="nav-item active"><i class="fa-solid fa-comment-dots"></i></div>
+            <div class="nav-item active" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment-dots"></i>
+            </div>
             <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+    </div>
+
+    <!-- History Modal (Moved outside app-container) -->
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>ประวัติการคุย</h3>
+                <button class="close-modal" onclick="closeHistory()">&times;</button>
+            </div>
+            <div class="modal-body" id="historyModalBody">
+                <!-- History items will be loaded here -->
+            </div>
         </div>
     </div>
 
@@ -256,11 +387,130 @@
 
             applyTheme(currentTheme);
 
-            // Initial Welcome Message
-            setTimeout(() => {
-                addBotMessage(PERSONAS[currentTheme].welcome);
-            }, 600);
+            // Load Chat History from Supabase
+            loadChatHistory();
         });
+
+        async function loadChatHistory() {
+            if (!_supabase) return;
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) {
+                    addBotMessage(PERSONAS[currentTheme].welcome, false);
+                    return;
+                }
+
+                const { data, error } = await _supabase
+                    .from('chat_history')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: true })
+                    .limit(50);
+
+                if (error) throw error;
+
+                const chatBox = document.getElementById('chatMessages');
+                chatBox.innerHTML = ''; // Clear only if we have history
+
+                if (!data || data.length === 0) {
+                    addBotMessage(PERSONAS[currentTheme].welcome, true); // Save welcome message if new
+                } else {
+                    data.forEach(msg => {
+                        const div = document.createElement('div');
+                        div.className = `message ${msg.role}`;
+                        div.innerText = msg.content;
+                        chatBox.appendChild(div);
+                    });
+                    scrollToBottom();
+                }
+            } catch (err) {
+                console.error("Error loading chat history:", err);
+                addBotMessage(PERSONAS[currentTheme].welcome, false);
+            }
+        }
+
+        async function saveChatMessage(role, content) {
+            if (!_supabase) return;
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+
+                await _supabase.from('chat_history').insert([
+                    { user_id: user.id, role: role, content: content }
+                ]);
+            } catch (err) {
+                console.error("Error saving chat message:", err);
+            }
+        }
+
+        async function openChatHistoryModal() {
+
+            const modal = document.getElementById('historyModal');
+            const body = document.getElementById('historyModalBody');
+
+            if (!modal || !body) {
+                alert("Error: Modal elements not found!");
+                return;
+            }
+
+            modal.style.display = 'flex';
+            body.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-color);"><i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลด...</div>';
+
+            try {
+                if (!_supabase) {
+                    body.innerHTML = '<p style="text-align:center; color:var(--text-muted);">ไม่พบการเชื่อมต่อฐานข้อมูล</p>';
+                    return;
+                }
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) {
+                    body.innerHTML = '<p style="text-align:center; color:var(--text-muted);">กรุณาเข้าสู่ระบบเพื่อดูประวัติการคุย</p>';
+                    return;
+                }
+
+                const { data, error } = await _supabase
+                    .from('chat_history')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    body.innerHTML = '<p style="text-align:center; color:var(--text-muted);">ไม่มีประวัติการคุย</p>';
+                } else {
+                    let html = '';
+                    data.forEach(msg => {
+                        const date = new Date(msg.created_at).toLocaleString('th-TH', {
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                        const roleLabel = msg.role === 'user' ? 'คุณ' : 'CareFate';
+                        const color = msg.role === 'user' ? 'var(--primary-color)' : '#22c55e';
+                        html += `
+                            <div class="history-list-item" onclick="closeHistory()">
+                                <div class="history-timestamp" style="color:${color}; font-weight:600;">${date} | ${roleLabel}</div>
+                                <div class="history-preview" style="color:var(--text-color);">${msg.content}</div>
+                            </div>
+                        `;
+                    });
+                    body.innerHTML = html;
+                }
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = '<p style="color:red; text-align:center;">โหลดไม่สำเร็จ</p>';
+            }
+        }
+
+        function startNewChat() {
+            if (confirm('คุณต้องการเริ่มแชทใหม่ใช่ไหม? (ข้อความปัจจุบันจะถูกล้าง)')) {
+                document.getElementById('chatMessages').innerHTML = '';
+                addBotMessage(PERSONAS[currentTheme].welcome, false);
+            }
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
 
         function applyTheme(theme) {
             document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
@@ -276,8 +526,8 @@
             const text = input.value.trim();
             if (!text) return;
 
-            // 1. Add User Message
-            addUserMessage(text);
+            // 1. Add & Save User Message
+            addUserMessage(text, true);
             input.value = '';
 
             // 2. Show Typing Indicator
@@ -303,32 +553,34 @@
                 typing.style.display = 'none';
 
                 if (data.status === 'success') {
-                    addBotMessage(data.reply);
+                    addBotMessage(data.reply, true);
                 } else {
-                    addBotMessage('ขออภัยครับ ระบบขัดข้องชั่วคราว (' + (data.message || 'Unknown Error') + ')');
+                    addBotMessage('ขออภัยครับ ระบบขัดข้องชั่วคราว (' + (data.message || 'Unknown Error') + ')', false);
                 }
 
             } catch (e) {
                 console.error(e);
                 typing.style.display = 'none';
-                addBotMessage('ขออภัยครับ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                addBotMessage('ขออภัยครับ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', false);
             }
         }
 
-        function addUserMessage(text) {
+        function addUserMessage(text, save = true) {
             const div = document.createElement('div');
             div.className = 'message user';
             div.innerText = text;
             document.getElementById('chatMessages').appendChild(div);
             scrollToBottom();
+            if (save) saveChatMessage('user', text);
         }
 
-        function addBotMessage(text) {
+        function addBotMessage(text, save = true) {
             const div = document.createElement('div');
             div.className = 'message bot';
             div.innerText = text;
             document.getElementById('chatMessages').appendChild(div);
             scrollToBottom();
+            if (save) saveChatMessage('bot', text);
         }
 
         function scrollToBottom() {

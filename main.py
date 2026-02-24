@@ -5,8 +5,8 @@ from fastapi.responses import FileResponse
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (.env overrides OS-level env vars)
+load_dotenv(override=True)
 
 app = FastAPI()
 
@@ -47,40 +47,178 @@ class ReportRequest(BaseModel):
     email: str
     report_html: str
 
-# --- OpenRouter AI Integration ---
+# # --- AI Configuration & Service Layer ---
 import json
+import time
 import urllib.request
 import urllib.error
 import random
 from datetime import datetime
+from typing import List, Dict, Optional
 
-# Load OpenRouter Key from Environment
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-OPENROUTER_MODEL = "google/gemma-3-27b-it:free"
+# Load keys
+OPENROUTER_API_KEY = (os.getenv("OPENROUTER_API_KEY") or "").strip()
+GEMINI_API_KEY     = (os.getenv("GEMINI_API_KEY") or "").strip()
+GROQ_API_KEY       = (os.getenv("GROQ_API_KEY") or "").strip()
 
-def call_openrouter(messages):
-    if not OPENROUTER_API_KEY:
-         raise Exception("Please configure OPENROUTER_API_KEY in .env file")
+# Global state for AI stability
+COOLDOWNS: Dict[str, float] = {}  # model_id -> expiry_timestamp
+DISABLED_MODELS: set = set()      # models that hit 402 billing limits
 
+# 3-Layer Fallback Configuration
+PRIORITY_MODELS = [
+    # Layer 1: Groq Primary (Extremely fast)
+    # Using more stable/available IDs
+    {"provider": "groq",       "id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B (Groq)"},
+    {"provider": "groq",       "id": "llama-3.1-70b-versatile", "name": "Llama 3.1 70B (Groq)"},
+    {"provider": "groq",       "id": "llama3-70b-8192",         "name": "Llama 3 70B (Groq)"},
+    {"provider": "groq",       "id": "llama-3.1-8b-instant",    "name": "Llama 3.1 8B (Groq)"},
+
+    # Layer 2: OpenRouter (If Groq fails)
+    {"provider": "openrouter", "id": "openai/gpt-4o-mini", "name": "GPT-4o Mini"},
+    {"provider": "openrouter", "id": "google/gemini-2.0-flash-001", "name": "Gemini 2.0 Flash (Paid)"},
+    
+    # Layer 3: Emergency Fallback (Free / High rate-limit models)
+    {"provider": "openrouter", "id": "deepseek/deepseek-r1-distill-llama-70b:free", "name": "DeepSeek R1 (Free)"},
+    {"provider": "openrouter", "id": "meta-llama/llama-3.1-8b-instruct:free", "name": "Llama 3.1 8B (Free)"},
+    {"provider": "openrouter", "id": "google/gemma-3-27b-it:free", "name": "Gemma 3 27B (Free)"},
+    {"provider": "gemini",     "id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash"},
+]
+
+def startup_check():
+    if GROQ_API_KEY:
+        print(f"✅ Groq Key loaded: {GROQ_API_KEY[:10]}...")
+    if GEMINI_API_KEY:
+        print(f"✅ Gemini Key loaded: {GEMINI_API_KEY[:10]}...")
+    if OPENROUTER_API_KEY:
+        print(f"✅ OpenRouter Key loaded: {OPENROUTER_API_KEY[:12]}...{OPENROUTER_API_KEY[-4:]}")
+    if not any([GROQ_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY]):
+        print("⚠️  No AI keys found. AI features will not work.")
+
+startup_check()
+
+def log_ai_event(provider: str, model: str, result: str, start_time: float):
+    latency = round(time.time() - start_time, 2)
+    print(f"[AI] {provider:10} | {model:40} | {result:15} | {latency}s")
+
+def _call_gemini_api(model_id: str, messages: List[Dict]) -> str:
+    system_text = " ".join(m["content"] for m in messages if m["role"] == "system")
+    user_text   = next((m["content"] for m in messages if m["role"] == "user"), "")
+    combined    = f"{system_text}\n\n{user_text}" if system_text else user_text
+    
     payload = {
-        "model": OPENROUTER_MODEL,
-        "messages": messages
+        "contents": [{"role": "user", "parts": [{"text": combined}]}],
+        "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8}
     }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={GEMINI_API_KEY}"
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
+    
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        result = json.loads(resp.read().decode("utf-8"))
+        return result["candidates"][0]["content"]["parts"][0]["text"]
 
+def _call_groq_api(model_id: str, messages: List[Dict]) -> str:
+    payload = {"model": model_id, "messages": messages}
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        result = json.loads(resp.read().decode("utf-8"))
+        return result["choices"][0]["message"]["content"]
+
+def _call_openrouter_api(model_id: str, messages: List[Dict]) -> str:
+    payload = {"model": model_id, "messages": messages}
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions",
-        data=json.dumps(payload).encode('utf-8'),
+        data=json.dumps(payload).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
             "HTTP-Referer": "http://localhost:8000",
-            "X-Title": "CareFate Local"
+            "X-Title": "CareFate"
         }
     )
-    
-    with urllib.request.urlopen(req) as response:
-        result = json.loads(response.read().decode('utf-8'))
-        return result['choices'][0]['message']['content']
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        result = json.loads(resp.read().decode("utf-8"))
+        return result["choices"][0]["message"]["content"]
+
+def call_ai(messages: List[Dict]) -> str:
+    """Unified AI orchestrator with 3-layer fallback, retries, and cooldowns."""
+    for model_info in PRIORITY_MODELS:
+        model_id = model_info["id"]
+        provider = model_info["provider"]
+        model_name = model_info["name"]
+
+        # Check model availability
+        if model_id in DISABLED_MODELS:
+            print(f"DEBUG: Skipping {model_name} (Permanently Disabled)")
+            continue
+        if model_id in COOLDOWNS and time.time() < COOLDOWNS[model_id]:
+            rem = int(COOLDOWNS[model_id] - time.time())
+            print(f"DEBUG: Skipping {model_name} (Cooldown: {rem}s)")
+            continue
+
+        # Check API Keys
+        if provider == "groq" and not GROQ_API_KEY:
+            print(f"DEBUG: Skipping {model_name} (GROQ_API_KEY Missing)")
+            continue
+        if provider == "gemini" and not GEMINI_API_KEY:
+            print(f"DEBUG: Skipping {model_name} (GEMINI_API_KEY Missing)")
+            continue
+        if provider == "openrouter" and not OPENROUTER_API_KEY:
+            print(f"DEBUG: Skipping {model_name} (OPENROUTER_API_KEY Missing)")
+            continue
+
+        start_time = time.time()
+        for attempt in range(2):  # Try same model up to 2 times on 429
+            try:
+                if provider == "groq":
+                    reply = _call_groq_api(model_id, messages)
+                elif provider == "gemini":
+                    reply = _call_gemini_api(model_id, messages)
+                else:
+                    reply = _call_openrouter_api(model_id, messages)
+                
+                log_ai_event(provider, model_id, "SUCCESS", start_time)
+                return reply
+
+            except urllib.error.HTTPError as e:
+                body = e.read().decode("utf-8")
+                
+                if e.code == 429:  # Rate Limit
+                    if attempt == 0:
+                        print(f"⚠️  {model_name} rate-limited, waiting 2s...")
+                        time.sleep(2)
+                        continue
+                    else:
+                        print(f"⚠️  {model_name} still rate-limited, entering 5m cooldown.")
+                        COOLDOWNS[model_id] = time.time() + 300
+                
+                elif e.code == 402:  # Payment Required / Billing Limit
+                    print(f"❌ {model_name} billing limit reached. Disabling.")
+                    DISABLED_MODELS.add(model_id)
+                
+                else:  # Other HTTP errors (400, 404, 500, 503)
+                    print(f"⚠️  {model_name} error {e.code}. Entering 5m cooldown.")
+                    COOLDOWNS[model_id] = time.time() + 300
+                
+                log_ai_event(provider, model_id, f"HTTP_{e.code}", start_time)
+                break  # Move to next model in priority list
+
+            except Exception as e:
+                print(f"⚠️  {model_name} unexpected error: {e}")
+                COOLDOWNS[model_id] = time.time() + 300
+                log_ai_event(provider, model_id, "EXCEPTION", start_time)
+                break
+
+    # If everything fails
+    print("🚨 FATAL: All AI models exhausted or unavailable.")
+    return "ขออภัยครับ ระบบอาจล่าช้าเล็กน้อย กรุณาลองใหม่อีกครั้งในภายหลังนะครับ"
 
 class ChatRequest(BaseModel):
     message: str
@@ -103,11 +241,12 @@ async def chat_with_ai(request: ChatRequest):
     if request.history_context:
         context_instruction = f"\n\nHere is some recent health data for this user:\n{request.history_context}\nUse this data to provide specific, personalized advice if relevant to the user's message."
 
+    messages = [
+        {"role": "system", "content": system_content + context_instruction},
+        {"role": "user", "content": request.message}
+    ]
     try:
-        reply = call_openrouter([
-            {"role": "system", "content": system_content + context_instruction},
-            {"role": "user", "content": request.message}
-        ])
+        reply = call_ai(messages)
         return {"status": "success", "reply": reply}
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -152,11 +291,12 @@ async def get_horoscope(request: HoroscopeRequest):
     Language: Thai.
     """
 
+    horo_messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": "ขอคำทำนายดวงสุขภาพวันนี้หน่อยครับ"}
+    ]
     try:
-        reply = call_openrouter([
-             {"role": "system", "content": system_prompt},
-             {"role": "user", "content": "ขอคำทำนายดวงสุขภาพวันนี้หน่อยครับ"}
-        ])
+        reply = call_ai(horo_messages)
         print(f"DEBUG: Horoscope Success: {reply[:50]}...")
         return {"status": "success", "horoscope": reply}
     except Exception as e:
@@ -165,19 +305,19 @@ async def get_horoscope(request: HoroscopeRequest):
         # Theme-specific Fallbacks
         fallbacks = {
             'youth': [
-                "สีมงคลคือสีชมพู... วันนี้ตื่นมาหน้าใสวิ้ง! อย่าลืมทากันแดดก่อนออกจากบ้านนะวัยรุ่น (ระบบหนาแน่น)",
-                "สีมงคลคือสีส้ม... พลังงานล้นเหลือ! วันนี้ลองไปวิ่งสวนสาธารณะดูสิ เจอเนื้อคู่ไม่รู้ด้วยนะ (ระบบหนาแน่น)",
-                "สีมงคลคือสีฟ้า... วันนี้สดใสเว่อร์! ดื่มน้ำเยอะๆ ผิวจะได้เด้งๆ นะคะ (ระบบหนาแน่น)"
+                "สีมงคลคือสีชมพู... วันนี้ตื่นมาหน้าใสวิ้ง! อย่าลืมทากันแดดก่อนออกจากบ้านนะวัยรุ่น",
+                "สีมงคลคือสีส้ม... พลังงานล้นเหลือ! วันนี้ลองไปวิ่งสวนสาธารณะดูสิ เจอเนื้อคู่ไม่รู้ด้วยนะ",
+                "สีมงคลคือสีฟ้า... วันนี้สดใสเว่อร์! ดื่มน้ำเยอะๆ ผิวจะได้เด้งๆ นะคะ"
             ],
             'working': [
-                "สีมงคลคือสีเขียว... วันนี้งานยุ่งแค่ไหนก็อย่าลืมลุกเดินบ้าง ระวังออฟฟิศซินโดรมถามหานะครับ (ระบบหนาแน่น)",
-                "สีมงคลคือสีม่วง... เครียดงานให้พักสายตา จิบกาแฟเบาๆ แล้วลุยต่อนะครับ สู้ๆ! (ระบบหนาแน่น)",
-                "สีมงคลคือสีน้ำเงิน... วันนี้การเจรจาดี แต่ระวังปวดคอบ่าไหล่ ยืดเส้นยืดสายหน่อยนะ (ระบบหนาแน่น)"
+                "สีมงคลคือสีเขียว... วันนี้งานยุ่งแค่ไหนก็อย่าลืมลุกเดินบ้าง ระวังออฟฟิศซินโดรมถามหานะครับ",
+                "สีมงคลคือสีม่วง... เครียดงานให้พักสายตา จิบกาแฟเบาๆ แล้วลุยต่อนะครับ สู้ๆ!",
+                "สีมงคลคือสีน้ำเงิน... วันนี้การเจรจาดี แต่ระวังปวดคอบ่าไหล่ ยืดเส้นยืดสายหน่อยนะ"
             ],
             'elder': [
-                "สีมงคลคือสีขาว... วันนี้อากาศเปลี่ยนแปลง คุณตุณยายห่มผ้าหนาๆ ระวังเป็นหวัดนะครับ (ระบบหนาแน่น)",
-                "สีมงคลคือสีทอง... วันนี้สุขภาพแข็งแรงดี ลองเดินแกว่งแขนเบาๆ หน้าบ้านรับแดดเช้านะครับ (ระบบหนาแน่น)",
-                "สีมงคลคือสีครีม... ระวังลื่นในห้องน้ำนะครับ เดินเหินช้าๆ แต่ความดันปกติ แข็งแรงครับ (ระบบหนาแน่น)"
+                "สีมงคลคือสีขาว... วันนี้อากาศเปลี่ยนแปลง คุณตุณยายห่มผ้าหนาๆ ระวังเป็นหวัดนะครับ",
+                "สีมงคลคือสีทอง... วันนี้สุขภาพแข็งแรงดี ลองเดินแกว่งแขนเบาๆ หน้าบ้านรับแดดเช้านะครับ",
+                "สีมงคลคือสีครีม... ระวังลื่นในห้องน้ำนะครับ เดินเหินช้าๆ แต่ความดันปกติ แข็งแรงครับ"
             ]
         }
         
