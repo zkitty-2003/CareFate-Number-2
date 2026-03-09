@@ -211,14 +211,9 @@
                     font-family: 'Outfit', sans-serif;
                 ">
                     <option value="all">ทุกหมวดหมู่</option>
-                    <option value="excretion">การขับถ่าย</option>
-                    <option value="medication">ทานยา</option>
-                    <option value="sleep">การนอน</option>
-                    <option value="goal">เป้าหมาย</option>
-                    <option value="period">รอบเดือน</option>
-                    <option value="food">มื้ออาหาร</option>
-                    <option value="vehicle">การดูแลรถ</option>
-                    <option value="appointment">นัดหมายแพทย์</option>
+                    <option value="exercise">เน้นการเล่นกีฬาและกิจกรรม</option>
+                    <option value="goal">ตั้งเป้าหมายการเรียน/ชีวิต</option>
+                    <option value="period">บันทึกรอบเดือน</option>
                 </select>
             </div>
 
@@ -290,7 +285,7 @@
                     let allItems = [];
 
                     // FETCH ALL HEALTH TABLES
-                    const tables = ['excretion_logs', 'sleep_logs', 'exercise_logs', 'medication_logs', 'goal_logs', 'period_logs', 'food_logs', 'vehicle_logs', 'appointment_logs'];
+                    const tables = ['exercise_logs', 'goal_logs', 'period_logs'];
 
                     for (const table of tables) {
                         try {
@@ -302,9 +297,24 @@
                         } catch (e) { console.warn(`Fetch ${table} failed`, e); }
                     }
 
+                    // Merge exercise logs from localStorage (fallback in case Supabase insert failed)
+                    try {
+                        const localExLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
+                        console.log("Found local exercise logs:", localExLogs);
+                        const dbTimestamps = new Set(allItems.filter(i => i.type === 'exercise').map(i => i.created_at));
+                        const pendingLocal = localExLogs
+                            .filter(l => !dbTimestamps.has(l.created_at))
+                            .map(l => ({ ...l, type: 'exercise', _local: true }));
+                        console.log("Pending local logs to merge:", pendingLocal);
+                        if (pendingLocal.length > 0) {
+                            allItems = allItems.concat(pendingLocal);
+                        }
+                    } catch (e) { console.warn('LocalStorage exercise merge failed', e); }
+
                     // Fallbacks and cleanup for health items
                     // (Omitted standard sort for brevity in cache, each render handles filtering)
                     cachedHealthItems = allItems.sort((a, b) => new Date(b.created_at || b.appointment_date) - new Date(a.created_at || a.appointment_date));
+                    console.log("All cached health items after merge:", cachedHealthItems);
                 }
 
                 // Load Chat Data ONLY if on chat tab or cache empty
@@ -319,7 +329,7 @@
 
             } catch (e) {
                 console.error(e);
-                list.innerHTML = '<p style="text-align:center; color:white;">โหลดข้อมูลไม่สำเร็จ</p>';
+                list.innerHTML = '<p style="text-align:center; color:red; padding:2rem;">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
             }
         }
 
@@ -339,6 +349,7 @@
         }
 
         function renderCurrentView() {
+            console.log("Rendering view, activeTab:", activeTab, "health items count:", cachedHealthItems.length);
             if (activeTab === 'health') {
                 renderHealthList(cachedHealthItems);
             } else {
@@ -346,7 +357,7 @@
             }
         }
 
-        function renderHealthList(items) {
+        async function renderHealthList(items) {
             const list = document.getElementById('historyList');
 
             // Filters
@@ -354,11 +365,19 @@
             const now = new Date();
 
             if (currentTimeFilter === 'week') {
-                const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
-                filtered = filtered.filter(i => new Date(i.created_at || i.appointment_date) >= oneWeekAgo);
+                // Start from Monday of this calendar week at midnight
+                const startOfWeek = new Date();
+                startOfWeek.setHours(0, 0, 0, 0);
+                const day = startOfWeek.getDay(); // 0=Sun, 1=Mon,...
+                const diffToMonday = day === 0 ? -6 : 1 - day;
+                startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
+                filtered = filtered.filter(i => new Date(i.created_at || i.appointment_date) >= startOfWeek);
             } else if (currentTimeFilter === 'month') {
-                const oneMonthAgo = new Date(); oneMonthAgo.setDate(now.getDate() - 30);
-                filtered = filtered.filter(i => new Date(i.created_at || i.appointment_date) >= oneMonthAgo);
+                // Start from the 1st of this calendar month at midnight
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(i => new Date(i.created_at || i.appointment_date) >= startOfMonth);
             }
 
             if (currentFilter !== 'all') {
@@ -366,7 +385,7 @@
             }
 
             if (filtered.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:3rem; opacity:0.6;"><p>ไม่พบประวัติสุขภาพในช่วงนี้</p></div>';
+                list.innerHTML = '<div style="text-align:center; padding:3rem; opacity:0.6;"><p>ไม่พบประวัติสุขภาพ</p></div>';
                 return;
             }
 
@@ -381,16 +400,58 @@
 
                 let icon = 'fa-notes-medical';
                 let title = 'บันทึก';
+                let detailText = '-';
+
                 const type = item.type;
 
-                // Map icons
-                if (type === 'excretion') { icon = 'fa-toilet'; title = 'การขับถ่าย'; }
-                else if (type === 'sleep') { icon = 'fa-bed'; title = 'การนอนหลับ'; }
-                else if (type === 'food') { icon = 'fa-utensils'; title = 'มื้ออาหาร'; }
-                else if (type === 'appointment') { icon = 'fa-user-doctor'; title = 'นัดหมายแพทย์'; }
-                else if (type === 'medication') { icon = 'fa-pills'; title = 'ทานยา'; }
-                else if (type === 'goal') { icon = 'fa-bullseye'; title = 'เป้าหมาย'; }
-                else if (type === 'vehicle') { icon = 'fa-car'; title = 'ดูแลรถ'; }
+                // Map icons & build detail per type
+                if (type === 'exercise') {
+                    icon = 'fa-dumbbell'; title = 'เน้นการเล่นกีฬาและกิจกรรม';
+                    // Backward compatibility: DB uses detail/note. Old local storage uses activity/duration/intensity/calories.
+                    if (item.detail || item.note) {
+                        detailText = item.detail || '-';
+                        if (item.note && item.note.trim() !== '') {
+                            detailText = item.detail
+                                ? `${item.detail} — <span style="color:var(--primary-color); font-weight:600;">${item.note}</span>`
+                                : item.note;
+                        }
+                    } else if (item.activity) {
+                        // Old format map
+                        const intensityText = item.intensity ? `(${item.intensity})` : '';
+                        detailText = `${item.activity} — <span style="color:var(--primary-color); font-weight:600;">${item.duration} นาที | ${item.calories} kcal ${intensityText}</span>`;
+                    } else {
+                        detailText = '-';
+                    }
+                }
+                else if (type === 'period') {
+                    icon = 'fa-droplet'; title = 'บันทึกรอบเดือน';
+                    const parts = [];
+                    if (item.cycle_start || item.start_date) parts.push(`เริ่ม: ${item.cycle_start || item.start_date}`);
+                    if (item.cycle_length) parts.push(`รอบ: ${item.cycle_length} วัน`);
+                    if (item.period_length) parts.push(`ระยะเวลา: ${item.period_length} วัน`);
+                    if (item.symptom || item.symptoms) parts.push(item.symptom || item.symptoms);
+                    if (item.note) parts.push(item.note);
+                    if (item.detail) parts.push(item.detail);
+                    detailText = parts.join(' — ') || '-';
+                }
+                else if (type === 'goal') {
+                    icon = 'fa-bullseye'; title = 'ตั้งเป้าหมายการเรียน/ชีวิต';
+                    const parts = [];
+                    if (item.goal_text || item.title || item.goal) parts.push(item.goal_text || item.title || item.goal);
+                    if (item.status) parts.push(`<span style="color:var(--primary-color); font-weight:600;">${item.status}</span>`);
+                    if (item.note) parts.push(item.note);
+                    if (item.detail) parts.push(item.detail);
+                    detailText = parts.join(' — ') || '-';
+                }
+                else {
+                    // Generic fallback
+                    detailText = item.detail || '-';
+                    if (item.note && item.note !== item.detail && item.note.trim() !== '') {
+                        detailText = item.detail
+                            ? `${item.detail} — <span style="color:var(--primary-color); font-weight:600;">${item.note}</span>`
+                            : item.note;
+                    }
+                }
 
                 html += `
                     <div class="history-card">
@@ -401,7 +462,7 @@
                             </div>
                             <div>
                                 <h4 style="color:var(--text-color); font-size:0.95rem; margin:0;">${title}</h4>
-                                <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">${item.detail || '-'}</p>
+                                <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">${detailText}</p>
                             </div>
                         </div>
                     </div>

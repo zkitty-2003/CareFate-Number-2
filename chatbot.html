@@ -326,42 +326,55 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_RoboGAH-Nqm1dQi3ORqYUQ_StZ7uU4Y';
         let _supabase;
         let currentTheme = 'working'; // default
+        let currentUsername = 'เพื่อน'; // will be loaded from profile
+        let conversationHistory = []; // in-memory chat history for AI context
+
+        // ── ตรวจจับชื่อจากข้อความผู้ใช้ ──
+        function detectNameFromMessage(msg) {
+            const patterns = [
+                /เรียก(?:ฉัน|ผม|หนู)ว่า\s*([A-Za-zก-๙]+)/,
+                /ชื่อ(?:ฉัน|ผม|หนู)?(?:คือ|ว่า)?\s*([A-Za-zก-๙]+)/,
+                /(?:call|name)\s+(?:me\s+)?([A-Za-z]+)/i,
+            ];
+            for (const p of patterns) {
+                const m = msg.match(p);
+                if (m && m[1] && m[1].length >= 2) return m[1].trim();
+            }
+            return null;
+        }
 
         // ─── AI PERSONAS ───
         const PERSONAS = {
             'youth': {
                 name: 'พี่แคร์เฟต',
                 tone: 'cheerful, energetic, uses emojis, casual slang',
-                welcome: 'หวัดดีจ้า! 👋 วันนี้มีอะไรให้พี่ช่วยมั้ย? หรืออยากเม้าท์เรื่องสุขภาพก็จัดมาเลย! 💖✨',
+                getWelcome: (name) => `หวัดดีจ้า ${name}! 👋 วันนี้มีอะไรให้พี่ช่วยมั้ย? หรืออยากเม้าท์เรื่องสุขภาพก็จัดมาเลย! 💖✨`,
                 responses: [
                     'โอเคเลย! เดี๋ยวพี่จัดการให้แป๊บนึงน้า 😉',
                     'โห เยี่ยมไปเลย! สู้ๆ นะคนเก่ง 💪🔥',
                     'เรื่องนี้พี่ว่า... ลองพักผ่อนเยอะๆ ดื่มน้ำเปล่าบ่อยๆ ช่วยได้นะ 💧😴',
-                    'เข้าใจเลยยย 🥺 อย่าเครียดน้า เธอยังมีพี่อยู่ตรงนี้เสมอ 💖',
-                    'จัดไป! เดี๋ยวพี่เตือนให้อีกทีนะ ไม่ต้องห่วง! ⏰✨'
+                    'เข้าใจเลยยย 🥺 อย่าเครียดน้า เธอยังมีพี่อยู่ตรงนี้เสมอ 💖'
                 ]
             },
             'working': {
                 name: 'ผู้ช่วย CareFate',
                 tone: 'professional, efficient, polite, encouraging',
-                welcome: 'สวัสดีครับ/ค่ะ 🙏 มีเรื่องสุขภาพหรือการบันทึกข้อมูลให้ผมช่วยดูแลไหมครับ? พร้อมให้บริการเสมอครับ ✨',
+                getWelcome: (name) => `สวัสดีครับคุณ${name} 🙏 มีเรื่องสุขภาพหรือการบันทึกข้อมูลให้ผมช่วยดูแลไหมครับ? พร้อมให้บริการเสมอครับ ✨`,
                 responses: [
                     'รับทราบครับ ผมจะบันทึกข้อมูลนี้ไว้ให้ทันที ✅',
                     'เป็นคำถามที่ดีครับ เบื้องต้นแนะนำให้ลองสังเกตอาการดูอีกสักระยะนะครับ 🧐',
                     'อย่าลืมหาเวลาพักผ่อนบ้างนะครับ การทำงานหนักอาจส่งผลต่อสุขภาพได้ 💼🍵',
-                    'เรียบร้อยครับ ข้อมูลถูกอัปเดตแล้วครับผม 👍',
-                    'หากมีอาการผิดปกติเพิ่มเติม แนะนำให้ปรึกษาแพทย์โดยตรงนะครับ 🏥'
+                    'เรียบร้อยครับ ข้อมูลถูกอัปเดตแล้วครับผม 👍'
                 ]
             },
             'elder': {
                 name: 'น้องแคร์เฟต',
                 tone: 'respectful, slow-paced, warm, clear simple language',
-                welcome: 'กราบสวัสดีครับคุณตา/คุณยาย 🙏 วันนี้รู้สึกสบายตัวดีไหมครับ? ให้หลานช่วยดูเรื่องยาหรือนัดหมอให้นะครับ 👵👴🌼',
+                getWelcome: (name) => `กราบสวัสดีครับคุณ${name} 🙏 วันนี้รู้สึกสบายตัวดีไหมครับ? ให้หลานช่วยดูเรื่องยาหรือนัดหมอให้นะครับ 👵👴🌼`,
                 responses: [
-                    'ได้เลยครับ เดี๋ยวหลานจดบันทึกให้นะครับ คุณยายไม่ต้องกังวลครับ 📝☺️',
-                    'คุณตาค่อยๆ ทานยานะครับ ดื่มน้ำอุ่นตามเยอะๆ จะได้ชุ่มคอครับ 🍵💊',
-                    'เก่งมากเลยครับ! รักษาสุขภาพแข็งแรงแบบนี้ ลูกหลานชื่นใจแย่เลย 🥰👏',
-                    'ช่วงนี้อากาศเปลี่ยนแปลง ห่มผ้าหนาๆ นะครับ เดี๋ยวจะไม่สบาย 🧥🥶',
+                    'ได้เลยครับ เดี๋ยวหลานจดบันทึกให้นะครับ ไม่ต้องกังวลครับ 📝☺️',
+                    'ทานยา ตามนะครับ ดื่มน้ำอุ่นตามเยอะๆ จะได้ชุ่มคอครับ 🍵💊',
+                    'เก่งมากเลยครับ! ลูกหลานชื่นใจแย่เลย 🥰👏',
                     'ถ้ามีอาการเวียนหัว นั่งพักก่อนนะครับ อย่าเพิ่งลุกเดินเร็วนะครับ 🪑😟'
                 ]
             }
@@ -382,51 +395,24 @@
                     if (user && user.user_metadata && user.user_metadata.theme) {
                         currentTheme = user.user_metadata.theme;
                     }
+                    // Load real username
+                    const { data: profile } = await _supabase.from('profiles')
+                        .select('username').eq('id', user.id).single();
+                    if (profile?.username) currentUsername = profile.username;
+                    else if (user.user_metadata?.username) currentUsername = user.user_metadata.username;
                 }
             } catch (e) { }
 
             applyTheme(currentTheme);
 
-            // Load Chat History from Supabase
+            // Load Chat History AFTER username is ready
             loadChatHistory();
         });
 
         async function loadChatHistory() {
-            if (!_supabase) return;
-            try {
-                const { data: { user } } = await _supabase.auth.getUser();
-                if (!user) {
-                    addBotMessage(PERSONAS[currentTheme].welcome, false);
-                    return;
-                }
-
-                const { data, error } = await _supabase
-                    .from('chat_history')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .order('created_at', { ascending: true })
-                    .limit(50);
-
-                if (error) throw error;
-
-                const chatBox = document.getElementById('chatMessages');
-                chatBox.innerHTML = ''; // Clear only if we have history
-
-                if (!data || data.length === 0) {
-                    addBotMessage(PERSONAS[currentTheme].welcome, true); // Save welcome message if new
-                } else {
-                    data.forEach(msg => {
-                        const div = document.createElement('div');
-                        div.className = `message ${msg.role}`;
-                        div.innerText = msg.content;
-                        chatBox.appendChild(div);
-                    });
-                    scrollToBottom();
-                }
-            } catch (err) {
-                console.error("Error loading chat history:", err);
-                addBotMessage(PERSONAS[currentTheme].welcome, false);
-            }
+            // เริ่มใหม่เสมอเมื่อเปิดหน้า — ดูประวัติได้ผ่านปุ่มนาฬิกา
+            conversationHistory = [];
+            addBotMessage(PERSONAS[currentTheme].getWelcome(currentUsername), false);
         }
 
         async function saveChatMessage(role, content) {
@@ -504,7 +490,8 @@
         function startNewChat() {
             if (confirm('คุณต้องการเริ่มแชทใหม่ใช่ไหม? (ข้อความปัจจุบันจะถูกล้าง)')) {
                 document.getElementById('chatMessages').innerHTML = '';
-                addBotMessage(PERSONAS[currentTheme].welcome, false);
+                conversationHistory = []; // reset memory
+                addBotMessage(PERSONAS[currentTheme].getWelcome(currentUsername), false);
             }
         }
 
@@ -537,7 +524,10 @@
             // 3. Get Health Context (RAG)
             const healthContext = await window.getAIHealthContext(_supabase, 3);
 
-            // 4. Call Real API
+            // 4. Snapshot history BEFORE adding current turn (AI sees previous turns)
+            const historySnapshot = [...conversationHistory];
+
+            // 5. Call Real API with full conversation history
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
@@ -545,7 +535,9 @@
                     body: JSON.stringify({
                         message: text,
                         theme: currentTheme,
-                        history_context: healthContext
+                        username: currentUsername,
+                        history_context: healthContext,
+                        chat_messages: historySnapshot
                     })
                 });
 
@@ -553,6 +545,15 @@
                 typing.style.display = 'none';
 
                 if (data.status === 'success') {
+                    // ตรวจจับชื่อที่ผู้ใช้บอก แล้วอัปเดต currentUsername ทันที
+                    const detectedName = detectNameFromMessage(text);
+                    if (detectedName) currentUsername = detectedName;
+
+                    // Save turn to conversationHistory for next round
+                    conversationHistory.push({ role: 'user', content: text });
+                    conversationHistory.push({ role: 'assistant', content: data.reply });
+                    // Cap history at 20 messages (10 turns) to save memory
+                    if (conversationHistory.length > 20) conversationHistory = conversationHistory.slice(-20);
                     addBotMessage(data.reply, true);
                 } else {
                     addBotMessage('ขออภัยครับ ระบบขัดข้องชั่วคราว (' + (data.message || 'Unknown Error') + ')', false);

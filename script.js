@@ -74,6 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Login success, checking profile...");
             const user = data.user;
 
+            // ── Clear stale data from previous user session ──
+            const previousUserId = localStorage.getItem('carefate_user_id');
+            if (previousUserId && previousUserId !== user.id) {
+                const healthKeys = [
+                    'sleep_logs', 'exercise_logs', 'excretion_logs',
+                    'med_schedule', 'goals_data', 'period_logs',
+                    'food_logs', 'vehicle_logs', 'medication_logs',
+                    'appointment_logs', 'notification_history', 'chat_history'
+                ];
+                healthKeys.forEach(key => localStorage.removeItem(key));
+                console.log('Health data cleared: new user session detected.');
+            }
+            localStorage.setItem('carefate_user_id', user.id);
+
             // 2. Check Profile Strategy
             let hasTheme = false;
             let hasFeatures = false;
@@ -230,24 +244,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="tagline">กรุณากรอกรหัสผ่านใหม่ของคุณ</p>
                     </div>
                     
-                    <div class="input-group" style="margin-bottom: 1rem;">
-                        <i class="fa-solid fa-lock input-icon"></i>
-                        <input type="password" id="oldPassword" placeholder="รหัสผ่านเก่า" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
-                    </div>
 
-                    <div class="input-group" style="margin-bottom: 1rem;">
+                    <div class="input-group" style="margin-bottom: 1rem; position:relative;">
                         <i class="fa-solid fa-key input-icon"></i>
-                        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่" style="width:100%; padding: 12px 40px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                        <button type="button" id="toggleNew" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#aaa; padding:0;">
+                            <i class="fa-solid fa-eye-slash" id="eyeNewIcon"></i>
+                        </button>
                     </div>
 
-                    <div class="input-group">
+                    <div class="input-group" style="position:relative;">
                         <i class="fa-solid fa-circle-check input-icon"></i>
-                        <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่" style="width:100%; padding: 12px 12px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                        <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่" style="width:100%; padding: 12px 40px 12px 40px; border-radius:12px; border:1px solid #ddd; background: rgba(255,255,255,0.1); color: white;">
+                        <button type="button" id="toggleConfirm" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#aaa; padding:0;">
+                            <i class="fa-solid fa-eye-slash" id="eyeConfirmIcon"></i>
+                        </button>
                     </div>
                     
                     <div style="font-size: 0.8rem; color: #ffcccc; margin-top: 0.5rem; line-height: 1.4; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);">
                         <strong>เงื่อนไขรหัสผ่าน:</strong><br>
                         • ความยาว 7-20 ตัวอักษร<br>
+                        • ต้องเป็นตัวอักษรภาษาอังกฤษ<br>
                         • ต้องมีตัวเลข, ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่<br>
                         • ห้ามมีอักขระพิเศษ (@ # $ %)
                     </div>
@@ -262,15 +279,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Re-attach listener
         setTimeout(() => {
+            // Eye toggle — newPassword
+            document.getElementById('toggleNew').addEventListener('click', () => {
+                const inp = document.getElementById('newPassword');
+                const icon = document.getElementById('eyeNewIcon');
+                const show = inp.type === 'password';
+                inp.type = show ? 'text' : 'password';
+                icon.className = show ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            });
+            // Eye toggle — confirmPassword
+            document.getElementById('toggleConfirm').addEventListener('click', () => {
+                const inp = document.getElementById('confirmPassword');
+                const icon = document.getElementById('eyeConfirmIcon');
+                const show = inp.type === 'password';
+                inp.type = show ? 'text' : 'password';
+                icon.className = show ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            });
+
             const btn = document.getElementById('updatePasswordBtn');
             if (btn) {
                 btn.onclick = async () => {
-                    const oldPwd = document.getElementById('oldPassword').value;
                     const newPwd = document.getElementById('newPassword').value;
                     const confirmPwd = document.getElementById('confirmPassword').value;
 
                     // Basic Empty Check
-                    if (!oldPwd) return alert('กรุณากรอกรหัสผ่านเก่า');
                     if (!newPwd) return alert('กรุณากรอกรหัสผ่านใหม่');
                     if (!confirmPwd) return alert('กรุณายืนยันรหัสผ่านใหม่');
 
@@ -291,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!hasNumber) return alert('รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว');
                     if (!hasLower) return alert('รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว');
                     if (!hasUpper) return alert('รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว');
-                    if (!isAlphanumeric) return alert('รหัสผ่านห้ามมีอักขระพิเศษ (@ # $ %)');
+                    if (!isAlphanumeric) return alert('รหัสผ่านต้องเป็นตัวอักษรภาษาอังกฤษ และห้ามมีอักขระพิเศษ (@ # $ %)');
 
                     const btn = document.getElementById('updatePasswordBtn');
                     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังเปลี่ยน...';
@@ -300,11 +332,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { error } = await _supabase.auth.updateUser({ password: newPwd });
 
                     if (error) {
-                        alert('เกิดข้อผิดพลาด: ' + error.message);
+                        let msg = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+                        const e = error.message.toLowerCase();
+                        if (e.includes('same password') || e.includes('different from') || e.includes('previously used')) {
+                            msg = '❌ ไม่สามารถใช้รหัสผ่านเดิมได้ กรุณาตั้งรหัสผ่านใหม่ที่แตกต่างออกไป';
+                        } else if (e.includes('session missing') || e.includes('auth session') || e.includes('not authenticated')) {
+                            msg = '⏰ ลิงก์รีเซ็ตรหัสผ่านหมดอายุหรือถูกใช้ไปแล้ว\nกรุณาขอลิงก์ใหม่อีกครั้งที่หน้า Login';
+                        } else if (e.includes('weak password') || e.includes('password')) {
+                            msg = '❌ รหัสผ่านไม่ผ่านเกณฑ์ความปลอดภัย กรุณาตรวจสอบเงื่อนไขด้านล่าง';
+                        }
+                        alert(msg);
                         btn.innerHTML = 'ยืนยัน';
                         btn.disabled = false;
                     } else {
-                        alert('เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่ด้วยรหัสผ่านใหม่');
+                        alert('✅ เปลี่ยนรหัสผ่านสำเร็จ! กรุณาเข้าสู่ระบบใหม่ด้วยรหัสผ่านใหม่');
                         window.location.href = 'index.html';
                     }
                 };

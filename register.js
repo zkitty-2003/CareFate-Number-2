@@ -88,7 +88,7 @@ function initializeRegisterPage() {
         const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{7,20}$/;
 
         if (!passwordRegex.test(password)) {
-            showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
+            showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร ต้องเป็นตัวอักษรภาษาอังกฤษ ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
             return;
         }
 
@@ -128,6 +128,15 @@ function initializeRegisterPage() {
             });
 
             if (authError) throw authError;
+
+            // Supabase returns empty identities when email is already registered
+            // (it hides this for security, but we can detect it this way)
+            if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+                showInAppNotification('อีเมลซ้ำ', 'อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                return;
+            }
 
             console.log("Signup success:", authData);
 
@@ -333,67 +342,25 @@ async function initializeFeaturePage() {
     // Define Features & Logic
     const features = [
         {
-            id: 'medication',
-            title: 'การรับประทานยา',
-            desc: 'แจ้งเตือนและบันทึกการทานยา',
-            icon: 'fa-pills',
-            recommend: (a) => a >= 60 // Elder
-        },
-        {
-            id: 'excretion',
-            title: 'การขับถ่าย',
-            desc: 'บันทึกสุขภาพการขับถ่าย',
-            icon: 'fa-toilet',
-            recommend: (a) => a >= 60 || (a >= 6 && a <= 12) // Elder & Kids
-        },
-        {
-            id: 'sleep',
-            title: 'การนอนหลับ',
-            desc: 'วิเคราะห์คุณภาพการนอน',
-            icon: 'fa-bed',
-            recommend: (a) => a >= 24 // Working & Elder
-        },
-        {
             id: 'goals',
-            title: 'ตั้งเป้าหมาย',
+            title: 'ตั้งเป้าหมายการเรียน/ชีวิต',
             desc: 'ตั้งเป้าหมายชีวิตและการเรียน',
             icon: 'fa-bullseye',
-            recommend: (a) => a >= 13 && a <= 59 // Teen & Working
+            recommend: (a) => a >= 6 && a <= 59
         },
         {
             id: 'exercise',
-            title: 'ออกกำลังกาย',
+            title: 'เน้นการเล่นกีฬาและกิจกรรม',
             desc: 'ติดตามกิจกรรมออกกำลังกายรายวัน',
             icon: 'fa-dumbbell',
-            recommend: (a) => a >= 13 && a <= 59 // Teen & Working
+            recommend: (a) => a >= 6 && a <= 59
         },
         {
             id: 'period',
-            title: 'ติดตามรอบเดือน',
+            title: 'บันทึกรอบเดือน',
             desc: 'บันทึกและคาดการณ์รอบเดือน',
             icon: 'fa-droplet',
-            recommend: (a) => a >= 12 && a <= 50 // Teen & Working (Female context implied)
-        },
-        {
-            id: 'vehicle',
-            title: 'ยานพาหนะ',
-            desc: 'ดูแลรถ/มอเตอร์ไซค์คู่ใจ',
-            icon: 'fa-motorcycle',
-            recommend: (a) => a >= 16 && a <= 59 // Teen & Working
-        },
-        {
-            id: 'diet',
-            title: 'บันทึกอาหาร',
-            desc: 'คุมน้ำหนักและดูแลโภชนาการ',
-            icon: 'fa-utensils',
-            recommend: (a) => a >= 24 // Working (Diet) & Elder (Health)
-        },
-        {
-            id: 'appointment',
-            title: 'นัดหมายแพทย์',
-            desc: 'แจ้งเตือนวันนัดหมอและวัคซีน',
-            icon: 'fa-user-doctor',
-            recommend: (a) => a >= 60 || (a >= 25 && a <= 45) // Elder & Parents
+            recommend: (a) => a >= 12 && a <= 50
         }
     ];
 

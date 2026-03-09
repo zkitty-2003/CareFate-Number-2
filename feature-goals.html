@@ -169,6 +169,22 @@
             border-color: var(--goal-primary);
         }
 
+        .type-icon-time {
+            color: #a855f7;
+        }
+
+        .type-icon-count {
+            color: #2563eb;
+        }
+
+        .type-icon-distance {
+            color: #b45309;
+        }
+
+        .type-btn.active i {
+            color: #ffffff !important;
+        }
+
         /* Goal Actions (Edit/Delete) */
         .goal-actions {
             position: relative;
@@ -183,6 +199,11 @@
             padding: 0.3rem 0.5rem;
             border-radius: 8px;
             transition: background 0.2s;
+        }
+
+        /* Default action buttons */
+        .action-btn-save {
+            background: var(--goal-primary);
         }
 
         .goal-actions-btn:hover {
@@ -263,66 +284,322 @@
 
         /* --- THEME SPECIFIC UX/UI --- */
 
-        /* 1. YOUTH: Playful, Gradient Borders, Bouncy */
+        /* ====================================================
+           1. YOUTH: New design (reference image)
+           ==================================================== */
         body.theme-youth .app-container {
-            font-family: 'Outfit', sans-serif;
+            background: #f8f0ff;
         }
 
-        body.theme-youth .goal-card {
-            border: 2px solid transparent;
-            background: linear-gradient(rgba(255, 240, 245, 0.95), rgba(245, 230, 250, 0.95)) padding-box,
-                linear-gradient(45deg, #f472b6, #a78bfa) border-box;
-            box-shadow: 0 8px 20px -5px rgba(167, 139, 250, 0.3);
-            border-radius: 24px;
+        /* --- Hero Progress Card --- */
+        body.theme-youth .youth-hero-card {
+            background: linear-gradient(135deg, #b57bee 0%, #e879a8 100%);
+            border-radius: 22px;
+            padding: 1.2rem 1.4rem 1.4rem;
+            margin: 0.6rem 0 1rem;
+            box-shadow: 0 8px 28px rgba(167, 139, 250, 0.35);
+            color: #ffffff !important;
         }
 
-        body.theme-youth .goal-title {
+        body.theme-youth .youth-hero-card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem;
+            color: #ffffff !important;
+        }
+
+        body.theme-youth .youth-hero-card p {
+            font-size: 0.88rem;
+            margin: 0 0 0.85rem;
+            color: rgba(255, 255, 255, 0.95) !important;
+        }
+
+        body.theme-youth .youth-progress-bar-track {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 99px;
+            height: 9px;
+            overflow: hidden;
+        }
+
+        body.theme-youth .youth-progress-bar-fill {
+            background: white;
+            border-radius: 99px;
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* --- Section label row --- */
+        body.theme-youth .youth-section-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        body.theme-youth .youth-section-title {
+            font-size: 1rem;
+            font-weight: 700;
             color: #1e1b4b;
         }
 
-        body.theme-youth .goal-detail {
-            color: #6b7280;
+        body.theme-youth .youth-section-date {
+            font-size: 0.78rem;
+            color: #9ca3af;
         }
 
-        body.theme-youth .goal-status-btn {
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid #e5e7eb;
-            color: #374151;
+        /* --- Goal Item Card --- */
+        body.theme-youth .youth-goal-item {
+            background: white;
+            border-radius: 18px;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body.theme-youth .add-form {
-            border-radius: 24px;
-            border: 2px solid #f472b6;
-            box-shadow: 0 10px 30px rgba(244, 114, 182, 0.2);
+        body.theme-youth .youth-goal-item:active {
+            transform: scale(0.97);
         }
 
-        body.theme-youth .form-input,
-        body.theme-youth .form-select {
-            border-radius: 20px;
-            border: 2px solid #e2e8f0;
-            padding: 1.1rem;
+        body.theme-youth .youth-goal-icon-box {
+            width: 52px;
+            height: 52px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            background: #f0e8ff;
         }
 
-        body.theme-youth .form-input:focus {
-            border-color: #f472b6;
-            box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.2);
+        body.theme-youth .youth-goal-body {
+            flex: 1;
+            min-width: 0;
         }
 
-        body.theme-youth .type-btn {
-            border-radius: 16px;
-            font-weight: 500;
+        body.theme-youth .youth-goal-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e1b4b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        body.theme-youth .type-btn.active {
-            background: linear-gradient(135deg, #f472b6, #a78bfa);
+        body.theme-youth .youth-goal-name.done-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        body.theme-youth .youth-goal-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Circular checkbox */
+        body.theme-youth .youth-check-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2.5px solid #d1d5db;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        body.theme-youth .youth-check-circle.checked {
+            background: linear-gradient(135deg, #b57bee, #e879a8);
+            border-color: transparent;
+        }
+
+        body.theme-youth .youth-check-circle.checked::after {
+            content: '';
+            display: block;
+            width: 11px;
+            height: 7px;
+            border-left: 2.5px solid white;
+            border-bottom: 2.5px solid white;
+            transform: rotate(-45deg) translateY(-1px);
+        }
+
+        /* 3-dot menu for youth (top-right of item) */
+        body.theme-youth .youth-goal-item-actions {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        body.theme-youth .youth-dot-btn {
+            background: none;
             border: none;
+            color: #d1d5db;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0.25rem 0.35rem;
+            line-height: 1;
+            border-radius: 8px;
+        }
+
+        body.theme-youth .youth-dot-btn:hover {
+            background: #f3f4f6;
+        }
+
+        /* Form overrides for youth */
+        body.theme-youth .youth-form-container {
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            border: 1px solid #e9d5ff !important;
+            box-shadow: 0 4px 20px rgba(181, 123, 238, 0.1) !important;
+            padding: 1.5rem !important;
+        }
+
+        body.theme-youth .youth-form-group-wrap {
+            padding: 0;
+            margin-bottom: 1.2rem;
+        }
+
+        body.theme-youth .add-form .form-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.6rem;
+        }
+
+        body.theme-youth .youth-form-input,
+        body.theme-youth .youth-form-select {
+            border-radius: 14px;
+            border: 1px solid transparent !important;
+            background: #f8fafc !important;
+            padding: 0.9rem 1.1rem;
+            font-size: 0.95rem;
+            color: #334155;
+            box-shadow: none !important;
+            font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        body.theme-youth .youth-form-input::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        body.theme-youth #formTitle {
+            color: #9333ea !important;
+        }
+
+        body.theme-youth .youth-form-input:focus,
+        body.theme-youth .youth-form-select:focus {
+            border-color: #b57bee !important;
+            box-shadow: 0 0 0 3px rgba(181, 123, 238, 0.1) !important;
+            outline: none;
+        }
+
+        /* YOUTH Custom Type Grid */
+        body.theme-youth .youth-type-grid {
+            display: flex;
+            gap: 0.5rem;
+            background: #f8fafc;
+            padding: 0.5rem;
+            border-radius: 20px;
+        }
+
+        body.theme-youth .youth-type-btn {
+            flex: 1;
+            padding: 0.8rem 0.2rem;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        body.theme-youth .youth-type-btn i {
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        body.theme-youth .youth-type-btn.active {
+            background: #ffffff;
+            color: #a855f7;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        body.theme-youth .youth-type-btn.active i {
+            color: #a855f7 !important;
+        }
+
+        /* Split columns */
+        body.theme-youth .youth-form-row {
+            display: flex;
+            gap: 1rem;
+            padding: 0 1.5rem;
+            margin-bottom: 1.2rem;
+        }
+
+        body.theme-youth .youth-form-row>div {
+            flex: 1;
+            padding: 0;
+            margin: 0;
+        }
+
+        body.theme-youth .action-btn-cancel {
+            background: #f8fafc !important;
+            border: 1px solid transparent !important;
+            color: #64748b !important;
+        }
+
+        body.theme-youth .action-btn-save {
+            background: #7c3aed !important;
+            border: none !important;
+            color: white !important;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3) !important;
+        }
+
+        body.theme-youth .youth-save-btn {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
+            border-radius: 20px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 1.1rem;
+            width: calc(100% - 3rem);
+            margin: 1.5rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s;
+            display: block;
+        }
+
+        body.theme-youth .youth-save-btn:active {
+            transform: scale(0.98);
         }
 
         body.theme-youth .fab-add {
-            background: linear-gradient(135deg, #f472b6, #a78bfa);
-            box-shadow: 0 4px 20px rgba(244, 114, 182, 0.5);
-            border-radius: 16px;
-            /* Squircle */
+            background: linear-gradient(135deg, #b57bee, #e879a8);
+            box-shadow: 0 4px 20px rgba(181, 123, 238, 0.5);
+            border-radius: 18px;
         }
 
 
@@ -426,11 +703,12 @@
         }
 
 
-        /* 3. ELDER: High Contrast, Large Text, Simple */
+        /* 3. ELDER: High Contrast, Large Text, Simple - REDESIGN */
         body.theme-elder {
             --card-bg: #fff;
-            --text-color: #000;
-            --text-muted: #333;
+            --text-color: #0f172a;
+            --text-muted: #334155;
+            --elder-border: #1e293b;
         }
 
         body.theme-elder .background-shapes {
@@ -439,38 +717,78 @@
 
         body.theme-elder .app-container {
             background: #f8fafc;
+            border-left: 3px solid #059669;
+            /* Green edge line from design */
+            border-right: 3px solid #059669;
+            border-top: 3px solid #059669;
+            border-top-left-radius: 40px;
+            border-top-right-radius: 40px;
         }
 
         body.theme-elder .add-form {
-            border: 2px solid #000;
+            border: none;
             box-shadow: none;
             border-radius: 12px;
             padding: 1.5rem;
+            background: #f8fafc !important;
         }
 
         body.theme-elder .form-label {
-            font-size: 1.2rem;
-            color: #000;
+            font-size: 1.15rem;
+            color: var(--text-color);
             font-weight: 700;
         }
 
         body.theme-elder .form-input,
         body.theme-elder .form-select {
-            font-size: 1.2rem;
-            padding: 1.2rem;
-            border: 2px solid #000;
+            font-size: 1.1rem;
+            padding: 1rem 1.2rem;
+            border: 2px solid var(--elder-border);
             background: #fff;
-            color: #000;
+            color: var(--text-color);
             border-radius: 12px;
         }
 
         body.theme-elder .type-btn {
             font-size: 1.1rem;
-            border: 2px solid #000;
-            color: #000;
-            font-weight: 600;
+            border: 2px solid var(--elder-border);
+            color: var(--text-color);
+            font-weight: 700;
             background: #fff;
-            padding: 1rem;
+            padding: 1rem 0.5rem;
+            border-radius: 12px;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 0.5rem;
+            text-align: center;
+        }
+
+        body.theme-elder .type-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+        }
+
+        body.theme-elder .type-btn:nth-child(1) i {
+            /* background: #10b981; */
+            background: #dcfce7;
+            color: #059669;
+        }
+
+        body.theme-elder .type-btn:nth-child(2) i {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        body.theme-elder .type-btn:nth-child(3) i {
+            background: #ffedd5;
+            color: #ea580c;
         }
 
         body.theme-elder .type-btn.active {
@@ -479,42 +797,88 @@
             border-color: #059669;
         }
 
-        body.theme-elder h1 {
+        body.theme-elder .type-btn.active i {
+            background: #10b981 !important;
+            color: #fff !important;
+        }
+
+        body.theme-elder h1,
+        body.theme-elder h3 {
             font-size: 1.5rem !important;
-            color: #000 !important;
+            color: var(--text-color) !important;
+            font-weight: 800;
         }
 
         body.theme-elder .goal-card {
             background: #ffffff;
-            border: 2px solid #000;
-            border-radius: 12px;
+            border: 3px solid var(--elder-border);
+            border-radius: 20px;
             box-shadow: none;
-            padding: 1.5rem;
+            padding: 1.2rem;
         }
 
         body.theme-elder .goal-title {
-            font-size: 1.4rem;
-            color: #000;
-            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+            color: var(--text-color);
+            font-weight: 700;
+            margin-bottom: 0.3rem;
         }
 
         body.theme-elder .goal-detail {
-            font-size: 1.1rem;
-            color: #444;
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
         }
 
         body.theme-elder .goal-status-btn {
-            padding: 1rem;
-            font-size: 1.2rem;
-            border: 2px solid #666;
-            color: #000;
-            background: #f1f5f9;
+            padding: 0.8rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border: 2px solid var(--elder-border);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        body.theme-elder .goal-status-btn i {
+            margin-right: 0.4rem;
         }
 
         body.theme-elder .goal-status-btn.done-btn {
+            border-color: #cbd5e1;
+            color: #64748b;
+        }
+
+        body.theme-elder .goal-status-btn.not-done-btn {
+            border-color: #ef4444;
+            color: #ef4444;
+            background: #fef2f2;
+        }
+
+        body.theme-elder .goal-card.done .goal-status-btn.done-btn {
+            border-color: #059669;
+            color: #059669;
             background: #dcfce7;
-            border-color: #166534;
-            color: #166534;
+        }
+
+        body.theme-elder .goal-card.done .goal-status-btn.not-done-btn {
+            border-color: #cbd5e1;
+            color: #64748b;
+            background: transparent;
+        }
+
+        body.theme-elder .action-btn-save {
+            background: #4f46e5 !important;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            box-shadow: none !important;
+        }
+
+        body.theme-elder .action-btn-cancel {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            color: var(--text-color) !important;
         }
 
         body.theme-elder .fab-add {
@@ -545,14 +909,20 @@
                 style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
                 ตั้งเป้าหมาย
             </h1>
-            <button onclick="requestNotificationPermission()"
-                style="background:white; border:none; border-radius:50%; width:35px; height:35px; box-shadow:0 2px 5px rgba(0,0,0,0.1); color:var(--goal-primary); cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-bell"></i>
-            </button>
+            <div style="position:relative; width:45px; height:45px;">
+                <button onclick="requestNotificationPermission()"
+                    style="all:unset; box-sizing:border-box; width:100%; height:100%; border-radius:50%; border:2px solid var(--text-color); display:flex; align-items:center; justify-content:center; cursor:pointer; background:transparent;">
+                    <i class="fa-regular fa-bell"
+                        style="font-size:1.2rem; color:var(--text-color); margin:0; padding:0;"></i>
+                </button>
+                <div
+                    style="position:absolute; top:4px; right:4px; width:10px; height:10px; background:#ef4444; border-radius:50%; border:2px solid #ffffff; pointer-events:none;">
+                </div>
+            </div>
         </div>
 
         <div class="scrollable-content"
-            style="flex:1; overflow-y:auto; padding: 0 1.5rem 6rem; display:flex; flex-direction:column;">
+            style="flex:1; overflow-y:auto; padding: 0 1.5rem 6rem; display:flex; flex-direction:column; background: linear-gradient(to bottom, #f8fafc, #ffffff);">
 
             <div id="goalsList">
                 <!-- Javascript will populate this -->
@@ -564,50 +934,66 @@
             </div>
 
             <!-- Add Form Overlay (Hidden default) -->
-            <div id="addGoalForm" class="add-form" style="display:none; animation: fadeIn 0.3s; margin-bottom: 2rem;">
-                <h3 id="formTitle"
-                    style="color:#0f172a; font-size:1.2rem; margin-bottom:1.5rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.8rem;">
-                    เป้าหมายใหม่
-                </h3>
+            <!-- Add Form (Hidden default) -->
+            <div id="addGoalForm" class="add-form youth-form-container" style="display:none; margin-bottom: 2rem;">
+
+                <div style="display:flex; align-items:center; margin-bottom: 1.5rem;">
+                    <button onclick="toggleAddForm()"
+                        style="background:none; border:none; padding:0; cursor:pointer; color:var(--text-color);">
+                        <i class="fa-solid fa-arrow-left" style="font-size:1.5rem;"></i>
+                    </button>
+                    <h3 id="formTitle"
+                        style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:700; color:var(--text-color);">
+                        เป้าหมายใหม่
+                    </h3>
+                    <div style="width:35px"></div>
+                </div>
 
                 <div class="form-group">
                     <label class="form-label">ชื่อเป้าหมาย</label>
-                    <input type="text" id="goalName" class="form-input" placeholder="เช่น วิ่ง 30 นาที, อ่านหนังสือ">
+                    <input type="text" id="goalName" class="form-input" placeholder="เช่น วิ่ง 30 นาที, อ่านหนังสือ...">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group youth-type-container">
                     <label class="form-label">ประเภทเป้าหมาย</label>
-                    <div class="type-grid">
-                        <div class="type-btn active" onclick="selectType(this, 'time')">เวลา</div>
-                        <div class="type-btn" onclick="selectType(this, 'count')">จำนวนครั้ง</div>
-                        <div class="type-btn" onclick="selectType(this, 'distance')">ระยะทาง</div>
+                    <div id="typeGrid" class="type-grid">
+                        <div class="type-btn active" onclick="selectType(this, 'time')"><i
+                                class="fa-solid fa-clock type-icon-time"></i> <span>เวลา</span></div>
+                        <div class="type-btn" onclick="selectType(this, 'count')"><i
+                                class="fa-solid fa-arrows-rotate type-icon-count"></i> <span>จำนวนครั้ง</span></div>
+                        <div class="type-btn" onclick="selectType(this, 'distance')"><i
+                                class="fa-solid fa-ruler type-icon-distance"></i> <span>ระยะทาง</span></div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" id="valueLabel">จำนวนเวลา (นาที)</label>
-                    <input type="number" id="goalValue" class="form-input" placeholder="เช่น 30">
+                <!-- Layout for Value/Freq -->
+                <div id="youthFormRow" class="">
+                    <div class="form-group" style="flex:1;">
+                        <label class="form-label" id="valueLabel" style="font-size: 0.95rem;">ระยะเวลา (นาที)</label>
+                        <input type="number" id="goalValue" class="form-input" placeholder="เช่น 30">
+                    </div>
+
+                    <div class="form-group" style="flex:1;">
+                        <label class="form-label" style="font-size: 0.95rem;">ความถี่</label>
+                        <select id="goalFreq" class="form-select">
+                            <option value="daily">ทุกวัน</option>
+                            <option value="weekdays">จันทร์ - ศุกร์</option>
+                            <option value="weekends">เสาร์ - อาทิตย์</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">ความถี่</label>
-                    <select id="goalFreq" class="form-select">
-                        <option value="daily">ทุกวัน</option>
-                        <option value="weekdays">จันทร์ - ศุกร์</option>
-                        <option value="weekends">เสาร์ - อาทิตย์</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">เวลาแจ้งเตือน</label>
+                <div class="form-group" style="margin-top:1.5rem;">
+                    <label class="form-label">แจ้งเตือนฉันตอน</label>
                     <input type="time" id="goalTime" class="form-input">
                 </div>
 
+                <!-- Action Buttons -->
                 <div style="display:flex; gap:1rem; margin-top:2rem;">
-                    <button onclick="toggleAddForm()"
-                        style="flex:1; padding:1rem; background:transparent; border:1px solid #94a3b8; color:#64748b; border-radius:12px;">ยกเลิก</button>
-                    <button onclick="saveGoal()"
-                        style="flex:1; padding:1rem; background:var(--goal-primary); border:none; color:white; border-radius:12px; font-weight:600; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">บันทึก</button>
+                    <button class="action-btn-cancel" onclick="toggleAddForm()"
+                        style="flex:1; padding:1rem; background:transparent; border:1px solid #d1d5db; color:#6b7280; border-radius:12px; font-weight:600;">ยกเลิก</button>
+                    <button class="action-btn-save" id="saveGoalBtnText" onclick="saveGoal()"
+                        style="flex:1; padding:1rem; border:none; color:white; border-radius:12px; font-weight:600; box-shadow: 0 4px 10px rgba(181, 123, 238, 0.3);">บันทึก</button>
                 </div>
             </div>
 
@@ -617,12 +1003,6 @@
         <div class="fab-add" onclick="toggleAddForm()">
             <i class="fa-solid fa-plus"></i>
         </div>
-
-        <!-- Notification Toggle (Optional) -->
-        <button onclick="requestNotificationPermission()"
-            style="position:fixed; top:20px; right:20px; background:white; border:none; border-radius:50%; width:40px; height:40px; box-shadow:0 4px 10px rgba(0,0,0,0.1); color:var(--goal-primary); cursor:pointer; z-index:999;">
-            <i class="fa-solid fa-bell"></i>
-        </button>
 
         <!-- Bottom Nav -->
         <div class="bottom-nav">
@@ -652,8 +1032,26 @@
                 }
             } catch (e) { }
 
+            // Sync goals from Supabase → LocalStorage
+            await syncGoalsFromSupabase();
             loadGoals();
         });
+
+        async function syncGoalsFromSupabase() {
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+                const { data, error } = await _supabase
+                    .from('goals_schedule').select('*')
+                    .eq('user_id', user.id).order('created_at');
+                if (error || !data) return;
+                const goals = data.map(g => ({
+                    id: g.id, name: g.name, type: g.type,
+                    value: String(g.duration || ''), time: g.reminder_time || '', freq: g.frequency || 'daily'
+                }));
+                localStorage.setItem('goals_schedule', JSON.stringify(goals));
+            } catch (e) { console.warn('Supabase goals sync failed:', e); }
+        }
 
         function toggleAddForm() {
             const form = document.getElementById('addGoalForm');
@@ -689,35 +1087,109 @@
             if (type === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
         }
 
+        // Emoji icon map for youth theme based on goal name keywords
+        function getYouthEmoji(goal) {
+            const n = goal.name.toLowerCase();
+            if (n.includes('วิ่ง') || n.includes('จอก') || goal.type === 'distance') return { emoji: '🏃', bg: '#e0f0ff' };
+            if (n.includes('น้ำ') || n.includes('ดื่ม')) return { emoji: '💧', bg: '#e0f0ff' };
+            if (n.includes('นอน') || n.includes('หลับ')) return { emoji: '😴', bg: '#f0e8ff' };
+            if (n.includes('อ่าน') || n.includes('หนังสือ')) return { emoji: '📚', bg: '#fff0e0' };
+            if (n.includes('ออกกำลัง') || n.includes('ยิม') || n.includes('gym')) return { emoji: '💪', bg: '#e0ffe8' };
+            if (n.includes('กิน') || n.includes('อาหาร')) return { emoji: '🥗', bg: '#fff0e0' };
+            if (n.includes('ยา') || n.includes('วิตามิน')) return { emoji: '💊', bg: '#ffe0e0' };
+            if (n.includes('นั่งสมาธิ') || n.includes('yoga') || n.includes('โยคะ')) return { emoji: '🧘', bg: '#f0e8ff' };
+            if (goal.type === 'time') return { emoji: '⏱️', bg: '#f0e8ff' };
+            if (goal.type === 'count') return { emoji: '⭐', bg: '#fff9e0' };
+            return { emoji: '🎯', bg: '#f0e8ff' };
+        }
+
         function loadGoals() {
             const goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
-
-            // Get today's logs
             const todayStr = new Date().toDateString();
             const logs = JSON.parse(localStorage.getItem('goals_logs') || '{}');
             const todayLogs = logs[todayStr] || {};
-
             const list = document.getElementById('goalsList');
+            const isYouth = document.body.classList.contains('theme-youth');
 
             if (goals.length === 0) {
                 list.innerHTML = `
-                   <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
-                    <i class="fa-solid fa-bullseye" style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted);"></i>
-                    <p style="color:var(--text-muted);">ยังไม่มีเป้าหมาย<br>กดปุ่ม + เพื่อเริ่มตั้งเป้าหมาย</p>
-                </div>`;
+                    <div style="text-align:center; padding:3rem 1rem; opacity:0.6;">
+                        <i class="fa-solid fa-bullseye" style="font-size:3rem; margin-bottom:1rem; color:var(--text-muted);"></i>
+                        <p style="color:var(--text-muted);">ยังไม่มีเป้าหมาย<br>กดปุ่ม + เพื่อเริ่มตั้งเป้าหมาย</p>
+                    </div>`;
                 return;
             }
 
+            // ====== YOUTH NEW DESIGN ======
+            if (isYouth) {
+                const doneCount = goals.filter(g => todayLogs[g.id] === true).length;
+                const total = goals.length;
+                const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+                const labels = ['ยังไม่มี', 'นิดหน่อย 🌱', 'ดีมาก 💪', 'สุดยอด! 🔥'];
+                const labelIdx = doneCount === 0 ? 0 : doneCount === total ? 3 : doneCount >= total / 2 ? 2 : 1;
+                const todayDisplay = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                let heroHtml = `
+                    <div class="youth-hero-card">
+                        <h2>${labels[labelIdx]}</h2>
+                        <p>วันนี้คุณทำเป้าหมายสำเร็จไปแล้ว ${doneCount}/${total}</p>
+                        <div class="youth-progress-bar-track">
+                            <div class="youth-progress-bar-fill" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                    <div class="youth-section-row">
+                        <span class="youth-section-title">สิ่งที่ต้องทำวันนี้</span>
+                        <span class="youth-section-date">${todayDisplay}</span>
+                    </div>`;
+
+                let itemsHtml = '';
+                goals.forEach(goal => {
+                    const isDone = todayLogs[goal.id] === true;
+                    const { emoji, bg } = getYouthEmoji(goal);
+                    let unit = goal.type === 'count' ? 'ครั้ง' : goal.type === 'distance' ? 'กม.' : 'นาที';
+                    const freqMap = { daily: 'ทุกวัน', weekdays: 'จ-ศ', weekends: 'ส-อา' };
+                    const metaText = goal.time
+                        ? `${goal.value} ${unit} · ${goal.time} น.`
+                        : (freqMap[goal.freq] || 'ทุกวัน');
+
+                    itemsHtml += `
+                    <div class="youth-goal-item" id="card-${goal.id}">
+                        <div class="youth-goal-icon-box" style="background:${bg}">${emoji}</div>
+                        <div class="youth-goal-body">
+                            <div class="youth-goal-name ${isDone ? 'done-text' : ''}">${goal.name}</div>
+                            <div class="youth-goal-meta">
+                                <i class="fa-regular fa-clock" style="font-size:0.7rem;"></i>
+                                ${metaText}
+                            </div>
+                        </div>
+                        <div class="youth-goal-item-actions">
+                            <button class="youth-dot-btn" onclick="toggleMenu(event,'${goal.id}')">
+                                <i class="fa-solid fa-ellipsis-vertical"></i>
+                            </button>
+                            <div class="goal-actions-menu" id="menu-${goal.id}">
+                                <button class="goal-action-item" onclick="editGoal('${goal.id}')">
+                                    <i class="fa-solid fa-pen"></i> แก้ไข
+                                </button>
+                                <button class="goal-action-item delete" onclick="deleteGoal('${goal.id}')">
+                                    <i class="fa-solid fa-trash"></i> ลบ
+                                </button>
+                            </div>
+                        </div>
+                        <div class="youth-check-circle ${isDone ? 'checked' : ''}" onclick="youthToggleDone('${goal.id}','${goal.name}',this)"></div>
+                    </div>`;
+                });
+
+                list.innerHTML = heroHtml + itemsHtml;
+                return;
+            }
+
+            // ====== DEFAULT (working / elder) DESIGN ======
             let html = '';
             goals.forEach(goal => {
                 const isDone = todayLogs[goal.id] === true;
-
-                // Determine Unit
                 let unit = 'นาที';
                 if (goal.type === 'count') unit = 'ครั้ง';
                 if (goal.type === 'distance') unit = 'กม.';
-
-                // Icon logic
                 let icon = 'fa-clock';
                 if (goal.type === 'count') icon = 'fa-arrow-rotate-right';
                 if (goal.type === 'distance') icon = 'fa-person-running';
@@ -733,11 +1205,9 @@
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:0.5rem;">
-                            <div class="done-badge">
-                                <i class="fa-solid fa-check"></i> สำเร็จแล้ว
-                            </div>
+                            <div class="done-badge"><i class="fa-solid fa-check"></i> สำเร็จแล้ว</div>
                             <div class="goal-actions">
-                                <button class="goal-actions-btn" onclick="toggleMenu(event, '${goal.id}')">
+                                <button class="goal-actions-btn" onclick="toggleMenu(event,'${goal.id}')">
                                     <i class="fa-solid fa-ellipsis-vertical"></i>
                                 </button>
                                 <div class="goal-actions-menu" id="menu-${goal.id}">
@@ -751,25 +1221,87 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div style="display:flex; gap:0.5rem; margin-top:1rem;">
-                        <button class="goal-status-btn done-btn" onclick="markDone('${goal.id}', '${goal.name}', true)" style="flex:1; justify-content:center;">
+                        <button class="goal-status-btn done-btn" onclick="markDone('${goal.id}','${goal.name}',true)" style="flex:1; justify-content:center;">
                             <i class="fa-regular fa-circle-check"></i> ทำแล้ว
                         </button>
-                        <button class="goal-status-btn not-done-btn" onclick="if(confirm('ยืนยันว่ายังไม่ได้ทำ?')) markDone('${goal.id}', '${goal.name}', false)" style="flex:1; justify-content:center;">
-                             ยังไม่ได้ทำ
+                        <button class="goal-status-btn not-done-btn" onclick="if(confirm('ยืนยันว่ายังไม่ได้ทำ?')) markDone('${goal.id}','${goal.name}',false)" style="flex:1; justify-content:center;">
+                            ยังไม่ได้ทำ
                         </button>
                     </div>
-                </div>
-                `;
+                </div>`;
             });
-
             list.innerHTML = html;
+        }
+
+        function toggleAddForm() {
+            const form = document.getElementById('addGoalForm');
+            const list = document.getElementById('goalsList');
+            const fab = document.querySelector('.fab-add');
+            const isYouth = document.body.classList.contains('theme-youth');
+
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                list.style.display = 'none';
+                fab.style.display = 'none';
+
+                if (isYouth) {
+                    document.getElementById('youthFormRow').classList.add('youth-form-row');
+                    document.querySelectorAll('.form-input').forEach(el => el.classList.add('youth-form-input'));
+                    document.querySelectorAll('.form-select').forEach(el => el.classList.add('youth-form-select'));
+                    document.getElementById('typeGrid').classList.add('youth-type-grid');
+                    document.querySelectorAll('.type-btn').forEach(el => el.classList.add('youth-type-btn'));
+                } else {
+                    document.getElementById('youthFormRow').classList.remove('youth-form-row');
+                    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('youth-form-input'));
+                    document.querySelectorAll('.form-select').forEach(el => el.classList.remove('youth-form-select'));
+                    document.getElementById('typeGrid').classList.remove('youth-type-grid');
+                    document.querySelectorAll('.type-btn').forEach(el => el.classList.remove('youth-type-btn'));
+                }
+
+                if (!editingGoalId) {
+                    document.getElementById('formTitle').textContent = 'เป้าหมายใหม่';
+                    document.getElementById('goalName').value = '';
+                    document.getElementById('goalValue').value = '';
+                    document.getElementById('goalTime').value = '';
+
+                    const saveBtn = document.getElementById('saveGoalBtnText');
+                    if (saveBtn) saveBtn.innerText = isYouth ? 'บันทึกเป้าหมาย' : 'บันทึก';
+                }
+            } else {
+                form.style.display = 'none';
+                list.style.display = 'block';
+                fab.style.display = 'flex';
+                editingGoalId = null; // reset
+            }
+        }
+
+        function selectType(btn, type) {
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedType = type;
+
+            const isYouth = document.body.classList.contains('theme-youth');
+            const label = document.getElementById('valueLabel');
+
+            if (isYouth) {
+                if (type === 'time') label.innerText = 'ระยะเวลา (นาที)';
+                if (type === 'count') label.innerText = 'จำนวนครั้ง';
+                if (type === 'distance') label.innerText = 'ระยะทาง (กม.)';
+
+                // Trigger emoji change if listening
+                const goalInput = document.getElementById('goalName');
+                if (goalInput) goalInput.dispatchEvent(new Event('input'));
+            } else {
+                if (type === 'time') label.innerText = 'จำนวนเวลา (นาที)';
+                if (type === 'count') label.innerText = 'จำนวนครั้ง';
+                if (type === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
+            }
         }
 
         let editingGoalId = null; // Track if we're editing
 
-        function saveGoal() {
+        async function saveGoal() {
             const name = document.getElementById('goalName').value;
             const value = document.getElementById('goalValue').value;
             const time = document.getElementById('goalTime').value;
@@ -782,33 +1314,60 @@
 
             let goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
 
-            if (editingGoalId) {
-                // Update existing goal
-                goals = goals.map(g => {
-                    if (g.id === editingGoalId) {
-                        return { ...g, name, type: selectedType, value, time, freq };
-                    }
-                    return g;
+            // Generate UUID (Fallback structure)
+            const generateUUID = () => {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
                 });
-                editingGoalId = null;
-                document.getElementById('formTitle').textContent = 'เป้าหมายใหม่';
-            } else {
-                // Create new goal
-                const newGoal = {
-                    id: Date.now().toString(),
-                    name,
-                    type: selectedType,
-                    value,
-                    time,
-                    freq,
-                    created_at: new Date().toISOString()
-                };
-                goals.push(newGoal);
+            };
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    let newId = editingGoalId || generateUUID();
+                    const goalPayload = {
+                        id: newId,
+                        user_id: user.id, name, type: selectedType,
+                        duration: parseInt(value) || 0,
+                        frequency: freq, reminder_time: time || null
+                    };
+                    if (editingGoalId) {
+                        // Update in Supabase
+                        await _supabase.from('goals_schedule').update({
+                            name, type: selectedType,
+                            duration: parseInt(value) || 0,
+                            frequency: freq, reminder_time: time || null
+                        })
+                            .eq('id', editingGoalId).eq('user_id', user.id);
+                        goals = goals.map(g => g.id === editingGoalId
+                            ? { ...g, name, type: selectedType, value, time, freq } : g);
+                        editingGoalId = null;
+                    } else {
+                        // Insert to Supabase with manually generated UUID
+                        const { error } = await _supabase
+                            .from('goals_schedule').insert([goalPayload]);
+                        if (error) {
+                            console.error("Supabase insert error details:", error);
+                            throw error;
+                        }
+                        goals.push({ id: newId, name, type: selectedType, value, time, freq });
+                    }
+                    localStorage.setItem('goals_schedule', JSON.stringify(goals));
+                } else {
+                    throw new Error("User not authenticated");
+                }
+            } catch (e) {
+                console.error('Supabase save failed, using local:', e);
+                if (!editingGoalId) {
+                    goals.push({ id: generateUUID(), name, type: selectedType, value, time, freq, created_at: new Date().toISOString() });
+                } else {
+                    goals = goals.map(g => g.id === editingGoalId ? { ...g, name, type: selectedType, value, time, freq } : g);
+                    editingGoalId = null;
+                }
+                localStorage.setItem('goals_schedule', JSON.stringify(goals));
             }
 
-            localStorage.setItem('goals_schedule', JSON.stringify(goals));
-
-            // Reset
             document.getElementById('goalName').value = '';
             document.getElementById('goalValue').value = '';
             document.getElementById('goalTime').value = '';
@@ -831,12 +1390,19 @@
         });
 
         // --- Delete Goal ---
-        function deleteGoal(goalId) {
+        async function deleteGoal(goalId) {
             if (!confirm('ต้องการลบเป้าหมายนี้?')) return;
 
             let goals = JSON.parse(localStorage.getItem('goals_schedule') || '[]');
             goals = goals.filter(g => g.id !== goalId);
             localStorage.setItem('goals_schedule', JSON.stringify(goals));
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) await _supabase.from('goals_schedule').delete()
+                    .eq('id', goalId).eq('user_id', user.id);
+            } catch (e) { console.error('Supabase delete failed:', e); }
+
             loadGoals();
         }
 
@@ -851,7 +1417,17 @@
 
             // Set editing state
             editingGoalId = goalId;
+            const isYouth = document.body.classList.contains('theme-youth');
+
+            // Set type selection (need to do this before toggling form so UI reacts correctly based on type)
+            selectedType = goal.type || 'time';
+
+            // Show form (which reads editingGoalId and handles UI prep)
+            toggleAddForm();
+
             document.getElementById('formTitle').textContent = 'แก้ไขเป้าหมาย';
+            const saveBtn = document.getElementById('saveGoalBtnText');
+            if (saveBtn) saveBtn.innerText = isYouth ? 'บันทึกการแก้ไข' : 'บันทึก';
 
             // Fill form with existing data
             document.getElementById('goalName').value = goal.name;
@@ -859,47 +1435,50 @@
             document.getElementById('goalTime').value = goal.time || '';
             document.getElementById('goalFreq').value = goal.freq || 'daily';
 
-            // Set type selection
-            selectedType = goal.type || 'time';
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             const typeButtons = document.querySelectorAll('.type-btn');
             typeButtons.forEach(b => {
+                const textContent = b.textContent.trim();
                 const typeMap = { 'เวลา': 'time', 'จำนวนครั้ง': 'count', 'ระยะทาง': 'distance' };
-                if (typeMap[b.textContent] === selectedType) b.classList.add('active');
+                if (typeMap[textContent] === selectedType) b.classList.add('active');
             });
 
             // Update label
             const label = document.getElementById('valueLabel');
-            if (selectedType === 'time') label.innerText = 'จำนวนเวลา (นาที)';
-            if (selectedType === 'count') label.innerText = 'จำนวนครั้ง';
-            if (selectedType === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
+            if (isYouth) {
+                if (selectedType === 'time') label.innerText = 'ระยะเวลา (นาที)';
+                if (selectedType === 'count') label.innerText = 'จำนวนครั้ง';
+                if (selectedType === 'distance') label.innerText = 'ระยะทาง (กม.)';
+            } else {
+                if (selectedType === 'time') label.innerText = 'จำนวนเวลา (นาที)';
+                if (selectedType === 'count') label.innerText = 'จำนวนครั้ง';
+                if (selectedType === 'distance') label.innerText = 'ระยะทาง (กิโลเมตร)';
+            }
 
-            // Show form
-            const form = document.getElementById('addGoalForm');
-            const list = document.getElementById('goalsList');
-            const fab = document.querySelector('.fab-add');
-            form.style.display = 'block';
-            list.style.display = 'none';
-            fab.style.display = 'none';
-            setTimeout(() => form.scrollIntoView({ behavior: 'smooth' }), 100);
+            // Scroll to form (just in case though fixed now)
+            setTimeout(() => document.getElementById('addGoalForm').scrollIntoView({ behavior: 'smooth' }), 100);
         }
 
         async function markDone(id, name, status) {
-            if (!status) return; // Only process 'Done' for now based on requirement to log completion
-
             const todayStr = new Date().toDateString();
             const logs = JSON.parse(localStorage.getItem('goals_logs') || '{}');
 
             if (!logs[todayStr]) logs[todayStr] = {};
 
-            logs[todayStr][id] = true;
+            logs[todayStr][id] = status;
             localStorage.setItem('goals_logs', JSON.stringify(logs));
 
             // Visual Update
             const card = document.getElementById(`card-${id}`);
-            card.classList.add('done');
+            if (status) {
+                card.classList.add('done');
+            } else {
+                card.classList.remove('done');
+            }
 
             // Save History Log
+            const noteText = status ? 'เป้าหมายสำเร็จ' : 'ยังไม่ได้ทำ';
+
             try {
                 const { data: { user } } = await _supabase.auth.getUser();
                 if (user) {
@@ -907,19 +1486,78 @@
                         user_id: user.id,
                         type: 'goal',
                         detail: name,
-                        note: 'เป้าหมายสำเร็จ',
+                        note: noteText,
                         created_at: new Date().toISOString()
                     };
 
-                    // Save to Supabase
+                    // Save to Supabase goal_logs (for history page)
                     try {
-                        const { error } = await _supabase
-                            .from('goal_logs')
-                            .insert([logData]);
+                        const { error } = await _supabase.from('goal_logs').insert([{
+                            user_id: user.id,
+                            type: 'goal',
+                            detail: name,
+                            note: noteText,
+                            created_at: new Date().toISOString()
+                        }]);
                         if (error) console.error('Supabase error:', error);
                     } catch (err) { console.error(err); }
 
                     // Save to local storage for history.html fallback/demo
+                    const histLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
+                    histLogs.push(logData);
+                    localStorage.setItem('goal_history_logs', JSON.stringify(histLogs));
+                }
+            } catch (e) { console.error(e) }
+        }
+
+        async function youthToggleDone(id, name, element) {
+            const todayStr = new Date().toDateString();
+            const logs = JSON.parse(localStorage.getItem('goals_logs') || '{}');
+            if (!logs[todayStr]) logs[todayStr] = {};
+
+            const isCurrentlyDone = logs[todayStr][id] === true;
+
+            // Toggle status
+            logs[todayStr][id] = !isCurrentlyDone;
+            localStorage.setItem('goals_logs', JSON.stringify(logs));
+
+            // Visual Update locally before re-rendering (though loadGoals does it anyway)
+            if (!isCurrentlyDone) {
+                element.classList.add('checked');
+            } else {
+                element.classList.remove('checked');
+            }
+
+            // Reload UI to update the progress bar and everything
+            loadGoals();
+
+            // Save History Log for both checking and unchecking
+            const noteText = !isCurrentlyDone ? 'เป้าหมายสำเร็จ' : 'ยังไม่ได้ทำ';
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const logData = {
+                        user_id: user.id,
+                        type: 'goal',
+                        detail: name,
+                        note: noteText,
+                        created_at: new Date().toISOString()
+                    };
+
+                    // Save to Supabase goal_logs (for history page)
+                    try {
+                        const { error } = await _supabase.from('goal_logs').insert([{
+                            user_id: user.id,
+                            type: 'goal',
+                            detail: name,
+                            note: noteText,
+                            created_at: new Date().toISOString()
+                        }]);
+                        if (error) console.error('Supabase error:', error);
+                    } catch (err) { console.error(err); }
+
+                    // Save to local storage for history.html fallback
                     const histLogs = JSON.parse(localStorage.getItem('goal_history_logs') || '[]');
                     histLogs.push(logData);
                     localStorage.setItem('goal_history_logs', JSON.stringify(histLogs));

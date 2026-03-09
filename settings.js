@@ -276,7 +276,7 @@ async function changePassword() {
     // Complexity Check (Reuse logic)
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{7,20}$/;
     if (!passwordRegex.test(newPass)) {
-        showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านใหม่ต้องมีความยาว 7-20 ตัวอักษร มีตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก");
+        showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านใหม่ต้องมีความยาว 7-20 ตัวอักษร ต้องเป็นตัวอักษรภาษาอังกฤษ มีตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
         return;
     }
 

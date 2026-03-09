@@ -70,13 +70,13 @@
         .dash-greeting h1 {
             font-size: 1.35rem;
             font-weight: 700;
-            color: #2d2d3a;
+            color: #1a1a2e;
             line-height: 1.2;
         }
 
         .dash-greeting p {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #374151;
             margin-top: 0.15rem;
         }
 
@@ -379,7 +379,7 @@
         }
 
         body.theme-youth {
-            --nav-color: #f472b6;
+            --nav-color: #b392f5;
             --nav-rgb: 244, 114, 182;
         }
 
@@ -463,6 +463,18 @@
                 </div>
             </div>
 
+            <!-- AI Health Summary Card -->
+            <div id="healthSummaryCard" class="horo-card fade-in" style="margin-top:0.8rem; animation-delay:0.1s;">
+                <div class="horo-icon">🩺</div>
+                <div style="flex:1;">
+                    <div class="horo-title">สรุปสุขภาพ 7 วัน <span
+                            style="font-size:0.7rem; color:var(--text-muted); font-weight:400;">(AI วิเคราะห์)</span>
+                    </div>
+                    <div id="healthSummaryText" class="horo-text"><i class="fa-solid fa-circle-notch fa-spin"></i>
+                        กำลังวิเคราะห์...</div>
+                </div>
+            </div>
+
             <!-- Feature Sections -->
             <div id="featuresRoot"></div>
 
@@ -494,18 +506,12 @@
         let _supabase;
 
         const featureMeta = {
-            medication: { title: 'ยา', emoji: '💊', bg: '#FFF3DC', link: 'feature-medication.html', group: 'สุขภาพ' },
-            excretion: { title: 'ขับถ่าย', emoji: '🚽', bg: '#DCF4FF', link: 'feature-excretion.html', group: 'สุขภาพ' },
-            sleep: { title: 'นอนหลับ', emoji: '😴', bg: '#FFF9C4', link: 'feature-sleep.html', group: 'สุขภาพ' },
-            exercise: { title: 'ออกกำลังกาย', emoji: '🏃', bg: '#DCF0FF', link: 'feature-exercise.html', group: 'สุขภาพ' },
-            period: { title: 'ประจำเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html', group: 'สุขภาพ' },
-            diet: { title: 'มื้ออาหาร', emoji: '🍳', bg: '#FFE8D0', link: 'feature-food.html', group: 'ชีวิตประจำวัน' },
-            vehicle: { title: 'ยานพาหนะ', emoji: '🛵', bg: '#FFD6D6', link: 'feature-vehicle.html', group: 'ชีวิตประจำวัน' },
-            appointment: { title: 'นัดหมายแพทย์', emoji: '🗓️', bg: '#DCE8FF', link: 'feature-appointment.html', group: 'ชีวิตประจำวัน' },
-            goals: { title: 'ตั้งเป้าหมาย', emoji: '⭐', bg: '#FFF9C4', link: 'feature-goals.html', group: 'พิเศษ/ส่วนตัว' },
+            goals: { title: 'ตั้งเป้าหมายการเรียน/ชีวิต', emoji: '⭐', bg: '#FFF9C4', link: 'feature-goals.html', group: 'พิเศษ/ส่วนตัว' },
+            exercise: { title: 'เน้นการเล่นกีฬาและกิจกรรม', emoji: '🏃', bg: '#DCF0FF', link: 'feature-exercise.html', group: 'สุขภาพ' },
+            period: { title: 'บันทึกรอบเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html', group: 'สุขภาพ' },
         };
 
-        const GROUP_ORDER = ['สุขภาพ', 'ชีวิตประจำวัน', 'พิเศษ/ส่วนตัว'];
+        const GROUP_ORDER = ['สุขภาพ', 'พิเศษ/ส่วนตัว'];
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -546,6 +552,7 @@
 
                 renderFeatures(features);
                 loadHoroscope(theme);
+                loadHealthSummary(theme, username);
 
             } catch (e) { console.error(e); }
             finally {
@@ -567,15 +574,9 @@
 
         /* ---- Classic feature metadata (working/elder) ---- */
         const featureMetaClassic = {
-            medication: { title: 'ทานยา', icon: 'fa-pills', link: 'feature-medication.html' },
-            excretion: { title: 'การขับถ่าย', icon: 'fa-toilet', link: 'feature-excretion.html' },
-            sleep: { title: 'การนอน', icon: 'fa-bed', link: 'feature-sleep.html' },
-            goals: { title: 'เป้าหมาย', icon: 'fa-bullseye', link: 'feature-goals.html' },
-            exercise: { title: 'ออกกำลังกาย', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
-            period: { title: 'รอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
-            vehicle: { title: 'ยานพาหนะ', icon: 'fa-motorcycle', link: 'feature-vehicle.html' },
-            diet: { title: 'อาหาร', icon: 'fa-utensils', link: 'feature-food.html' },
-            appointment: { title: 'นัดหมอ', icon: 'fa-user-doctor', link: 'feature-appointment.html' },
+            goals: { title: 'ตั้งเป้าหมายการเรียน/ชีวิต', icon: 'fa-bullseye', link: 'feature-goals.html' },
+            exercise: { title: 'เน้นการเล่นกีฬาและกิจกรรม', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
+            period: { title: 'บันทึกรอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
         };
 
         function renderFeatures(list) {
@@ -583,19 +584,27 @@
             root.innerHTML = '';
             const isYouth = document.body.classList.contains('theme-youth');
 
+            // Filter list to only valid features
+            const meta = isYouth ? featureMeta : featureMetaClassic;
+            let validList = list.filter(id => meta[id]);
+
+            // If empty or no valid features, show all (fallback for old users)
+            if (validList.length === 0) {
+                validList = Object.keys(meta);
+            }
+
             if (isYouth) {
-                renderYouthTiles(root, list);
+                renderYouthTiles(root, validList);
             } else {
-                renderClassicCards(root, list);
+                renderClassicCards(root, validList);
             }
         }
 
         /* ---- Youth: colorful emoji 4-col grid ---- */
         function renderYouthTiles(root, list) {
-            const ids = list.length > 0 ? list : Object.keys(featureMeta);
             const grouped = {};
             GROUP_ORDER.forEach(g => grouped[g] = []);
-            ids.forEach(id => {
+            list.forEach(id => {
                 const m = featureMeta[id]; if (!m) return;
                 if (!grouped[m.group]) grouped[m.group] = [];
                 grouped[m.group].push(id);
@@ -603,7 +612,10 @@
 
             GROUP_ORDER.forEach((grp, gi) => {
                 const items = grouped[grp] || [];
-                if (items.length === 0) return;
+                const isLastGroup = gi === GROUP_ORDER.length - 1;
+
+                // Only skip if empty AND not the last group (where we need to show the Edit button)
+                if (items.length === 0 && !isLastGroup) return;
 
                 const sec = document.createElement('div');
                 sec.className = 'fade-in';
@@ -629,7 +641,7 @@
                     grid.appendChild(tile);
                 });
 
-                if (gi === 0) {
+                if (isLastGroup) {
                     const edit = document.createElement('button');
                     edit.className = 'feat-tile feat-tile-edit';
                     edit.onclick = () => location.href = 'feature-selection.html';
@@ -690,6 +702,38 @@
         }
 
 
+
+        async function loadHealthSummary(theme, username) {
+            const el = document.getElementById('healthSummaryText');
+            const cacheKey = `healthsummary_v1_${theme}_${new Date().toDateString()}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) { el.innerHTML = cached; return; }
+
+            try {
+                const ctx = typeof window.getAIHealthContext === 'function'
+                    ? await window.getAIHealthContext(_supabase, 7) : '';
+                const res = await fetch('/api/health-summary', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ theme, username, health_context: ctx })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    // Format bullet points nicely
+                    const formatted = data.summary
+                        .replace(/^•/gm, '<br>•')
+                        .replace(/^\*/gm, '<br>•')
+                        .trim()
+                        .replace(/^<br>/, '');
+                    el.innerHTML = formatted;
+                    localStorage.setItem(cacheKey, formatted);
+                } else {
+                    el.textContent = 'ไม่สามารถวิเคราะห์ข้อมูลได้';
+                }
+            } catch (e) {
+                el.textContent = 'ไม่สามารถเชื่อมต่อ AI ได้';
+            }
+        }
 
         async function loadHoroscope(theme) {
             const el = document.getElementById('horoscopeText');

@@ -572,7 +572,10 @@
 
         let editingId = null; // Track if we are editing
 
-        function loadSchedule() {
+        async function loadSchedule() {
+            // Sync from Supabase first
+            await syncMedFromSupabase();
+
             let schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
             // Get logs for TODAY
             const today = new Date(); // object
@@ -657,12 +660,38 @@
             container.innerHTML = html;
         }
 
-        function deleteMedication(id) {
+        async function syncMedFromSupabase() {
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+                const { data, error } = await _supabase.from('medication_schedule')
+                    .select('*').eq('user_id', user.id).order('created_at');
+                if (error || !data) return;
+                const schedule = data.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    time: item.times ? item.times[0] : '',
+                    notifyTime: item.times ? (item.times[1] || item.times[0]) : '',
+                    dose: item.dose || '',
+                    startDate: item.created_at,
+                    durationDays: item.unit && item.unit !== 'continuous' ? item.unit : null
+                }));
+                localStorage.setItem('med_schedule', JSON.stringify(schedule));
+            } catch (e) { console.warn('Med sync failed:', e); }
+        }
+
+        async function deleteMedication(id) {
             if (!confirm('คุณต้องการลบรายการยานี้ใช่หรือไม่?')) return;
 
             let schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
             schedule = schedule.filter(item => item.id !== id);
             localStorage.setItem('med_schedule', JSON.stringify(schedule));
+
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) await _supabase.from('medication_schedule').delete()
+                    .eq('id', id).eq('user_id', user.id);
+            } catch (e) { console.error('Med delete from Supabase failed:', e); }
 
             showInAppNotification('สำเร็จ', 'ลบรายการยาเรียบร้อยแล้ว');
             loadSchedule();
@@ -697,7 +726,7 @@
             form.scrollIntoView({ behavior: 'smooth' });
         }
 
-        function saveNewMedication() {
+        async function saveNewMedication() {
             const name = document.getElementById('newMedName').value;
             const time = document.getElementById('newMedTime').value;
             const notifyTime = document.getElementById('newMedNotifyTime').value;
@@ -706,49 +735,44 @@
             let duration = null;
             if (durationType === 'limited') {
                 duration = document.getElementById('newMedDuration').value;
-                if (!duration) {
-                    showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุจำนวนวัน');
-                    return;
-                }
+                if (!duration) { showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุจำนวนวัน'); return; }
             }
 
-            if (!name || !time) {
-                showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุชื่อยาและเวลา');
-                return;
-            }
+            if (!name || !time) { showInAppNotification('ข้อผิดพลาด', 'กรุณาระบุชื่อยาและเวลา'); return; }
 
             const schedule = JSON.parse(localStorage.getItem('med_schedule') || '[]');
 
-            if (editingId) {
-                // UPDATE Existing
-                const index = schedule.findIndex(i => i.id === editingId);
-                if (index !== -1) {
-                    schedule[index] = {
-                        ...schedule[index], // keep startDate? yes
-                        name,
-                        time,
-                        notifyTime: notifyTime || time,
-                        dose,
-                        durationDays: duration
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (user) {
+                    const payload = {
+                        user_id: user.id, name, dose: dose || null,
+                        times: notifyTime ? [time, notifyTime] : [time],
+                        unit: duration || 'continuous'
                     };
-                    showInAppNotification('สำเร็จ', 'แก้ไขรายการยาเรียบร้อยแล้ว');
+                    if (editingId) {
+                        await _supabase.from('medication_schedule').update(payload)
+                            .eq('id', editingId).eq('user_id', user.id);
+                        const idx = schedule.findIndex(i => i.id === editingId);
+                        if (idx !== -1) schedule[idx] = { ...schedule[idx], name, time, notifyTime: notifyTime || time, dose, durationDays: duration };
+                        showInAppNotification('สำเร็จ', 'แก้ไขรายการยาเรียบร้อยแล้ว');
+                    } else {
+                        const { data: inserted, error } = await _supabase
+                            .from('medication_schedule').insert([payload]).select();
+                        if (error) throw error;
+                        schedule.push({ id: inserted[0].id, name, time, notifyTime: notifyTime || time, dose, startDate: inserted[0].created_at, durationDays: duration });
+                        showInAppNotification('สำเร็จ', 'เพิ่มรายการยาเรียบร้อยแล้ว');
+                    }
+                    localStorage.setItem('med_schedule', JSON.stringify(schedule));
                 }
-            } else {
-                // CREATE New
-                const newMed = {
-                    id: Date.now().toString(),
-                    name,
-                    time,
-                    notifyTime: notifyTime || time, // Default to time if not set
-                    dose,
-                    startDate: new Date().toISOString(), // store creation date
-                    durationDays: duration
-                };
-                schedule.push(newMed);
-                showInAppNotification('สำเร็จ', 'เพิ่มรายการยาเรียบร้อยแล้ว');
+            } catch (e) {
+                console.error('Supabase med save failed, using local:', e);
+                if (!editingId) {
+                    schedule.push({ id: Date.now().toString(), name, time, notifyTime: notifyTime || time, dose, startDate: new Date().toISOString(), durationDays: duration });
+                    showInAppNotification('สำเร็จ', 'เพิ่มรายการยาเรียบร้อยแล้ว');
+                }
+                localStorage.setItem('med_schedule', JSON.stringify(schedule));
             }
-
-            localStorage.setItem('med_schedule', JSON.stringify(schedule));
 
             // Reset form
             document.getElementById('newMedName').value = '';
@@ -757,13 +781,10 @@
             document.getElementById('newMedDose').value = '';
             document.getElementById('newMedDuration').value = '';
             setDurationType('continuous');
-
-            // Reset Edit Mode
             editingId = null;
             const saveBtn = document.querySelector('#addForm button[onclick="saveNewMedication()"]');
             saveBtn.innerHTML = 'บันทึก';
-
-            toggleAddForm(); // Close form
+            toggleAddForm();
             loadSchedule();
         }
 

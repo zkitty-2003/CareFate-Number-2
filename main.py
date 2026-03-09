@@ -223,15 +223,18 @@ def call_ai(messages: List[Dict]) -> str:
 class ChatRequest(BaseModel):
     message: str
     theme: str # 'youth', 'working', 'elder'
+    username: str = "เพื่อน" # ชื่อผู้ใช้ (default fallback)
     history_context: str = "" # Optional historical data summary
+    chat_messages: List[Dict] = [] # บทสนทนาย้อนหลัง [{role, content}]
 
 @app.post("/api/chat")
 async def chat_with_ai(request: ChatRequest):
     # Define System Prompts
+    name_note = f"ชื่อ account ของผู้ใช้คือ '{request.username}' แต่ถ้าผู้ใช้บอกชื่อหรือชื่อเล่นในบทสนทนา **ให้ใช้ชื่อนั้นทันทีและจำไว้ตลอดการสนทนา** อย่าลืมไม่ว่ากี่ข้อความก็ตาม"
     system_prompts = {
-        'youth': "You represent 'P'CareFate', a cheerful, energetic AI assistant for teenagers. Use casual Thai slang, emojis, be encouraging and fun. Keep responses short and lively. Speak in Thai.",
-        'working': "You are 'CareFate Assistant', a professional, efficient, and polite AI for working adults. Be concise, informative, and helpful. Use formal but friendly Thai.",
-        'elder': "You are 'Nong CareFate', a respectful, warm grandchild-like assistant for elderly people. Use very polite Thai (Khun Ta/Khun Yai), simple words, be patient and caring. Speak in Thai."
+        'youth': f"You represent 'P\u2019CareFate', a cheerful, energetic AI assistant for teenagers. {name_note} Use casual Thai slang, emojis, be encouraging and fun. Keep responses short and lively. Speak in Thai.",
+        'working': f"You are 'CareFate Assistant', a professional, efficient, and polite AI for working adults. {name_note} Be concise, informative, and helpful. Use formal but friendly Thai.",
+        'elder': f"You are 'Nong CareFate', a respectful, warm grandchild-like assistant for elderly people. {name_note} Use very polite Thai, simple words, be patient and caring. Speak in Thai."
     }
     
     system_content = system_prompts.get(request.theme, system_prompts['working'])
@@ -241,10 +244,18 @@ async def chat_with_ai(request: ChatRequest):
     if request.history_context:
         context_instruction = f"\n\nHere is some recent health data for this user:\n{request.history_context}\nUse this data to provide specific, personalized advice if relevant to the user's message."
 
-    messages = [
-        {"role": "system", "content": system_content + context_instruction},
-        {"role": "user", "content": request.message}
-    ]
+    # Build messages with conversation history for memory
+    messages = [{"role": "system", "content": system_content + context_instruction}]
+    
+    # Append previous turns (limit to last 10 to avoid token overflow)
+    for turn in request.chat_messages[-10:]:
+        role = turn.get("role", "user")
+        content = turn.get("content", "")
+        if role in ("user", "assistant") and content:
+            messages.append({"role": role, "content": content})
+    
+    # Append current user message
+    messages.append({"role": "user", "content": request.message})
     try:
         reply = call_ai(messages)
         return {"status": "success", "reply": reply}
@@ -327,6 +338,56 @@ async def get_horoscope(request: HoroscopeRequest):
         
         return {"status": "success", "horoscope": fallback_msg}
 
+
+
+class HealthSummaryRequest(BaseModel):
+    theme: str = "working"
+    username: str = "ผู้ใช้"
+    health_context: str = ""
+
+@app.post("/api/health-summary")
+async def get_health_summary(request: HealthSummaryRequest):
+    """AI วิเคราะห์ข้อมูลสุขภาพ 7 วันและสรุปเป็น bullet points"""
+    print(f"DEBUG: Health Summary Request for user '{request.username}' theme '{request.theme}'")
+
+    if not request.health_context or request.health_context.strip() == "":
+        # No data yet — return encouraging default
+        defaults = {
+            'youth': "ยังไม่มีข้อมูลสุขภาพ ลองบันทึกข้อมูลแรกดูสิ! 💪",
+            'working': "ยังไม่มีข้อมูลสุขภาพในช่วง 7 วันที่ผ่านมา เริ่มบันทึกได้เลยครับ",
+            'elder': "ยังไม่มีข้อมูลสุขภาพครับ ลองบันทึกยาหรือนัดหมอก่อนนะครับ"
+        }
+        return {"status": "success", "summary": defaults.get(request.theme, defaults['working']), "bullets": []}
+
+    persona_tone = {
+        'youth': "ใช้ภาษาเป็นกันเอง มีอมยิ้ม emoji สนุกสนาน",
+        'working': "ใช้ภาษาสุภาพ กระชับ มืออาชีพ",
+        'elder': "ใช้ภาษาสุภาพมาก อ่านง่าย ตรงประเด็น"
+    }
+
+    system_prompt = f"""คุณคือผู้ช่วยสุขภาพ AI ของแอป CareFate
+ผู้ใช้ชื่อ: {request.username}
+รูปแบบการตอบ: {persona_tone.get(request.theme, persona_tone['working'])}
+
+วิเคราะห์ข้อมูลสุขภาพ 7 วันที่ผ่านมา แล้วสรุปเป็น **3 ข้อสั้นๆ** ในรูปแบบนี้เท่านั้น:
+• [สิ่งที่ดี หรือสิ่งที่น่าเป็นห่วง]
+• [สิ่งที่ดี หรือสิ่งที่น่าเป็นห่วง]  
+• [คำแนะนำ 1 ข้อ]
+
+ห้ามพูดถึงข้อมูลที่ไม่มีในบริบท ถ้าข้อมูลน้อยให้บอกตรงๆ ใช้ภาษาไทยเท่านั้น ห้ามมีหัวข้อหรือคำอธิบายเพิ่มเติม"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"ข้อมูลสุขภาพ 7 วันล่าสุด:\n{request.health_context}\n\nกรุณาสรุป 3 ข้อ"}
+    ]
+
+    try:
+        reply = call_ai(messages)
+        print(f"DEBUG: Health Summary Success: {reply[:80]}...")
+        return {"status": "success", "summary": reply}
+    except Exception as e:
+        print(f"DEBUG: Health Summary Error: {str(e)}")
+        return {"status": "success", "summary": "ไม่สามารถวิเคราะห์ข้อมูลสุขภาพได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง"}
 
 
 @app.post("/api/send-report")

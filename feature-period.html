@@ -446,8 +446,38 @@
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
             });
 
+            // Sync cycles from Supabase → LocalStorage
+            await syncPeriodFromSupabase();
             loadData();
         });
+
+        async function syncPeriodFromSupabase() {
+            try {
+                if (!_supabase) return;
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+
+                // Sync period_cycles
+                const { data: cycles, error } = await _supabase.from('period_cycles')
+                    .select('*').eq('user_id', user.id).order('start_date');
+                // Only overwrite LocalStorage if Supabase has actual data
+                if (!error && cycles && cycles.length > 0) {
+                    const local = cycles.map(c => ({
+                        id: c.id, start: c.start_date, end: c.end_date || null
+                    }));
+                    localStorage.setItem('period_cycles', JSON.stringify(local));
+                }
+
+                // Sync today's symptoms
+                const { data: syms } = await _supabase.from('period_symptoms')
+                    .select('*').eq('user_id', user.id).eq('date', todayStr).maybeSingle();
+                if (syms) {
+                    const logs = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
+                    logs[todayStr] = { symptoms: syms.symptoms || [], note: syms.note || '' };
+                    localStorage.setItem('period_symptoms', JSON.stringify(logs));
+                }
+            } catch (e) { console.warn('Period sync failed:', e); }
+        }
 
         function loadData() {
             // Load Cycles
@@ -544,23 +574,36 @@
             }
         }
 
-        function startPeriod() {
+        async function startPeriod() {
             if (!confirm('ยืนยันบันทึกว่าประจำเดือนเริ่มมาวันนี้?')) return;
 
             const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
-            cycles.push({
-                start: todayStr,
-                end: null
-            });
+            cycles.push({ start: todayStr, end: null });
             localStorage.setItem('period_cycles', JSON.stringify(cycles));
 
-            // Log to History
-            logToHistory('ประจำเดือนเริ่มมา', 'รอบเดือนใหม่');
+            // Save to Supabase
+            try {
+                if (_supabase) {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    if (user) {
+                        const { data: inserted, error } = await _supabase.from('period_cycles').insert([{
+                            user_id: user.id, start_date: todayStr
+                        }]).select();
+                        if (!error && inserted) {
+                            // Update local id with Supabase UUID
+                            const last = cycles.length - 1;
+                            cycles[last].id = inserted[0].id;
+                            localStorage.setItem('period_cycles', JSON.stringify(cycles));
+                        }
+                    }
+                }
+            } catch (e) { console.error('Period start Supabase failed:', e); }
 
+            logToHistory('ประจำเดือนเริ่มมา', 'รอบเดือนใหม่');
             loadData();
         }
 
-        function endPeriod() {
+        async function endPeriod() {
             if (!confirm('ยืนยันบันทึกว่าประจำเดือนหมดวันนี้?')) return;
 
             const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
@@ -569,7 +612,27 @@
                 cycles[lastIdx].end = todayStr;
                 localStorage.setItem('period_cycles', JSON.stringify(cycles));
 
-                // Log to History
+                // Save to Supabase
+                try {
+                    if (_supabase) {
+                        const { data: { user } } = await _supabase.auth.getUser();
+                        if (user) {
+                            const cycleId = cycles[lastIdx].id;
+                            const dur = getDuration(cycles[lastIdx].start, todayStr);
+                            if (cycleId) {
+                                await _supabase.from('period_cycles').update({
+                                    end_date: todayStr, duration: dur
+                                }).eq('id', cycleId).eq('user_id', user.id);
+                            } else {
+                                // Fallback: update the latest cycle without end_date
+                                await _supabase.from('period_cycles').update({
+                                    end_date: todayStr, duration: dur
+                                }).eq('user_id', user.id).is('end_date', null);
+                            }
+                        }
+                    }
+                } catch (e) { console.error('Period end Supabase failed:', e); }
+
                 logToHistory('ประจำเดือนหมด', 'ระยะเวลา: ' + getDuration(cycles[lastIdx].start, todayStr) + ' วัน');
             }
             loadData();
@@ -583,6 +646,12 @@
         }
 
         // --- Symptoms ---
+        const symptomNames = {
+            cramps: 'ปวดท้อง', moody: 'หงุดหงิด', acne: 'เป็นสิว',
+            fatigue: 'อ่อนเพลีย', headache: 'ปวดหัว', bloating: 'ตัวบวม',
+            cravings: 'อยากทานของหวาน', sleepy: 'ง่วงนอน'
+        };
+
         function toggleSymptom(el, symptomKey) {
             el.classList.toggle('active');
 
@@ -592,6 +661,8 @@
             const currentSymptoms = new Set(logs[todayStr].symptoms);
             if (el.classList.contains('active')) {
                 currentSymptoms.add(symptomKey);
+                // Log to health history when symptom is selected
+                logToHistory(symptomNames[symptomKey] || symptomKey, 'บันทึกอาการประจำเดือน');
             } else {
                 currentSymptoms.delete(symptomKey);
             }
@@ -599,7 +670,8 @@
             logs[todayStr].symptoms = Array.from(currentSymptoms);
             localStorage.setItem('period_symptoms', JSON.stringify(logs));
 
-            // Feedback
+            // Sync to Supabase
+            saveSymptomToSupabase(logs[todayStr].symptoms, logs[todayStr].note);
             showToast('บันทึกอาการแล้ว');
         }
 
@@ -611,7 +683,34 @@
             logs[todayStr].note = noteCtx;
             localStorage.setItem('period_symptoms', JSON.stringify(logs));
 
+            // Sync to Supabase
+            saveSymptomToSupabase(logs[todayStr].symptoms, noteCtx);
             if (noteCtx.trim().length > 0) showToast('บันทึกโน้ตแล้ว');
+        }
+
+        async function saveSymptomToSupabase(symptoms, note) {
+            try {
+                if (!_supabase) return;
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return;
+
+                // Check if a record for today already exists
+                const { data: existing } = await _supabase.from('period_symptoms')
+                    .select('id').eq('user_id', user.id).eq('date', todayStr).maybeSingle();
+
+                if (existing) {
+                    // UPDATE existing record
+                    await _supabase.from('period_symptoms').update({
+                        symptoms: symptoms || [], note: note || null
+                    }).eq('id', existing.id);
+                } else {
+                    // INSERT new record
+                    await _supabase.from('period_symptoms').insert([{
+                        user_id: user.id, date: todayStr,
+                        symptoms: symptoms || [], note: note || null
+                    }]);
+                }
+            } catch (e) { console.error('Symptom save failed:', e); }
         }
 
         function loadSymptoms() {
@@ -706,12 +805,52 @@
             });
             list.innerHTML = html;
         }
-
         async function logToHistory(detail, note) {
             try {
                 if (_supabase) {
                     const { data: { user } } = await _supabase.auth.getUser();
                     if (user) {
+                        const todayDate = new Date();
+                        todayDate.setHours(0, 0, 0, 0);
+                        const todayISO = todayDate.toISOString();
+
+                        // Check if we already logged symptoms today
+                        if (note === 'บันทึกอาการประจำเดือน') {
+                            const { data: existingLogs } = await _supabase.from('period_logs')
+                                .select('*')
+                                .eq('user_id', user.id)
+                                .eq('note', 'บันทึกอาการประจำเดือน')
+                                .gte('created_at', todayISO)
+                                .order('created_at', { ascending: false })
+                                .limit(1);
+
+                            if (existingLogs && existingLogs.length > 0) {
+                                // Update existing log for today
+                                const logId = existingLogs[0].id;
+                                let currentDetail = existingLogs[0].detail || '';
+                                let newDetail = detail;
+
+                                // Prevent duplicate symptom names in the string
+                                if (!currentDetail.includes(detail)) {
+                                    if (currentDetail && currentDetail !== '-') {
+                                        newDetail = currentDetail + ', ' + detail;
+                                    }
+
+                                    await _supabase.from('period_logs').update({
+                                        detail: newDetail,
+                                        created_at: new Date().toISOString() // Refresh time to bump to top
+                                    }).eq('id', logId);
+
+                                    // Update local storage fallback
+                                    updateLocalHistoryFallback(user.id, logId, newDetail, note);
+                                    return; // Done
+                                } else {
+                                    return; // Already includes this symptom, do nothing
+                                }
+                            }
+                        }
+
+                        // If not a symptom update or no existing log today, insert new
                         const logData = {
                             user_id: user.id,
                             type: 'period',
@@ -722,11 +861,15 @@
 
                         // Supabase Insert
                         try {
-                            const { error } = await _supabase.from('period_logs').insert([logData]);
-                            if (error) console.error('Supabase error:', error);
+                            const { data: inserted, error } = await _supabase.from('period_logs').insert([logData]).select();
+                            if (error) {
+                                console.error('Supabase error:', error);
+                            } else if (inserted && inserted.length > 0) {
+                                logData.id = inserted[0].id; // Keep real UUID for local updates
+                            }
                         } catch (err) { console.error(err); }
 
-                        // Fallback to local storage for history.html integration
+                        // Fallback to local storage
                         const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
                         histLogs.push(logData);
                         localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
@@ -756,6 +899,44 @@
                 histLogs.push(logData);
                 localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
             }
+        }
+
+        // Helper to keep local storage aggregated too
+        function updateLocalHistoryFallback(userId, logId, newDetail, note) {
+            const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
+
+            // Try to find by real ID first
+            let index = histLogs.findIndex(l => l.id === logId);
+
+            // If not found by ID (maybe old record without one), find by type/note/date
+            if (index === -1) {
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+
+                index = histLogs.findIndex(l => {
+                    if (l.type !== 'period' || l.note !== note) return false;
+                    const logDate = new Date(l.created_at);
+                    logDate.setHours(0, 0, 0, 0);
+                    return logDate.getTime() === todayDate.getTime();
+                });
+            }
+
+            if (index !== -1) {
+                histLogs[index].detail = newDetail;
+                histLogs[index].created_at = new Date().toISOString(); // Bump time
+            } else {
+                // Should not happen, but just in case
+                histLogs.push({
+                    id: logId,
+                    user_id: userId,
+                    type: 'period',
+                    detail: newDetail,
+                    note: note,
+                    created_at: new Date().toISOString()
+                });
+            }
+
+            localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
         }
 
     </script>

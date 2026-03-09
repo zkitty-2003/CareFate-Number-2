@@ -34,19 +34,8 @@ function showInAppNotification(title, body) {
     // Play sound
     playNotificationSound();
 
-    // 1. Find the best container (Mobile Frame)
-    const appFrame = document.querySelector('.app-container') ||
-        document.querySelector('.dashboard-container') ||
-        document.querySelector('.login-screen') ||
-        document.body;
-
-    // Ensure parent is relative if it's not body (so absolute positioning works inside it)
-    if (appFrame !== document.body) {
-        const style = window.getComputedStyle(appFrame);
-        if (style.position === 'static') {
-            appFrame.style.position = 'relative';
-        }
-    }
+    // 1. Force container to be document.body to avoid overflow:hidden traps
+    const appFrame = document.body;
 
     // 2. Create toast container if not exists
     let container = document.getElementById('carefate-toast-container');
@@ -54,21 +43,18 @@ function showInAppNotification(title, body) {
         container = document.createElement('div');
         container.id = 'carefate-toast-container';
 
-        // Strategy: Absolute if inside a frame, Fixed if body
-        // We want it at the TOP of the frame.
-        const posType = (appFrame === document.body) ? 'fixed' : 'absolute';
-
+        // Always fixed relative to the viewport
         container.style.cssText = `
-            position: ${posType}; 
+            position: fixed; 
             top: 20px; 
             left: 0; 
             width: 100%; 
-            z-index: 99999;
+            z-index: 2147483647; /* MAX Z-INDEX */
             display: flex; 
             flex-direction: column; 
-            align-items: center; /* Center horizontally */
+            align-items: center; 
             gap: 10px;
-            pointer-events: none; /* Let clicks pass through gaps */
+            pointer-events: none;
         `;
         appFrame.appendChild(container);
     } else {
@@ -187,36 +173,37 @@ function checkGoalNotifications() {
     const currentTime = `${currentHour}:${currentMinute}`;
     const todayStr = now.toDateString();
 
-    // Check Day Frequency
-    const day = now.getDay(); // 0=Sun, 1=Mon...
+    const day = now.getDay();
     const isWeekend = (day === 0 || day === 6);
 
-    // Sent log to avoid duplicates
     const sentLogs = JSON.parse(localStorage.getItem('goal_notifications_sent') || '{}');
 
     goals.forEach(goal => {
+        console.log(`[Notif Debug] Processing Goal: ${goal.name || 'Unnamed'}, Time: ${goal.time || 'None'}, Freq: ${goal.freq || 'None'}`);
+
         if (!goal.time) return;
 
-        // Freq Check
-        if (goal.freq === 'weekdays' && isWeekend) return;
-        if (goal.freq === 'weekends' && !isWeekend) return;
+        const freq = goal.freq || 'daily';
+        if (freq === 'weekdays' && isWeekend) return;
+        if (freq === 'weekends' && !isWeekend) return;
 
-        // Time Check (Exact Minute Match)
+        console.log(`[Notif Debug] Goal time valid, CurrentTime: ${currentTime}`);
+
         if (goal.time === currentTime) {
-            if (sentLogs[goal.id] !== todayStr) {
-                // Determine unit
+            const notifKey = `${goal.id}_${goal.time}`;
+            console.log(`[Notif Debug] Time match! Key: ${notifKey}, Logged for today?: ${sentLogs[notifKey] === todayStr}`);
+
+            if (sentLogs[notifKey] !== todayStr) {
                 let unit = 'นาที';
                 if (goal.type === 'count') unit = 'ครั้ง';
                 if (goal.type === 'distance') unit = 'กม.';
 
-                // Show In-App Notification!
                 showInAppNotification(
                     'ถึงเวลาทำเป้าหมาย! 🎯',
                     `${goal.name} (${goal.value} ${unit})`
                 );
 
-                // Mark as sent
-                sentLogs[goal.id] = todayStr;
+                sentLogs[notifKey] = todayStr;
                 localStorage.setItem('goal_notifications_sent', JSON.stringify(sentLogs));
                 console.log(`[Notif] ✅ Goal sent: ${goal.name}`);
             }

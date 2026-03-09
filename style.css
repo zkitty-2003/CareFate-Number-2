@@ -810,8 +810,6 @@ body.theme-youth .profile-pic {
 }
 
 /* Specific text overrides */
-body.theme-youth p,
-body.theme-youth span,
 body.theme-youth label {
     color: #8b86a3 !important;
 }

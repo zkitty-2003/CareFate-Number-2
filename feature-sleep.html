@@ -310,7 +310,7 @@
             <div id="resultCard" class="sleep-card" style="display:none; animation: fadeIn 0.5s;">
                 <div style="font-size:0.9rem; color:var(--text-muted);">คุณนอนไปทั้งหมด</div>
                 <div id="durationText" class="time-display">0 ชม. 0 นาที</div>
-                <div id="cycleText" style="font-size:0.85rem; color:var(--text-color); margin-top:0.5rem;"></div>
+
             </div>
 
             <div class="sleep-card">
@@ -372,7 +372,6 @@
                     ควรเข้านอนตอนไหน?
                 </p>
                 <div id="suggestedBedTimes" style="display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:center;">
-                    <!-- Filled by JS -->
                     <span style="color:var(--text-muted); font-size:0.8rem;">(กรุณาระบุเวลาตื่นด้านบน)</span>
                 </div>
             </div>
@@ -456,16 +455,6 @@
             document.getElementById('durationText').innerText = `${hours} ชม. ${mins} นาที`;
             document.getElementById('resultCard').style.display = 'block';
 
-            // Cycle Logic (90 mins)
-            const cycles = (diffMins / 90).toFixed(1);
-            let cycleMsg = `คิดเป็นประมาณ ${cycles} รอบการนอน (Cycle)`;
-            if (Math.abs(diffMins % 90) < 15 || Math.abs(diffMins % 90) > 75) {
-                cycleMsg += ` <i class="fa-solid fa-check-circle" style="color:#4ade80;"></i> ช่วงเวลาเหมาะสม!`;
-            } else {
-                cycleMsg += ` (ควรตื่นให้ครบรอบ 90 นาที)`;
-            }
-            document.getElementById('cycleText').innerHTML = cycleMsg;
-
             // Update Suggestions
             updateSuggestions(wakeVal);
         }
@@ -476,25 +465,15 @@
             const wakeDate = new Date();
             wakeDate.setHours(wH, wM, 0, 0);
 
-            // Calculate subtractive cycles (90mins * 4, 5, 6)
-            // 4 cycles = 6h, 5 cycles = 7.5h, 6 cycles = 9h
-            // +15 mins to fall asleep
-
             let html = '';
-
             [6, 5, 4].forEach(cycles => {
-                const sleepMins = (cycles * 90) + 15; // 15 min buffer
+                const sleepMins = (cycles * 90) + 15;
                 const bedDate = new Date(wakeDate.getTime() - (sleepMins * 60000));
                 const timeStr = bedDate.toTimeString().slice(0, 5);
-
-                html += `
-                    <div style="background:var(--card-bg); padding:0.5rem 1rem; border-radius:10px; border:1px solid var(--primary-color); text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                        <div style="font-weight:bold; color:var(--text-color);">${timeStr}</div>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">${cycles} รอบ</div>
-                    </div>
-                `;
+                html += `<div style="background:var(--card-bg); padding:0.5rem 1rem; border-radius:10px; border:1px solid var(--primary-color); text-align:center; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-weight:bold; color:var(--text-color);">${timeStr}</div>
+                </div>`;
             });
-
             document.getElementById('suggestedBedTimes').innerHTML = html;
         }
 

@@ -100,6 +100,32 @@
             margin: 0.5rem 0;
         }
 
+        /* Default Kcal Card Base Styles */
+        .kcal-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .youth-only {
+            display: none;
+        }
+
+        .kcal-unit {
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .kcal-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+
+        .working-elder-only {
+            display: inline;
+        }
+
         /* ==========================================
            THEME 1: YOUTH — Playful, Gradient, Bouncy
            ========================================== */
@@ -115,6 +141,75 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* Hero Card Overrides for Youth */
+        body.theme-youth .youth-only {
+            display: inline;
+        }
+
+        body.theme-youth .working-elder-only {
+            display: none;
+        }
+
+        body.theme-youth .exercise-card.kcal-hero-card {
+            background: linear-gradient(to right, #ffa3b5, #ffdfd4, #ffd4ee) !important;
+            border: none !important;
+            box-shadow: 0 10px 30px rgba(255, 163, 181, 0.4) !important;
+            padding: 1.5rem 1.5rem !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.theme-youth .kcal-hero-card .kcal-title {
+            color: #d81b60 !important;
+            font-size: 0.9rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        body.theme-youth .kcal-hero-card .kcal-title span {
+            color: inherit !important;
+        }
+
+        body.theme-youth .kcal-value-row {
+            display: flex;
+            flex-direction: row;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        body.theme-youth .kcal-hero-card .kcal-display {
+            background: none !important;
+            -webkit-text-fill-color: #ffffff !important;
+            color: #ffffff !important;
+            font-size: 3rem !important;
+            font-weight: 800 !important;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+            margin: 0 !important;
+            line-height: 1 !important;
+        }
+
+        body.theme-youth .kcal-hero-card .kcal-unit {
+            color: #ffffff !important;
+            font-size: 1.2rem !important;
+            font-weight: 700 !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        body.theme-youth .kcal-hero-card .kcal-note {
+            background: rgba(255, 255, 255, 0.4) !important;
+            padding: 0.3rem 0.8rem !important;
+            border-radius: 25px !important;
+            color: #d81b60 !important;
+            font-size: 0.7rem !important;
+            font-weight: 600 !important;
+            margin-top: 0 !important;
+            opacity: 1 !important;
         }
 
         body.theme-youth .activity-btn {
@@ -133,9 +228,15 @@
         body.theme-youth .activity-btn.active {
             background: linear-gradient(135deg, rgba(244, 114, 182, 0.15), rgba(167, 139, 250, 0.15));
             border-color: #f472b6;
-            color: #be185d;
+            color: #be185d !important;
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 8px 25px rgba(244, 114, 182, 0.25);
+            font-weight: 700 !important;
+        }
+
+        body.theme-youth .activity-btn.active span {
+            color: #be185d !important;
+            font-weight: 700 !important;
         }
 
         body.theme-youth .activity-btn i {
@@ -157,20 +258,149 @@
         }
 
         body.theme-youth .intensity-opt.active {
-            background: linear-gradient(135deg, #f472b6, #a78bfa);
-            color: white;
+            background: rgba(244, 114, 182, 0.1) !important;
+            border-color: #f472b6 !important;
+            color: #be185d !important;
+            font-weight: 700 !important;
+            box-shadow: 0 8px 20px rgba(244, 114, 182, 0.15) !important;
         }
 
+        body.theme-youth .intensity-opt.active span {
+            color: #be185d !important;
+            font-weight: 700 !important;
+        }
+
+        /* Adjust labels and titles directly since we removed generic overrides */
+        body.theme-youth label {
+            color: #5d5b6a !important;
+            font-weight: 600 !important;
+        }
+
+        body.theme-youth .youth-title-bold {
+            color: #3d3b4a !important;
+            font-weight: 800 !important;
+        }
+
+        /* Activity Grid - Youth Overrides */
+        body.theme-youth .text-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        body.theme-youth .activity-grid {
+            gap: 1rem;
+        }
+
+        body.theme-youth .activity-btn {
+            background: #ffffff;
+            border: 2px solid #f6eaf3;
+            border-radius: 20px;
+            padding: 1.2rem 0.5rem;
+            color: #8b86a3;
+            font-weight: 500;
+        }
+
+        body.theme-youth .activity-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.03);
+        }
+
+        body.theme-youth .activity-btn.active {
+            background: linear-gradient(135deg, rgba(255, 240, 230, 0.5), transparent) !important;
+            border-color: #ff9f43 !important;
+            color: #5d5b6a !important;
+            box-shadow: 0 8px 20px rgba(255, 159, 67, 0.2) !important;
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        /* Duration Slider - Youth Overrides */
+        body.theme-youth .duration-title {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+
+        body.theme-youth .youth-duration-pill-inline {
+            background: #ffebd6;
+            color: #ff9f43;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        body.theme-youth #durationSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            background: #ffd1dc;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            box-shadow: inset 0 1px 4px rgba(255, 107, 107, 0.3);
+        }
+
+        body.theme-youth #durationSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+            border: 3px solid #fff;
+        }
+
+        body.theme-youth .youth-slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #5d5b6a;
+            font-weight: 600;
+            margin-top: 0.8rem;
+        }
+
+        /* Intensity Selector - Youth Overrides */
+        body.theme-youth .intensity-selector {
+            background: transparent !important;
+            gap: 0.8rem;
+            display: flex;
+        }
+
+        body.theme-youth .intensity-opt {
+            background: #ffffff;
+            border: 2px solid #f6eaf3;
+            border-radius: 20px;
+            color: #8b86a3;
+            padding: 0.8rem 0.5rem;
+            font-size: 0.85rem;
+        }
+
+
         body.theme-youth #saveBtn {
-            background: linear-gradient(135deg, #f472b6, #a78bfa) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 6px 20px rgba(244, 114, 182, 0.35);
+            background: linear-gradient(135deg, #ff6b6b, #ff8da1) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.35) !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        body.theme-youth #saveBtn span {
+            color: #ffffff !important;
+            font-weight: 700 !important;
         }
 
         body.theme-youth textarea {
             background: rgba(255, 245, 250, 0.9) !important;
             border-color: #f3e4ef !important;
             color: #5d5b6a !important;
+        }
+
+        body.theme-youth textarea::placeholder {
+            color: #8b86a3 !important;
         }
 
         /* ==========================================
@@ -366,7 +596,7 @@
             </button>
             <h1
                 style="flex:1; text-align:center; font-size:1.2rem; margin:0; font-weight:600; color:var(--text-color);">
-                ออกกำลังกาย
+                ออกกำลังกาย<span class="youth-only"> 💦</span>
             </h1>
             <div style="width:35px;"></div>
         </div>
@@ -375,59 +605,98 @@
             style="flex:1; overflow-y:auto; padding: 0 1.5rem 2rem; display:flex; flex-direction:column;">
 
             <!-- Kcal Calculation Display -->
-            <div class="exercise-card">
-                <div style="font-size:0.9rem; color:var(--text-muted);">เผาผลาญพลังงานไป</div>
-                <div id="kcalDisplay" class="kcal-display">0</div>
-                <div style="font-size:1rem; color:var(--text-color);">Kcal (กิโลแคลอรี่)</div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; opacity:0.8;">
-                    (คำนวณจาก: กิจกรรม x ความหนัก x เวลา)
+            <div class="exercise-card kcal-hero-card">
+                <div class="kcal-title">เผาผลาญพลังงานไป<span class="youth-only">แล้ว</span></div>
+                <div class="kcal-value-row">
+                    <div id="kcalDisplay" class="kcal-display">0</div>
+                    <div class="kcal-unit">Kcal<span class="working-elder-only"> (กิโลแคลอรี่)</span></div>
+                </div>
+                <div class="kcal-note">
+                    <span class="working-elder-only">(</span>คำนวณจาก: กิจกรรม x ความหนัก x เวลา<span
+                        class="working-elder-only">)</span>
                 </div>
             </div>
 
             <!-- Activity Selection -->
             <label style="color:var(--text-color); margin-left:0.5rem; font-weight:500;">
-                <i class="fa-solid fa-person-running" style="margin-right:0.5rem; color:var(--exercise-primary);"></i>
-                ประเภทกิจกรรม
+                <i class="fa-solid fa-person-running working-elder-only"
+                    style="margin-right:0.5rem; color:var(--exercise-primary);"></i>
+                <span class="youth-only" style="margin-right:0.5rem;">🏃</span>
+                <span class="working-elder-only">ประเภทกิจกรรม</span>
+                <span class="youth-only youth-title-bold"
+                    style="color:#5d5b6a; font-weight:700;">เลือกกิจกรรมเลย!</span>
             </label>
             <div class="activity-grid">
-                <div class="activity-btn" onclick="selectActivity(this, 'run', 10)">
-                    <i class="fa-solid fa-person-running"></i>
+                <div class="activity-btn" onclick="selectActivity(this, 'วิ่ง / เดินเร็ว', 10)">
+                    <i class="fa-solid fa-person-running working-elder-only"></i><span
+                        class="youth-only text-emoji">🏃</span>
                     <span>วิ่ง / เดินเร็ว</span>
                 </div>
-                <div class="activity-btn" onclick="selectActivity(this, 'gym', 6)">
-                    <i class="fa-solid fa-dumbbell"></i>
-                    <span>ฟิตเนส / เวท</span>
+                <div class="activity-btn" onclick="selectActivity(this, 'ฟุตบอล / กีฬาทีม', 9)">
+                    <i class="fa-solid fa-futbol working-elder-only"></i><span class="youth-only text-emoji">⚽</span>
+                    <span>ฟุตบอล / กีฬาทีม</span>
                 </div>
-                <div class="activity-btn" onclick="selectActivity(this, 'yoga', 3)">
-                    <i class="fa-solid fa-spa"></i>
+                <div class="activity-btn" onclick="selectActivity(this, 'เต้น', 7)">
+                    <i class="fa-solid fa-music working-elder-only"></i><span class="youth-only text-emoji">🎵</span>
+                    <span>เต้น</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'ว่ายน้ำ', 8)">
+                    <i class="fa-solid fa-person-swimming working-elder-only"></i><span
+                        class="youth-only text-emoji">🏊</span>
+                    <span>ว่ายน้ำ</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'ปั่นจักรยาน', 7)">
+                    <i class="fa-solid fa-person-biking working-elder-only"></i><span
+                        class="youth-only text-emoji">🚴</span>
+                    <span>ปั่นจักรยาน</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'ยิม / เวท', 6)">
+                    <i class="fa-solid fa-dumbbell working-elder-only"></i><span
+                        class="youth-only text-emoji">🏋️</span>
+                    <span>ยิม / เวท</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'แบดมินตัน / เทนนิส', 7)">
+                    <i class="fa-solid fa-table-tennis-paddle-ball working-elder-only"></i><span
+                        class="youth-only text-emoji">🏸</span>
+                    <span>แบดมินตัน</span>
+                </div>
+                <div class="activity-btn" onclick="selectActivity(this, 'โยคะ / ยืดเหยียด', 3)">
+                    <i class="fa-solid fa-spa working-elder-only"></i><span class="youth-only text-emoji">🧘</span>
                     <span>โยคะ / ยืดเหยียด</span>
-                </div>
-                <div class="activity-btn" onclick="selectActivity(this, 'sport', 8)">
-                    <i class="fa-solid fa-volleyball"></i>
-                    <span>เล่นกีฬา</span>
                 </div>
             </div>
 
             <!-- Duration & Intensity -->
             <div class="exercise-card" style="margin-top:1.5rem;">
-                <div style="margin-bottom:1.5rem;">
-                    <label style="display:block; text-align:left; color:var(--text-color); margin-bottom:0.5rem;">
+                <div style="margin-bottom:1.5rem;" class="duration-section">
+                    <label style="display:block; text-align:left; color:var(--text-color); margin-bottom:0.5rem;"
+                        class="duration-title">
                         ระยะเวลา (นาที)
+                        <span class="youth-only youth-duration-pill-inline" id="durationValueYouth">30</span>
                     </label>
-                    <div style="display:flex; align-items:center; gap:1rem;">
-                        <input type="range" id="durationSlider" min="5" max="180" value="30" step="5"
+                    <div style="display:flex; align-items:center; gap:1rem;" class="duration-slider-container">
+                        <input type="range" id="durationSlider" min="5" max="120" value="30" step="5"
                             style="flex:1; accent-color:var(--exercise-primary);" oninput="updateDuration(this.value)">
                         <span id="durationValue"
-                            style="font-size:1.5rem; font-weight:bold; color:var(--text-color); width:80px;">30</span>
+                            style="font-size:1.5rem; font-weight:bold; color:var(--text-color); width:80px;"
+                            class="working-elder-only">30</span>
+                    </div>
+                    <div class="youth-only youth-slider-labels">
+                        <span>5 นาที</span>
+                        <span>2 ชั่วโมง</span>
                     </div>
                 </div>
 
                 <div style="text-align:left;">
-                    <label style="color:var(--text-color);">ความเข้มข้น (Intensity)</label>
+                    <label style="color:var(--text-color);" class="intensity-title">ความเข้มข้น (Intensity)<span
+                            class="youth-only"> 🔥</span></label>
                     <div class="intensity-selector">
-                        <div class="intensity-opt active" onclick="setIntensity(this, 0.8)">เบา</div>
-                        <div class="intensity-opt" onclick="setIntensity(this, 1.0)">ปานกลาง</div>
-                        <div class="intensity-opt" onclick="setIntensity(this, 1.2)">หนัก</div>
+                        <div class="intensity-opt active" onclick="setIntensity(this, 0.8)">เบา<span
+                                class="youth-only">ชิลๆ 😅</span></div>
+                        <div class="intensity-opt" onclick="setIntensity(this, 1.0)">ปานกลาง<span class="youth-only">
+                                🥵</span></div>
+                        <div class="intensity-opt" onclick="setIntensity(this, 1.2)">หนัก<span class="youth-only">หน่วง
+                                🤬</span></div>
                     </div>
                 </div>
             </div>
@@ -435,7 +704,8 @@
             <!-- Note -->
             <div class="exercise-card">
                 <div style="text-align:left;">
-                    <label style="color:var(--text-color); margin-bottom:0.5rem; display:block;">บันทึกเพิ่มเติม</label>
+                    <label style="color:var(--text-color); margin-bottom:0.5rem; display:block;"
+                        class="note-title">บันทึกเพิ่มเติม<span class="youth-only"> (ถ้ามี) 📝</span></label>
                     <textarea id="exerciseNote" rows="2" placeholder="เช่น วิ่งรอบหมู่บ้าน, ยกเวทแขน..."
                         style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--card-border); border-radius:12px; padding:0.8rem; color:var(--text-color); font-family:var(--font-family); resize:none; outline:none; font-size:0.9rem;"></textarea>
                 </div>
@@ -444,7 +714,9 @@
             <!-- Save Button -->
             <button class="btn-primary" id="saveBtn" onclick="saveExerciseLog()"
                 style="margin-top:1rem; margin-bottom:1rem; background: linear-gradient(135deg, #f97316, #ea580c);">
-                <i class="fa-solid fa-fire"></i> บันทึกการเผาผลาญ
+                <i class="fa-solid fa-fire working-elder-only"></i> <span
+                    class="working-elder-only">บันทึกการเผาผลาญ</span>
+                <span class="youth-only">🔥 บันทึกการเผาผลาญ!</span>
             </button>
 
         </div>
@@ -479,12 +751,34 @@
                     document.body.classList.add(`theme-${user.user_metadata.theme}`);
                 }
             } catch (e) { }
+
+            updateSliderBackground();
         });
+
+        function updateSliderBackground() {
+            const slider = document.getElementById('durationSlider');
+            if (document.body.classList.contains('theme-youth')) {
+                const min = parseInt(slider.min) || 5;
+                const max = parseInt(slider.max) || 120;
+                const val = parseInt(slider.value) || 30;
+                const percent = ((val - min) / (max - min)) * 100;
+                slider.style.background = `linear-gradient(to right, #ff8da1 0%, #ff8da1 ${percent}%, #ffe4e6 ${percent}%, #ffe4e6 100%)`;
+            } else {
+                slider.style.background = '';
+            }
+        }
 
         function updateDuration(val) {
             currentDuration = parseInt(val);
             document.getElementById('durationValue').innerText = currentDuration;
+
+            const youthPill = document.getElementById('durationValueYouth');
+            if (youthPill) {
+                youthPill.innerText = currentDuration;
+            }
+
             calculateCalories();
+            updateSliderBackground();
         }
 
         function selectActivity(el, type, baseMet) {
@@ -541,20 +835,28 @@
             try {
                 const { data: { user } } = await _supabase.auth.getUser();
                 if (user) {
+                    const intensityText = currentIntensityMultiplier === 0.8 ? 'เบา' : currentIntensityMultiplier === 1.0 ? 'ปานกลาง' : 'หนัก';
+                    const noteText = `${currentDuration} นาที | ${kcal} kcal (${intensityText})${note ? ' — ' + note : ''}`;
                     const logData = {
                         user_id: user.id,
                         type: 'exercise',
                         detail: selectedActivityName,
-                        note: `${currentDuration} นาที | ${kcal} kcal ${note ? '| ' + note : ''}`,
+                        note: noteText,
                         calories: parseInt(kcal),
-                        duration: currentDuration,
                         created_at: new Date().toISOString()
                     };
 
                     // Try DB
                     try {
-                        await _supabase.from('exercise_logs').insert([logData]);
-                    } catch (err) { console.warn("DB Save failed", err); }
+                        const { error: dbErr } = await _supabase.from('exercise_logs').insert([logData]);
+                        if (dbErr) {
+                            alert("Supabase Error: " + dbErr.message);
+                            console.warn("DB Save failed:", dbErr.message);
+                        }
+                    } catch (err) {
+                        alert("Fetch Error: " + err.message);
+                        console.warn("DB Save failed", err);
+                    }
 
                     // Local Storage
                     const exLogs = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
