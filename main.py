@@ -113,7 +113,7 @@ def _call_gemini_api(model_id: str, messages: List[Dict]) -> str:
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={GEMINI_API_KEY}"
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
     
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=25) as resp:
         result = json.loads(resp.read().decode("utf-8"))
         return result["candidates"][0]["content"]["parts"][0]["text"]
 
@@ -127,7 +127,7 @@ def _call_groq_api(model_id: str, messages: List[Dict]) -> str:
             "Content-Type": "application/json"
         }
     )
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=25) as resp:
         result = json.loads(resp.read().decode("utf-8"))
         return result["choices"][0]["message"]["content"]
 
@@ -139,11 +139,11 @@ def _call_openrouter_api(model_id: str, messages: List[Dict]) -> str:
         headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:8000",
+            "HTTP-Referer": "https://carefate.onrender.com",
             "X-Title": "CareFate"
         }
     )
-    with urllib.request.urlopen(req, timeout=20) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read().decode("utf-8"))
         return result["choices"][0]["message"]["content"]
 
@@ -211,7 +211,9 @@ def call_ai(messages: List[Dict]) -> str:
                 break  # Move to next model in priority list
 
             except Exception as e:
-                print(f"⚠️  {model_name} unexpected error: {e}")
+                import traceback
+                print(f"⚠️  {model_name} unexpected error: {str(e)}")
+                traceback.print_exc()
                 COOLDOWNS[model_id] = time.time() + 300
                 log_ai_event(provider, model_id, "EXCEPTION", start_time)
                 break
@@ -228,7 +230,7 @@ class ChatRequest(BaseModel):
     chat_messages: List[Dict] = [] # บทสนทนาย้อนหลัง [{role, content}]
 
 @app.post("/api/chat")
-async def chat_with_ai(request: ChatRequest):
+def chat_with_ai(request: ChatRequest):
     # Define System Prompts
     name_note = f"ชื่อ account ของผู้ใช้คือ '{request.username}' แต่ถ้าผู้ใช้บอกชื่อหรือชื่อเล่นในบทสนทนา **ให้ใช้ชื่อนั้นทันทีและจำไว้ตลอดการสนทนา** อย่าลืมไม่ว่ากี่ข้อความก็ตาม"
     system_prompts = {
@@ -267,7 +269,7 @@ class HoroscopeRequest(BaseModel):
     history_context: str = ""
 
 @app.post("/api/horoscope")
-async def get_horoscope(request: HoroscopeRequest):
+def get_horoscope(request: HoroscopeRequest):
     print(f"DEBUG: Horoscope Request for theme '{request.theme}'")
     today = datetime.now().strftime("%A %d %B %Y")
     
@@ -346,7 +348,7 @@ class HealthSummaryRequest(BaseModel):
     health_context: str = ""
 
 @app.post("/api/health-summary")
-async def get_health_summary(request: HealthSummaryRequest):
+def get_health_summary(request: HealthSummaryRequest):
     """AI วิเคราะห์ข้อมูลสุขภาพ 7 วันและสรุปเป็น bullet points"""
     print(f"DEBUG: Health Summary Request for user '{request.username}' theme '{request.theme}'")
 
