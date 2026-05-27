@@ -1237,7 +1237,17 @@
             document.getElementById('tmContent').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์ดวงชะตา...';
             document.getElementById('tmRatingBox').style.display = 'none';
             document.getElementById('tmFeedback').value = '';
+            document.getElementById('tmFeedback').disabled = false;
+            document.getElementById('tmStars').style.pointerEvents = 'auto';
             setTellerRating(0);
+
+            const initialSubmitBtn = document.querySelector('.teller-submit-btn');
+            if (initialSubmitBtn) {
+                initialSubmitBtn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                initialSubmitBtn.disabled = false;
+                initialSubmitBtn.style.background = '';
+                initialSubmitBtn.classList.remove('ready');
+            }
 
             modal.style.display = 'flex';
             modal.offsetHeight;
@@ -1258,6 +1268,59 @@
 
                 const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
                 console.log(`[Fortune] Checking prediction for ${id} on ${todayStr} for user:`, sessionUser?.id);
+
+                // Check if already rated today
+                let alreadyRated = null;
+                const localRatedKey = `rated_${id}_${todayStr}`;
+                const localRatedVal = localStorage.getItem(localRatedKey);
+                if (localRatedVal) {
+                    try {
+                        alreadyRated = JSON.parse(localRatedVal);
+                        console.log("[Rating] Found rating in localStorage for today:", alreadyRated);
+                    } catch (e) {}
+                }
+
+                if (!alreadyRated && _supabase && sessionUser) {
+                    try {
+                        const todayStart = new Date();
+                        todayStart.setHours(0, 0, 0, 0);
+                        const { data: existingReview, error: reviewErr } = await _supabase
+                            .from('teller_reviews')
+                            .select('rating, feedback')
+                            .eq('user_id', sessionUser.id)
+                            .eq('teller_id', id)
+                            .gte('created_at', todayStart.toISOString())
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (existingReview) {
+                            alreadyRated = existingReview;
+                            console.log("[Rating] Found rating in Supabase for today:", alreadyRated);
+                            localStorage.setItem(localRatedKey, JSON.stringify(alreadyRated));
+                        }
+                    } catch (dbErr) {
+                        console.warn("[Rating] Error checking reviews from Supabase:", dbErr);
+                    }
+                }
+
+                if (alreadyRated) {
+                    // Set rating stars and make read-only
+                    setTellerRating(alreadyRated.rating);
+                    document.getElementById('tmStars').style.pointerEvents = 'none';
+
+                    // Set feedback text and make read-only
+                    document.getElementById('tmFeedback').value = alreadyRated.feedback || '';
+                    document.getElementById('tmFeedback').disabled = true;
+
+                    // Update submit button to be disabled with message
+                    const submitBtn = document.querySelector('.teller-submit-btn');
+                    if (submitBtn) {
+                        submitBtn.innerHTML = 'คุณได้บันทึกคะแนนของวันนี้ไปแล้ว <i class="fa-solid fa-circle-check"></i>';
+                        submitBtn.disabled = true;
+                        submitBtn.classList.remove('ready');
+                    }
+                }
 
                 // Check Supabase first for today's prediction
                 let cachedText = null;
@@ -1432,6 +1495,29 @@
                 if (sessionError) throw new Error('Session error: ' + sessionError.message);
                 if (!session || !session.user) throw new Error('ไม่ได้เข้าสู่ระบบ กรุณา login ใหม่');
 
+                // Double check if already rated today
+                const todayStr = new Date().toISOString().split('T')[0];
+                const localRatedKey = `rated_${currentTellerId}_${todayStr}`;
+                if (localStorage.getItem(localRatedKey)) {
+                    throw new Error('คุณได้บันทึกคะแนนของวันนี้ไปแล้ว');
+                }
+
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const { data: existingReview, error: reviewErr } = await _supabase
+                    .from('teller_reviews')
+                    .select('id')
+                    .eq('user_id', session.user.id)
+                    .eq('teller_id', currentTellerId)
+                    .gte('created_at', todayStart.toISOString())
+                    .limit(1)
+                    .maybeSingle();
+
+                if (existingReview) {
+                    localStorage.setItem(localRatedKey, JSON.stringify({ rating: currentTellerRating, feedback: feedback }));
+                    throw new Error('คุณได้บันทึกคะแนนของวันนี้ไปแล้ว');
+                }
+
                 console.log('Inserting review:', {
                     user_id: session.user.id,
                     teller_id: currentTellerId,
@@ -1452,6 +1538,13 @@
                 }
 
                 console.log('Review saved successfully!');
+                
+                // Cache the saved rating and feedback
+                localStorage.setItem(localRatedKey, JSON.stringify({
+                    rating: currentTellerRating,
+                    feedback: feedback
+                }));
+
                 await loadTellerRatings();
                 closeTellerModal();
                 btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
@@ -1463,12 +1556,20 @@
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${e.message}`;
                 btn.style.background = '#ef4444';
                 btn.disabled = false;
-                // Reset button after 4 seconds
-                setTimeout(() => {
-                    btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
-                    btn.style.background = '';
-                    btn.disabled = false;
-                }, 4000);
+                
+                if (e.message !== 'คุณได้บันทึกคะแนนของวันนี้ไปแล้ว') {
+                    // Reset button after 4 seconds if it's not the already-rated error
+                    setTimeout(() => {
+                        btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                        btn.style.background = '';
+                        btn.disabled = false;
+                    }, 4000);
+                } else {
+                    // For already rated, lock inputs and button
+                    btn.disabled = true;
+                    document.getElementById('tmStars').style.pointerEvents = 'none';
+                    document.getElementById('tmFeedback').disabled = true;
+                }
             }
         }
 
