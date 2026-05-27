@@ -819,6 +819,16 @@
                     </div>
                     <div id="healthSummaryText" class="horo-text" style="margin-top: 0.5rem;"><i class="fa-solid fa-circle-notch fa-spin"></i>
                         กำลังวิเคราะห์...</div>
+                    
+                    <!-- Today's Logs Display -->
+                    <div id="todayHealthLogs" style="margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(0,0,0,0.08); display:none;">
+                        <div style="font-size:0.8rem; font-weight:700; color: #1e293b; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.25rem;">
+                            <i class="fa-solid fa-circle-check" style="color:#22c55e;"></i> บันทึกสุขภาพของคุณวันนี้:
+                        </div>
+                        <div id="todayLogsList" style="display:flex; flex-direction:column; gap:0.35rem;">
+                            <!-- Dynamically loaded today's logs -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -932,6 +942,7 @@
 
                 renderFeatures(features);
                 loadHealthSummary(theme, username);
+                loadTodayHealthLogs();
                 loadTellerRatings(); // Load real ratings from DB
 
             } catch (e) { console.error(e); }
@@ -1206,6 +1217,151 @@
                 }
             } catch (e) {
                 el.textContent = 'ไม่สามารถเชื่อมต่อ AI ได้';
+            }
+        }
+
+        async function loadTodayHealthLogs() {
+            if (!_supabase) return;
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                if (!session || !session.user) return;
+                const user = session.user;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayStartISO = todayStart.toISOString();
+
+                let logs = [];
+
+                // 1. Check Exercise logs for today
+                try {
+                    const { data: exData } = await _supabase
+                        .from('exercise_logs')
+                        .select('detail, calories')
+                        .eq('user_id', user.id)
+                        .gte('created_at', todayStartISO)
+                        .order('created_at', { ascending: false });
+
+                    if (exData && exData.length > 0) {
+                        exData.forEach(item => {
+                            logs.push({
+                                icon: '🏃',
+                                title: 'ออกกำลังกาย',
+                                detail: `${item.detail} (${item.calories} kcal)`
+                            });
+                        });
+                    } else {
+                        const localEx = JSON.parse(localStorage.getItem('exercise_logs') || '[]');
+                        const todayEx = localEx.filter(x => x.created_at && x.created_at.startsWith(todayStr));
+                        todayEx.forEach(item => {
+                            logs.push({
+                                icon: '🏃',
+                                title: 'ออกกำลังกาย',
+                                detail: `${item.detail} (${item.calories} kcal)`
+                            });
+                        });
+                    }
+                } catch (e) { console.warn(e); }
+
+                // 2. Check Excretion logs for today
+                try {
+                    const { data: excData } = await _supabase
+                        .from('excretion_logs')
+                        .select('type, color')
+                        .eq('user_id', user.id)
+                        .gte('created_at', todayStartISO)
+                        .order('created_at', { ascending: false });
+
+                    const typeMap = { 'hard': 'แข็ง/ท้องผูก', 'normal': 'ปกติ (สุขภาพดี)', 'soft': 'เหลว', 'liquid': 'ท้องเสีย' };
+                    const colorMap = { 'brown': 'น้ำตาล', 'green': 'เขียว', 'yellow': 'เหลือง', 'black': 'ดำ', 'red': 'แดง' };
+
+                    if (excData && excData.length > 0) {
+                        excData.forEach(item => {
+                            const typeTh = typeMap[item.type] || item.type;
+                            const colorTh = item.color ? `สี${colorMap[item.color] || item.color}` : '';
+                            logs.push({
+                                icon: '💩',
+                                title: 'การขับถ่าย',
+                                detail: `${typeTh} ${colorTh}`
+                            });
+                        });
+                    } else {
+                        const localExc = JSON.parse(localStorage.getItem('excretion_local') || '[]');
+                        const todayExc = localExc.filter(x => x.date && x.date.includes(todayStr));
+                        todayExc.forEach(item => {
+                            const typeTh = typeMap[item.type] || item.type;
+                            const colorTh = item.color ? `สี${colorMap[item.color] || item.color}` : '';
+                            logs.push({
+                                icon: '💩',
+                                title: 'การขับถ่าย',
+                                detail: `${typeTh} ${colorTh}`
+                            });
+                        });
+                    }
+                } catch (e) { console.warn(e); }
+
+                // 3. Check Period / Symptom logs for today
+                try {
+                    const { data: symData } = await _supabase
+                        .from('period_symptoms')
+                        .select('symptoms')
+                        .eq('user_id', user.id)
+                        .eq('date', todayStr)
+                        .maybeSingle();
+
+                    if (symData && symData.symptoms && symData.symptoms.length > 0) {
+                        const symptomNames = {
+                            cramps: 'ปวดท้อง', moody: 'หงุดหงิด', acne: 'เป็นสิว',
+                            fatigue: 'อ่อนเพลีย', headache: 'ปวดหัว', bloating: 'ตัวบวม',
+                            cravings: 'อยากทานของหวาน', sleepy: 'ง่วงนอน'
+                        };
+                        const listTh = symData.symptoms.map(s => symptomNames[s] || s).join(', ');
+                        logs.push({
+                            icon: '📅',
+                            title: 'อาการรอบเดือน',
+                            detail: listTh
+                        });
+                    } else {
+                        const localSyms = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
+                        const todaySyms = localSyms[todayStr];
+                        if (todaySyms && todaySyms.symptoms && todaySyms.symptoms.length > 0) {
+                            const symptomNames = {
+                                cramps: 'ปวดท้อง', moody: 'หงุดหงิด', acne: 'เป็นสิว',
+                                fatigue: 'อ่อนเพลีย', headache: 'ปวดหัว', bloating: 'ตัวบวม',
+                                cravings: 'อยากทานของหวาน', sleepy: 'ง่วงนอน'
+                            };
+                            const listTh = todaySyms.symptoms.map(s => symptomNames[s] || s).join(', ');
+                            logs.push({
+                                icon: '📅',
+                                title: 'อาการรอบเดือน',
+                                detail: listTh
+                            });
+                        }
+                    }
+                } catch (e) { console.warn(e); }
+
+                // Render Logs
+                const container = document.getElementById('todayHealthLogs');
+                const listEl = document.getElementById('todayLogsList');
+
+                if (logs.length > 0) {
+                    listEl.innerHTML = logs.map(log => `
+                        <div style="background:rgba(168,85,247,0.06); border-radius:10px; padding:0.5rem 0.8rem; display:flex; align-items:center; justify-content:space-between; font-size:0.8rem; border: 1px solid rgba(168,85,247,0.1);">
+                            <div style="display:flex; align-items:center; gap:0.5rem; color:#475569;">
+                                <span>${log.icon}</span>
+                                <strong>${log.title}:</strong>
+                                <span>${log.detail}</span>
+                            </div>
+                            <span style="color:#22c55e; font-size:0.75rem; font-weight:700;"><i class="fa-solid fa-check-double"></i> บันทึกแล้ว</span>
+                        </div>
+                    `).join('');
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Error loading today health logs:", err);
             }
         }
 
