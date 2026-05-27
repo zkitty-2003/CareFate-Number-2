@@ -56,7 +56,45 @@ function initializeRegisterPage() {
     };
 
     setupToggle('togglePasswordBtn', 'password');
-    setupToggle('toggleConfirmPasswordBtn', 'confirmPassword');
+
+    // --- Dynamic Password Validation ---
+    const passwordInput = document.getElementById('password');
+    const reqLength = document.getElementById('req-length');
+    const reqEnglish = document.getElementById('req-english');
+    const reqComplexity = document.getElementById('req-complexity');
+    const reqSpecial = document.getElementById('req-special');
+
+    const updateReqUI = (el, isValid) => {
+        const icon = el.querySelector('i');
+        if (isValid) {
+            el.style.color = 'var(--success)';
+            icon.className = 'fa-solid fa-circle-check';
+            icon.style.color = 'var(--success)';
+        } else {
+            el.style.color = '#cbd5e1';
+            icon.className = 'fa-solid fa-circle-info';
+            icon.style.color = '#94a3b8';
+        }
+    };
+
+    const validateRules = (pass) => {
+        return {
+            length: pass.length >= 7 && pass.length <= 20,
+            english: /^[a-zA-Z0-9]*$/.test(pass), // Simplified: will be refined by complexity
+            complexity: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/.test(pass),
+            noSpecial: !/[^a-zA-Z0-9]/.test(pass)
+        };
+    };
+
+    passwordInput.addEventListener('input', (e) => {
+        const pass = e.target.value;
+        const rules = validateRules(pass);
+
+        updateReqUI(reqLength, rules.length);
+        updateReqUI(reqEnglish, /^[a-zA-Z0-9]*$/.test(pass) && pass.length > 0);
+        updateReqUI(reqComplexity, rules.complexity);
+        updateReqUI(reqSpecial, rules.noSpecial && pass.length > 0);
+    });
 
     // Validation
     const validateDate = (input) => {
@@ -75,8 +113,7 @@ function initializeRegisterPage() {
         const username = document.getElementById('username').value.trim();
         const dob = document.getElementById('dob').value;
         const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+        const password = passwordInput.value;
 
         // Validation 1: Date
         if (dob > today) {
@@ -84,19 +121,36 @@ function initializeRegisterPage() {
             return;
         }
 
-        // Validation 2: Password Complexity
-        const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{7,20}$/;
+        // Validation 2: Password Complexity (Granular)
+        const rules = validateRules(password);
+        let errorMsg = "";
 
-        if (!passwordRegex.test(password)) {
-            showInAppNotification('รหัสผ่านไม่ปลอดภัย', "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร ต้องเป็นตัวอักษรภาษาอังกฤษ ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และห้ามมีอักขระพิเศษ");
+        if (!rules.length) {
+            errorMsg = "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร";
+        } else if (!/[a-zA-Z]/.test(password)) {
+            errorMsg = "รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษ";
+        } else if (!rules.complexity) {
+            errorMsg = "รหัสผ่านต้องประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก";
+        } else if (!rules.noSpecial) {
+            errorMsg = "รหัสผ่านห้ามมีอักขระพิเศษ (@ # $ %)";
+        }
+
+        if (errorMsg) {
+            showInAppNotification('รหัสผ่านไม่ปลอดภัย', errorMsg);
+            // Highlight the specific failing requirement in red temporarily
+            const failId = !rules.length ? 'req-length' :
+                (!/[a-zA-Z]/.test(password) ? 'req-english' :
+                    (!rules.complexity ? 'req-complexity' : 'req-special'));
+            const failEl = document.getElementById(failId);
+            if (failEl) {
+                failEl.style.color = 'var(--danger)';
+                failEl.querySelector('i').style.color = 'var(--danger)';
+                failEl.querySelector('i').className = 'fa-solid fa-circle-xmark';
+            }
             return;
         }
 
-        // Validation 3: Confirm Match
-        if (password !== confirmPassword) {
-            showInAppNotification('ข้อผิดพลาด', "รหัสผ่านไม่ตรงกัน!");
-            return;
-        }
+
 
         // Calculate Age
         const birthDate = new Date(dob);
@@ -144,17 +198,17 @@ function initializeRegisterPage() {
             const mainContainer = document.querySelector('.login-screen');
             mainContainer.innerHTML = `
                 <div class="logo-container" style="text-align: center; animation: fadeIn 0.5s;">
-                    <div class="logo-icon" style="margin: 0 auto 1.5rem; background: var(--success);">
-                        <i class="fa-regular fa-paper-plane"></i>
+                    <div class="logo-icon" style="margin: 0 auto 1.5rem; background: var(--success); box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);">
+                        <i class="fa-regular fa-paper-plane" style="color: white; font-size: 2rem;"></i>
                     </div>
-                    <h1 class="app-name">กรุณาตรวจสอบอีเมล</h1>
-                    <p class="tagline" style="margin-top: 1rem; color: #fff;">
-                        เราได้ส่งลิงก์ยืนยันไปที่ <br><strong>${email}</strong>
+                    <h1 class="app-name" style="font-size: 1.875rem; color: #1e293b; margin-bottom: 0.5rem;">กรุณาตรวจสอบอีเมล</h1>
+                    <p class="tagline" style="margin-top: 1rem; color: #475569; font-size: 1rem; line-height: 1.5;">
+                        เราได้ส่งลิงก์ยืนยันไปที่ <br><strong style="color: #6366f1;">${email}</strong>
                     </p>
-                    <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+                    <p style="margin-top: 1.5rem; color: #64748b; font-size: 0.875rem; background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #f1f5f9;">
                         คลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชีของคุณ
                     </p>
-                    <a href="index.html" class="btn-primary" style="margin-top: 2rem; text-decoration: none; display: inline-flex;">
+                    <a href="index.html" class="btn-primary" style="margin-top: 2rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #0f172a; box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3);">
                         กลับสู่หน้าเข้าสู่ระบบ
                     </a>
                 </div>
@@ -202,17 +256,19 @@ async function initializeThemePage() {
             id: 'youth',
             name: 'สดใส มีชีวิตชีวา',
             desc: 'สดใสและมีสีสัน สำหรับคนรุ่นใหม่',
-            range: [6, 23],
+            range: [0, 19],
             class: 'theme-youth',
-            icon: 'fa-bolt'
+            icon: 'fa-bolt',
+            iconBg: 'background: linear-gradient(135deg, #e879f9, #ec4899);' // fuchsia-400 to pink-500
         },
         {
             id: 'working',
             name: 'เรียบหรู มืออาชีพ',
             desc: 'เรียบหรู สบายตา เน้นการใช้งาน',
-            range: [24, 59],
+            range: [20, 59],
             class: 'theme-working',
-            icon: 'fa-briefcase'
+            icon: 'fa-briefcase',
+            iconBg: 'background: linear-gradient(135deg, #3b82f6, #6366f1);' // blue-500 to indigo-500
         },
         {
             id: 'elder',
@@ -220,65 +276,101 @@ async function initializeThemePage() {
             desc: 'คุมโทนชัดเจน อ่านง่าย สบายตา',
             range: [60, 150],
             class: 'theme-elder',
-            icon: 'fa-leaf'
+            icon: 'fa-leaf',
+            iconBg: 'background: linear-gradient(135deg, #fb923c, #f59e0b);' // orange-400 to amber-500
         }
     ];
 
     // Determine Theme
     let recommendedThemeId = 'working';
-    if (age >= 6 && age <= 23) recommendedThemeId = 'youth';
-    else if (age >= 24 && age <= 59) recommendedThemeId = 'working';
+    if (age <= 19) recommendedThemeId = 'youth';
+    else if (age >= 20 && age <= 59) recommendedThemeId = 'working';
     else if (age >= 60) recommendedThemeId = 'elder';
 
     let selectedThemeId = recommendedThemeId;
 
     // Update Header with Age
-    const tagline = document.querySelector('.tagline');
+    const tagline = document.getElementById('ageTagline');
     if (tagline) {
-        tagline.innerHTML = `แนะนำธีมตามช่วงอายุ (<strong>อายุ ${age} ปี</strong>):`;
+        tagline.innerHTML = `แนะนำธีมตามช่วงอายุ (อายุ ${age} ปี):`;
     }
 
     // Render Cards
-    themes.forEach(theme => {
-        const isRecommended = theme.id === recommendedThemeId;
-        const card = document.createElement('div');
-        card.className = `theme-card ${theme.class} ${isRecommended ? 'recommended selected' : ''}`;
+    const renderCards = () => {
+        container.innerHTML = ''; // clear
+        themes.forEach(theme => {
+            const isRecommended = theme.id === recommendedThemeId;
+            const isSelected = theme.id === selectedThemeId;
+            const card = document.createElement('button');
+            
+            // Format range text
+            let rangeText = `อายุ ${theme.range[0]} - ${theme.range[1]} ปี`;
+            if (theme.range[1] >= 100) rangeText = `อายุ ${theme.range[0]} ปีขึ้นไป`;
+            if (theme.range[0] === 0) rangeText = `อายุ ${theme.range[1]} ปีลงไป`;
 
-        // Format range text
-        let rangeText = `อายุ ${theme.range[0]} - ${theme.range[1]} ปี`;
-        if (theme.range[1] > 100) rangeText = `อายุ ${theme.range[0]} ปีขึ้นไป`;
+            card.className = `w-full relative flex items-center gap-4 p-5 rounded-[28px] transition-all duration-300 text-left border-2`;
+            // Base styles
+            card.style.width = '100%';
+            card.style.position = 'relative';
+            card.style.display = 'flex';
+            card.style.alignItems = 'center';
+            card.style.gap = '1rem';
+            card.style.padding = '1.25rem';
+            card.style.borderRadius = '28px';
+            card.style.transition = 'all 0.3s ease';
+            card.style.textAlign = 'left';
+            card.style.border = '2px solid transparent';
+            card.style.cursor = 'pointer';
 
-        card.innerHTML = `
-            ${isRecommended ? '<span class="badge">แนะนำ</span>' : ''}
-            <div class="theme-icon">
-                <i class="fa-solid ${theme.icon}"></i>
-            </div>
-            <div class="theme-info">
-                <h3>${theme.name}</h3>
-                <p class="theme-range" style="font-size: 0.75rem; color: #a855f7; margin-bottom: 0.2rem; font-weight: 600;">
-                    <i class="fa-regular fa-clock"></i> ${rangeText}
-                </p>
-                <p>${theme.desc}</p>
-            </div>
-            <div style="margin-left: auto;">
-                ${isRecommended ? '<i class="fa-solid fa-circle-check" style="color:var(--success)"></i>' : '<i class="fa-regular fa-circle"></i>'}
-            </div>
-        `;
+            if (isSelected) {
+                card.style.backgroundColor = '#E3F2FD';
+                card.style.borderColor = '#2563eb';
+                card.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                card.style.transform = 'scale(1.02)';
+            } else {
+                card.style.backgroundColor = 'rgba(148, 163, 184, 0.3)';
+            }
 
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.theme-card').forEach(c => {
-                c.classList.remove('selected');
-                c.querySelector('.fa-circle-check')?.classList.replace('fa-circle-check', 'fa-circle');
-                c.querySelector('.fa-circle')?.classList.add('fa-regular');
+            card.innerHTML = `
+                ${isRecommended ? `
+                <div style="position: absolute; top: 0.75rem; right: 1.25rem; background-color: #9333ea; color: white; font-size: 0.625rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em;">
+                  แนะนำ
+                </div>` : ''}
+                
+                <div style="flex-shrink: 0; width: 3.5rem; height: 3.5rem; ${theme.iconBg} border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
+                    <i class="fa-solid ${theme.icon}" style="color: white; font-size: 1.25rem;"></i>
+                </div>
+
+                <div style="flex: 1;">
+                    <h3 style="font-weight: 600; font-size: 1.125rem; line-height: 1.25; color: ${isSelected ? '#0f172a' : '#1e293b'}; margin-bottom: 0;">
+                        ${theme.name}
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.375rem; margin-top: 0.125rem;">
+                        <div style="width: 0.375rem; height: 0.375rem; border-radius: 9999px; background-color: ${isSelected ? '#9333ea' : '#64748b'};"></div>
+                        <p style="font-size: 0.75rem; font-weight: 600; margin: 0; color: ${isSelected ? '#7e22ce' : '#334155'};">
+                            ${rangeText}
+                        </p>
+                    </div>
+                    <p style="font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600; line-height: 1.625; margin-bottom: 0; color: ${isSelected ? '#1e293b' : '#475569'};">
+                        ${theme.desc}
+                    </p>
+                </div>
+
+                <div style="flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 9999px; border: 2px solid; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; ${isSelected ? 'background-color: #2563eb; border-color: #2563eb; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);' : 'background-color: white; border-color: #94a3b8;'}">
+                    ${isSelected ? '<i class="fa-solid fa-check" style="color: white; font-size: 0.75rem; stroke-width: 3px;"></i>' : ''}
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                selectedThemeId = theme.id;
+                renderCards();
             });
-            card.classList.add('selected');
-            const iconContainer = card.lastElementChild;
-            iconContainer.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--success)"></i>';
-            selectedThemeId = theme.id;
-        });
 
-        container.appendChild(card);
-    });
+            container.appendChild(card);
+        });
+    };
+
+    renderCards();
 
     // Save Theme -> Go to Features
     completeBtn.addEventListener('click', async () => {
@@ -343,22 +435,19 @@ async function initializeFeaturePage() {
     const features = [
         {
             id: 'goals',
-            title: 'ตั้งเป้าหมายการเรียน/ชีวิต',
-            desc: 'ตั้งเป้าหมายชีวิตและการเรียน',
+            title: 'เป้าหมาย',
             icon: 'fa-bullseye',
             recommend: (a) => a >= 6 && a <= 59
         },
         {
             id: 'exercise',
-            title: 'เน้นการเล่นกีฬาและกิจกรรม',
-            desc: 'ติดตามกิจกรรมออกกำลังกายรายวัน',
+            title: 'ออกกำลัง',
             icon: 'fa-dumbbell',
             recommend: (a) => a >= 6 && a <= 59
         },
         {
             id: 'period',
-            title: 'บันทึกรอบเดือน',
-            desc: 'บันทึกและคาดการณ์รอบเดือน',
+            title: 'รอบเดือน',
             icon: 'fa-droplet',
             recommend: (a) => a >= 12 && a <= 50
         }
@@ -441,7 +530,6 @@ async function initializeFeaturePage() {
             </div>
             <i class="fa-solid ${feat.icon} feature-icon"></i>
             <div class="feature-title">${feat.title}</div>
-            <div class="feature-desc">${feat.desc}</div>
         `;
 
         grid.appendChild(card);

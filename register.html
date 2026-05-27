@@ -5,99 +5,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>สมัครสมาชิก - CareFate</title>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=15">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 
 <body>
     <div class="app-container">
-        <!-- Reusing background shapes for consistency -->
-        <div class="background-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
+        <!-- Background Aura -->
+        <div class="aura purple-aura"></div>
+        <div class="aura blue-aura"></div>
+        <div class="aura pink-aura"></div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="time" id="statusBarTime">9:41</span>
+            <div class="status-icons">
+                <div class="battery"></div>
+                <div class="signal"></div>
+            </div>
         </div>
 
-        <main class="login-screen">
-            <div class="logo-container" style="margin-bottom: 2rem; text-align: center;">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-user-plus"></i>
-                </div>
-                <h1 class="app-name">สร้างบัญชีใหม่</h1>
-                <p class="tagline">เข้าร่วมเพื่อเริ่มต้นดูแลสุขภาพของคุณ</p>
+        <main class="login-screen bright-theme" style="justify-content: flex-start; padding-top: 1.5rem;">
+            <a href="index.html" class="back-link" style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-weight: 600; font-size: 0.875rem; text-decoration: none; margin-bottom: 1.5rem; transition: color 0.3s;">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>กลับหน้าเข้าสู่ระบบ</span>
+            </a>
+
+            <div class="login-header" style="text-align: left; margin-bottom: 2rem;">
+                <h2 class="app-name" style="font-size: 1.875rem; margin-bottom: 0.5rem;">สร้างบัญชีใหม่</h2>
+                <p class="tagline" style="color: #64748b; justify-content: flex-start; font-size: 1rem;">เริ่มต้นดูแลกิจกรรมและโชคชะตาของคุณ</p>
             </div>
 
             <form class="login-form" id="registerForm">
-                <div class="input-group">
-                    <i class="fa-regular fa-user input-icon"></i>
-                    <input type="text" id="username" placeholder="ชื่อผู้ใช้" required>
+                <div class="form-group">
+                    <label for="username" class="input-label">ชื่อผู้ใช้</label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-user input-icon"></i>
+                        <input type="text" id="username" placeholder="ชื่อเล่นหรือชื่อจริงของคุณ" required>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <i class="fa-regular fa-calendar input-icon"></i>
-                    <!-- Using type="date" for simplicity, styled in CSS -->
-                    <input type="date" id="dob" required style="color: rgba(255,255,255,0.8);">
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label for="dob" class="input-label">วัน/เดือน/ปี เกิด</label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-calendar input-icon"></i>
+                        <input type="date" id="dob" required style="color: #1e293b;">
+                    </div>
+                </div>
+                <p style="font-size: 0.6875rem; color: #94a3b8; margin: 0 0 1rem 0.25rem;">* ข้อมูลนี้จะใช้ในการคำนวณดวงชะตาของคุณ</p>
+
+                <div class="form-group">
+                    <label for="email" class="input-label">อีเมล</label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="email" placeholder="example@email.com" required>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <i class="fa-regular fa-envelope input-icon"></i>
-                    <input type="email" id="email" placeholder="อีเมล" required>
-                </div>
-
-                <div class="input-group">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                    <input type="password" id="password" placeholder="รหัสผ่าน" required>
-                    <button type="button" class="toggle-password" id="togglePasswordBtn">
-                        <i class="fa-regular fa-eye-slash"></i>
-                    </button>
-                </div>
-
-                <div class="input-group">
-                    <i class="fa-solid fa-check-double input-icon"></i>
-                    <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่าน" required>
-                    <button type="button" class="toggle-password" id="toggleConfirmPasswordBtn">
-                        <i class="fa-regular fa-eye-slash"></i>
-                    </button>
+                <div class="form-group">
+                    <label for="password" class="input-label">รหัสผ่าน</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="ระบุรหัสผ่านของคุณ" required>
+                        <button type="button" class="toggle-password" id="togglePasswordBtn">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Password Requirements Hint -->
-                <div style="font-size: 0.8rem; color: #cbd5e1; margin: 0.5rem 0 0.2rem 0.5rem; line-height: 1.6;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
-                        <span>7-20 ตัวอักษร</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
-                        <span>ต้องเป็นตัวอักษรภาษาอังกฤษ</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-circle-check" style="color:var(--success); font-size: 0.7rem;"></i>
-                        <span>ต้องมีตัวเลข, ตัวพิมพ์เล็ก และตัวพิมพ์ใหญ่</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-circle-xmark" style="color:var(--danger); font-size: 0.7rem;"></i>
-                        <span>ห้ามมีอักขระพิเศษ (@ # $ %)</span>
+                <div class="password-rules" style="background-color: #f8fafc; padding: 1rem; border-radius: 1rem; border: 1px solid #f1f5f9; margin-top: -0.5rem; margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">ความปลอดภัยของรหัสผ่าน:</p>
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <div id="req-length" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                            <span style="font-size: 0.6875rem; font-weight: 500;">ความยาว 7-20 ตัวอักษร</span>
+                        </div>
+                        <div id="req-english" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                            <span style="font-size: 0.6875rem; font-weight: 500;">ใช้ภาษาอังกฤษ (ตัวเล็กและตัวใหญ่)</span>
+                        </div>
+                        <div id="req-complexity" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                            <span style="font-size: 0.6875rem; font-weight: 500;">ต้องมีตัวเลขประกอบด้วย</span>
+                        </div>
+                        <div id="req-special" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                            <span style="font-size: 0.6875rem; font-weight: 500;">ห้ามมีอักขระพิเศษ (@ # $ %)</span>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary" style="margin-top: 1.5rem;">
-                    <span>สมัครสมาชิก</span>
-                    <i class="fa-solid fa-user-plus"></i>
-                </button>
+                <div class="login-action-container">
+                    <button type="submit" class="btn-primary" style="background: linear-gradient(to right, #9333ea, #4f46e5); box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.3);">
+                        <span>ลงทะเบียน</span>
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </div>
             </form>
-
-            <footer class="login-footer">
-                <p>มีบัญชีอยู่แล้ว? <a href="index.html">เข้าสู่ระบบ</a></p>
-            </footer>
         </main>
+
+        <!-- Bottom Bar -->
+        <div class="home-indicator">
+            <div class="indicator-bar"></div>
+        </div>
     </div>
 
     <script src="notifications.js?v=8"></script>
-    <script src="register.js"></script>
+    <script src="register.js?v=6"></script>
+    <script>
+        // Real-time Status Bar Clock
+        function updateStatusBarTime() {
+            const timeElement = document.getElementById('statusBarTime');
+            if (!timeElement) return;
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            timeElement.textContent = `${hours}:${minutes}`;
+        }
+        updateStatusBarTime();
+        setInterval(updateStatusBarTime, 1000);
+    </script>
 </body>
 
 </html>

@@ -339,6 +339,94 @@ def get_horoscope(request: HoroscopeRequest):
         fallback_msg = random.choice(tips)
         
         return {"status": "success", "horoscope": fallback_msg}
+class FortuneTellerRequest(BaseModel):
+    teller_id: str
+    username: str = "ผู้ใช้"
+    history_context: str = ""
+    birth_date: str = ""
+
+@app.post("/api/fortune-teller")
+def get_fortune_teller_prediction(request: FortuneTellerRequest):
+    print(f"DEBUG: Fortune Teller Request for '{request.teller_id}'")
+    now = datetime.now()
+    today_str = now.strftime("%Y-%m-%d")  # Used as seed key
+    thai_days = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"]
+    day_colors = {
+        "จันทร์":   "สีเหลือง",
+        "อังคาร":   "สีชมพู",
+        "พุธ":      "สีเขียว",
+        "พฤหัสบดี": "สีส้ม",
+        "ศุกร์":    "สีฟ้า",
+        "เสาร์":    "สีม่วง",
+        "อาทิตย์":  "สีแดง",
+    }
+    weekday_th = thai_days[now.weekday()]
+    lucky_color = day_colors[weekday_th]
+    thai_date = now.strftime(f"วัน{weekday_th} ที่ %d/%m/%Y")
+
+    personas = {
+        'love': {
+            'name': 'แม่หมอจันทรา',
+            'focus': 'ความรัก ความสัมพันธ์ เสน่ห์ และคนรอบข้าง',
+            'tone': 'ใช้ภาษาเป็นกันเอง อบอุ่น มีคำว่า "นะคะ/ค่า" ให้กำลังใจ'
+        },
+        'finance': {
+            'name': 'ซินแสเศรษฐี',
+            'focus': 'การเงิน โชคลาภ การลงทุน และรายรับรายจ่าย',
+            'tone': 'ใช้ภาษาหนักแน่น น่าเชื่อถือ เรียกผู้ใช้ว่า "เถ้าแก่" หรือ "เศรษฐี"'
+        },
+        'work': {
+            'name': 'อาจารย์ดวงดาว',
+            'focus': 'การงาน หน้าที่ ความสำเร็จ และอุปสรรคในที่ทำงาน',
+            'tone': 'ใช้ภาษาแบบมืออาชีพ ชัดเจน มีความมุ่งมั่น'
+        },
+        'health': {
+            'name': 'ผู้เฒ่าโอสถ',
+            'focus': 'สุขภาพ ร่างกาย การพักผ่อน และการดูแลตัวเอง',
+            'tone': 'ใช้ภาษาคนแก่ใจดี ห่วงใย เรียกผู้ใช้ว่า "หลานเอ๊ย" หรือ "ลูกเอ๊ย"'
+        },
+        'overall': {
+            'name': 'เซนมาสเตอร์',
+            'focus': 'ภาพรวมชีวิต สติปัญญา ความสงบ และการใช้ชีวิต',
+            'tone': 'ใช้ภาษาปรัชญา ลุ่มลึก แฝงข้อคิด'
+        }
+    }
+
+    persona = personas.get(request.teller_id, personas['love'])
+
+    system_prompt = f"""คุณคือหมอดู AI ชื่อ "{persona['name']}" ในแอป CareFate
+วันนี้คือ{thai_date} (date_seed: {today_str})
+สีมงคลประจำวัน{weekday_th}คือ{lucky_color}
+ชื่อผู้ใช้: {request.username}
+วันเดือนปีเกิด: {request.birth_date if request.birth_date else 'ไม่ระบุ'}
+
+บุคลิกและแนวทาง:
+- เรื่องที่เน้น: {persona['focus']}
+- โทนภาษา: {persona['tone']}
+
+ข้อมูลสุขภาพล่าสุด: {request.history_context if request.history_context else 'ไม่มี'}
+
+งานของคุณ: สร้างคำทำนายดวงชะตา**รายวัน**สำหรับวัน{weekday_th}นี้ (3-4 ประโยค) โดย:
+1. กล่าวถึงสีมงคลวันนี้ ({lucky_color}) พร้อมคำแนะนำว่าใส่เสื้อสีนี้เพื่ออะไร
+2. ทำนายเรื่อง {persona['focus']} ให้ตรงกับพลังงานของวัน{weekday_th}
+3. ให้คำแนะนำ 1 ข้อที่ทำได้จริงวันนี้
+
+สำคัญ: ห้ามทักทาย ห้ามมีคำนำ เริ่มต้นด้วยเรื่องสีมงคลได้เลย ใช้ภาษาไทยเท่านั้น"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"ขอคำทำนายดวงชะตาวัน{weekday_th}ที่ {today_str} ของฉันหน่อย"}
+    ]
+
+    try:
+        reply = call_ai(messages)
+        print(f"DEBUG: Fortune Teller Success: {reply[:50]}...")
+        return {"status": "success", "prediction": reply, "date": today_str}
+    except Exception as e:
+        print(f"DEBUG: Fortune Teller Error: {str(e)}")
+        fallback = f"วัน{weekday_th}นี้ สีมงคลคือ{lucky_color} แนะนำให้สวมใส่เสื้อสีนี้เพื่อเสริม{persona['focus']} ขอให้วันนี้เป็นวันที่ดีนะคะ"
+        return {"status": "success", "prediction": fallback, "date": today_str}
+
 
 
 
@@ -371,12 +459,17 @@ def get_health_summary(request: HealthSummaryRequest):
 ผู้ใช้ชื่อ: {request.username}
 รูปแบบการตอบ: {persona_tone.get(request.theme, persona_tone['working'])}
 
-วิเคราะห์ข้อมูลสุขภาพ 7 วันที่ผ่านมา แล้วสรุปเป็น **3 ข้อสั้นๆ** ในรูปแบบนี้เท่านั้น:
-• [สิ่งที่ดี หรือสิ่งที่น่าเป็นห่วง]
-• [สิ่งที่ดี หรือสิ่งที่น่าเป็นห่วง]  
-• [คำแนะนำ 1 ข้อ]
+วิเคราะห์ข้อมูลสุขภาพ 7 วันที่ผ่านมา แล้วสรุปให้ **สั้นและกระชับที่สุด (ไม่เกิน 2 ข้อ)** 
+ข้อกำหนดสำคัญมาก:
+- ห้ามกล่าวทักทาย (ห้ามมี สวัสดีค่ะ/ครับ)
+- ห้ามมีประโยคเกริ่นนำหรือประโยคสรุปท้าย
+- ตอบเฉพาะ bullet points เท่านั้น 
 
-ห้ามพูดถึงข้อมูลที่ไม่มีในบริบท ถ้าข้อมูลน้อยให้บอกตรงๆ ใช้ภาษาไทยเท่านั้น ห้ามมีหัวข้อหรือคำอธิบายเพิ่มเติม"""
+รูปแบบที่ต้องการ:
+• [สรุปภาพรวม 1 ประโยค]
+• [คำแนะนำ 1 ประโยค]
+
+ใช้ภาษาไทยเท่านั้น"""
 
     messages = [
         {"role": "system", "content": system_prompt},

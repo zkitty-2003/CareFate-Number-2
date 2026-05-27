@@ -8,55 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=10">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="ai-logic.js"></script>
 
     <style>
-        /* ===== Outer area (body) stays WHITE on all themes ===== */
-        body.theme-youth,
-        body.theme-working,
-        body.theme-elder {
-            background: #ffffff !important;
-        }
-
-        /* ===== DASHBOARD CARD — same size as history.html ===== */
-        .dashboard-container {
-            /* inherits from style.css: max-width:420px, height:90vh, max-height:850px */
-            border-radius: 28px !important;
-        }
-
-        /* Theme-specific card backgrounds */
-        body.theme-youth .dashboard-container {
-            background: rgba(255, 240, 255, 0.75) !important;
-            backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.7) !important;
-            box-shadow: 0 20px 60px rgba(200, 150, 220, 0.2) !important;
-        }
-
-        body.theme-working .dashboard-container,
-        body.theme-elder .dashboard-container {
-            background: #f2f4f8 !important;
-            backdrop-filter: none !important;
-            border: 1px solid #e5e7eb !important;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
-        }
-
-        /* Fix horo-card on non-gradient background */
-        body.theme-working .horo-card,
-        body.theme-elder .horo-card {
-            background: #ffffff !important;
-            backdrop-filter: none !important;
-            border: 1px solid #ede9fe !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
-        }
-
-        /* Fix notif-btn on non-gradient background */
-        body.theme-working .notif-btn,
-        body.theme-elder .notif-btn {
-            background: #f3f4f6 !important;
-            border: 1px solid #e5e7eb !important;
-        }
 
         /* ===== HEADER ===== */
         .dash-top {
@@ -90,8 +46,8 @@
             width: 34px;
             height: 34px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -166,15 +122,15 @@
         /* ===== HOROSCOPE CARD ===== */
         .horo-card {
             margin: 0.6rem 1.1rem 0.8rem;
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(5px);
+            border: 1px solid #ffffff;
             border-radius: 18px;
             padding: 0.9rem 1rem;
             display: flex;
             align-items: flex-start;
             gap: 0.75rem;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         }
 
         .horo-icon {
@@ -406,9 +362,312 @@
             }
         }
 
+        /* ===== GLOBAL THEME REDESIGN ===== */
+        body.theme-youth,
+        body.theme-working,
+        body.theme-elder {
+            background: #d1d5db !important; /* Gray outer background like React preview */
+            position: relative;
+        }
+
+        /* App Container / Phone Frame */
+        body.theme-youth .dashboard-container,
+        body.theme-working .dashboard-container,
+        body.theme-elder .dashboard-container {
+            border: 10px solid #ffffff !important;
+            border-radius: 64px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            backdrop-filter: none !important;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto !important;
+        }
+        body.theme-youth .dashboard-container { background: #FAF9FF !important; }
+        body.theme-working .dashboard-container { background: #f0f9ff !important; }
+        body.theme-elder .dashboard-container { background: #fffcf8 !important; }
+
+        /* Aura Backgrounds (moved inside container) */
+        body.theme-youth .dashboard-container::before {
+            content: '';
+            position: absolute;
+            top: -5%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(216, 180, 254, 0.3);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body.theme-youth .dashboard-container::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: -15%;
+            width: 350px;
+            height: 350px;
+            background: rgba(191, 219, 254, 0.4);
+            filter: blur(90px);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Header */
+        body.theme-youth .dash-top,
+        body.theme-working .dash-top,
+        body.theme-elder .dash-top {
+            padding: 1.5rem 1.5rem 1rem;
+            align-items: flex-start;
+        }
+        body.theme-youth .dash-greeting h1,
+        body.theme-working .dash-greeting h1,
+        body.theme-elder .dash-greeting h1 {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+        body.theme-youth .dash-greeting p,
+        body.theme-working .dash-greeting p,
+        body.theme-elder .dash-greeting p {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        /* Hide tellers in non-youth themes (now only hidden in working) */
+        body.theme-working .tellers-section { display: none !important; }
+        body.theme-youth .header-right,
+        body.theme-working .header-right,
+        body.theme-elder .header-right { gap: 0.75rem; }
+        body.theme-youth .notif-btn,
+        body.theme-working .notif-btn,
+        body.theme-elder .notif-btn {
+            width: 44px; height: 44px; border-radius: 16px;
+            background: #ffffff !important; border: 1px solid #f1f5f9 !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        body.theme-youth .avatar-ring,
+        body.theme-working .avatar-ring,
+        body.theme-elder .avatar-ring {
+            width: 44px; height: 44px; border-radius: 16px;
+            background: #f3e8ff !important; border: 1px solid #e9d5ff !important;
+            padding: 0; box-shadow: none; display: flex; align-items: center; justify-content: center;
+        }
+        body.theme-youth .avatar-inner,
+        body.theme-working .avatar-inner,
+        body.theme-elder .avatar-inner { background: transparent; }
+        body.theme-youth .avatar-inner i,
+        body.theme-working .avatar-inner i,
+        body.theme-elder .avatar-inner i { color: #9333ea; font-size: 1.2rem; }
+
+        /* AI Tellers Section */
+        .tellers-section { z-index: 10; position: relative; margin-bottom: 1.5rem; display: block; }
+        body .tellers-header {
+            padding: 0 1.5rem; font-size: 1rem; font-weight: 600; color: var(--text-color);
+            margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        body .tellers-scroll {
+            display: flex; overflow-x: auto; padding: 12px 1rem 0.5rem; gap: 0.75rem;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+        body .tellers-scroll::-webkit-scrollbar { display: none; }
+        body .tellers-scroll::after {
+            content: '';
+            flex: 0 0 0.5rem; /* Spacer to ensure right margin on scroll */
+        }
+        body .teller-item {
+            display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+            flex-shrink: 0; cursor: pointer; transition: transform 0.15s; position: relative;
+            width: 66px; /* reduced width so more items fit */
+        }
+        body .teller-item:active { transform: scale(0.95); }
+        body .teller-icon-wrap { position: relative; }
+        body .teller-icon-box {
+            width: 54px; height: 54px; border-radius: 18px; display: flex;
+            align-items: center; justify-content: center; color: white; font-size: 1.4rem;
+            border: 2px solid white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        body .teller-rating {
+            position: absolute; bottom: -4px; right: -8px; background: white; padding: 2px 4px;
+            border-radius: 8px; display: flex; align-items: center; gap: 2px;
+            border: 1px solid #f8fafc; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        body .teller-rating i { font-size: 0.5rem; color: #eab308; }
+        body .teller-rating span { font-size: 0.55rem; font-weight: 700; color: #1e293b; }
+        body .teller-info { text-align: center; width: 100%; }
+        body .teller-name { font-size: 0.65rem; font-weight: 600; color: var(--text-color); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body .teller-expert { font-size: 0.55rem; font-weight: 500; color: var(--text-muted); }
+        body .teller-badge {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 10; background: #f97316; color: white;
+            font-size: 0.55rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+            border: 1px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: nowrap;
+        }
+
+        /* Horoscope Card */
+        body .horo-card {
+            margin: 0 1.5rem 1.5rem; background: #ffffff !important; border-radius: 28px !important;
+            padding: 1.25rem 1.25rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
+            border: 1px solid #fdf4ff !important; 
+            display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
+        }
+        body .horo-card > div { display: contents; }
+        body .horo-icon {
+            width: 40px; height: 40px; border-radius: 12px; background: #0f172a !important;
+            color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        body .horo-title { font-size: 1.05rem; font-weight: 600; color: var(--text-color); margin: 0; }
+        body .horo-text { font-size: 0.9rem; color: var(--text-color); font-weight: 500; line-height: 1.6; width: 100%; margin-top: 0.25rem; }
+
+        /* Sections */
+        body .sect-title { font-size: 1.15rem; font-weight: 700; color: var(--text-color); padding: 0 1.5rem 1rem; }
+        body .feat-grid { padding: 0 1.5rem 1.5rem; gap: 1rem; }
+        body .feat-icon-box {
+            width: 64px; height: 64px; border-radius: 22px; font-size: 1.8rem;
+            border: 1px solid white; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        body .feat-label { font-size: 0.8rem; color: var(--text-color); font-weight: 700; }
+        body .feat-tile-edit .feat-icon-box { background: transparent !important; border: 2px dashed #cbd5e1 !important; box-shadow: none !important; }
+
+        /* Bottom Nav (Flush to bottom) */
+        body.theme-youth .bottom-nav,
+        body.theme-working .bottom-nav,
+        body.theme-elder .bottom-nav {
+            position: absolute !important; margin: 0 !important;
+            bottom: 0; left: 0; right: 0; height: 86px; border-radius: 0;
+            width: 100% !important; padding-bottom: 15px; /* space for home indicator */
+            background: rgba(255, 255, 255, 0.98) !important; 
+            border: none !important; border-top: 2px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: none !important;
+            z-index: 40;
+            display: flex; justify-content: space-around; align-items: center;
+        }
+        /* Set theme colors for bottom nav */
+        body.theme-youth { --nav-color: #a855f7; }
+        body.theme-working { --nav-color: #4f46e5; }
+        body.theme-elder { --nav-color: #10b981; }
+
+        body.theme-youth .nav-item,
+        body.theme-working .nav-item,
+        body.theme-elder .nav-item { 
+            width: 60px; height: 60px; border-radius: 50%; background: transparent !important;
+            position: relative; display: flex; align-items: center; justify-content: center;
+            color: #9ca3af; transition: all 0.3s; z-index: 2;
+        }
+        body.theme-youth .nav-item i,
+        body.theme-working .nav-item i,
+        body.theme-elder .nav-item i { font-size: 1.4rem; z-index: 2; transition: all 0.3s; }
+        
+        body.theme-youth .nav-item.active i,
+        body.theme-elder .nav-item.active i { color: var(--nav-color) !important; transform: scale(1.1); }
+        
+        /* Glowing effect for active icon */
+        body.theme-youth .nav-item::before,
+        body.theme-working .nav-item::before,
+        body.theme-elder .nav-item::before {
+            content: ''; position: absolute; width: 36px; height: 36px; border-radius: 50%;
+            background: var(--nav-color); filter: blur(14px); opacity: 0; transition: opacity 0.3s; z-index: 1;
+        }
+        body.theme-youth .nav-item.active::before,
+        body.theme-elder .nav-item.active::before { opacity: 0.35; }
+
+        /* ===== WORKING THEME SPECIFIC OVERRIDES ===== */
+        body.theme-working .nav-item { width: 55px; height: 55px; }
+        body.theme-working .nav-item.active { background: rgba(16, 185, 129, 0.12) !important; border-radius: 20px !important; }
+        body.theme-working .nav-item i { color: #94a3b8 !important; opacity: 1 !important; }
+        body.theme-working .nav-item.active i { color: #0891b2 !important; transform: scale(1.05); }
+        body.theme-working .nav-item::before { display: none !important; }
+
         .fade-in {
             animation: fadeUp 0.35s ease both;
         }
+
+        /* ===== ELDER THEME SPECIFIC OVERRIDES ===== */
+        /* Typography */
+        body.theme-elder .dash-greeting h1 { font-size: 1.6rem !important; color: #431407 !important; }
+        body.theme-elder .greeting-emoji { display: none; }
+        body.theme-elder #dateDisplay { font-size: 0.85rem !important; color: #ea580c !important; font-weight: 700; }
+        body.theme-elder .tellers-header { font-size: 1.15rem !important; color: #431407 !important; }
+        body.theme-elder .tellers-header i.fa-sparkles { display: none; }
+        /* Protect Tellers Section from Global Elder Enlargement */
+        body.theme-elder .teller-badge { font-size: 0.6rem !important; line-height: 1.2 !important; }
+        body.theme-elder .teller-rating { font-size: 0.75rem !important; line-height: 1.2 !important; }
+        body.theme-elder .teller-rating span { font-size: 0.75rem !important; line-height: 1.2 !important; }
+        body.theme-elder .teller-icon-box i { font-size: 1.6rem !important; line-height: 1 !important; color: white !important; }
+        body.theme-elder .teller-name { font-size: 0.8rem !important; line-height: 1.2 !important; color: #431407 !important; font-weight: 800; }
+        body.theme-elder .teller-expert { font-size: 0.7rem !important; line-height: 1.2 !important; color: #ea580c !important; font-weight: 700; }
+        body.theme-elder .sect-title { font-size: 1.3rem !important; color: #431407 !important; font-weight: 800; }
+        
+        /* Health Summary Card */
+        body.theme-elder .horo-card {
+            border: 2px solid #fdba74 !important;
+            box-shadow: 0 15px 30px -5px rgba(234, 88, 12, 0.1) !important;
+        }
+        body.theme-elder .horo-icon { background: #fff7ed !important; color: #ea580c !important; font-size: 1.6rem !important; width: 48px !important; height: 48px !important; }
+        body.theme-elder .horo-title { font-size: 1.25rem !important; color: #ea580c !important; font-weight: 800; }
+        body.theme-elder .horo-text { font-size: 1.05rem !important; line-height: 1.7; color: #431407 !important; }
+        
+        /* Bottom Nav (Flush but with Elder colors) */
+        body.theme-elder .nav-item.active { background: #dcfce3 !important; border-radius: 20px !important; width: 60px; height: 60px; }
+        body.theme-elder .nav-item i { color: #fdbab7 !important; opacity: 1 !important; }
+        body.theme-elder .nav-item.active i { color: #059669 !important; }
+        body.theme-elder .nav-item::before { display: none !important; }
+        
+        /* Background Overrides */
+        body.theme-elder .dashboard-container { background: #fffcf8 !important; }
+
+        /* Fortune Teller Modal */
+        .teller-modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+            z-index: 100; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 0.3s; border-radius: 64px;
+        }
+        .teller-modal-overlay.show { opacity: 1; }
+        .teller-modal {
+            background: #ffffff; width: 85%; max-width: 340px; border-radius: 32px;
+            padding: 1.5rem; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95) translateY(10px); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .teller-modal-overlay.show .teller-modal { transform: scale(1) translateY(0); }
+        .teller-modal-close {
+            position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px;
+            background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: #64748b; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s;
+        }
+        .teller-modal-close:active { background: #e2e8f0; }
+        .teller-modal-icon {
+            width: 80px; height: 80px; border-radius: 28px; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 2.2rem; margin-top: -3.5rem; margin-bottom: 0.8rem;
+            border: 4px solid white; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.15);
+        }
+        .teller-modal-name { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem; }
+        .teller-modal-subtitle { font-size: 0.75rem; font-weight: 600; color: #a855f7; margin-bottom: 1.25rem; }
+        .teller-modal-content {
+            background: #f8fafc; border-radius: 20px; padding: 1.25rem; width: 100%;
+            font-size: 0.85rem; color: #1e293b; line-height: 1.6; text-align: center;
+            margin-bottom: 1.25rem; font-weight: 500; min-height: 80px; display: flex; align-items: center; justify-content: center;
+        }
+        .teller-rating-box {
+            width: 100%; border-top: 1px solid #f1f5f9; padding-top: 1.25rem; text-align: center;
+        }
+        .teller-rating-title { font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem; }
+        .teller-stars { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .teller-stars i { font-size: 1.5rem; color: #e2e8f0; cursor: pointer; transition: color 0.2s; }
+        .teller-stars i.active { color: #f472b6; } /* Pinkish for the youth theme */
+        .teller-feedback-input {
+            width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 0.75rem 1rem; font-size: 0.85rem; color: #334155; font-family: inherit;
+            resize: none; outline: none; margin-bottom: 1rem; transition: border-color 0.2s; box-sizing: border-box;
+        }
+        .teller-feedback-input:focus { border-color: #a855f7; }
+        .teller-submit-btn {
+            width: 100%; background: #f1f5f9; color: #64748b; border: none; border-radius: 14px;
+            padding: 0.8rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .teller-submit-btn.ready { background: #0f172a; color: white; }
+        .teller-submit-btn.ready:active { transform: scale(0.97); }
     </style>
 </head>
 
@@ -431,21 +690,32 @@
 
     <!-- Dashboard Card -->
     <div class="dashboard-container" id="dashboardContent" style="display:none;opacity:0;transition:opacity 0.4s;">
+        <!-- Status Bar -->
+        <div class="status-bar" style="position:relative; z-index:20;">
+            <span class="time" id="statusBarTime">9:41</span>
+            <div class="status-icons">
+                <div class="battery" style="width:20px;height:10px;background:#cbd5e1;border-radius:2px;"></div>
+                <div class="signal" style="width:12px;height:12px;background:#cbd5e1;border-radius:50%;"></div>
+            </div>
+        </div>
+
+        <!-- Pink aura layer 3 (Youth Only) -->
+        <div class="aura-pink" style="display:none; position:absolute; bottom:-10%; left:10%; width:450px; height:450px; background:rgba(251,207,232,0.3); filter:blur(120px); border-radius:50%; z-index:0; pointer-events:none;"></div>
 
         <!-- ---- Header ---- -->
-        <div class="dash-top">
+        <div class="dash-top" style="position:relative; z-index:10; padding-top:1rem;">
             <div class="dash-greeting">
-                <h1>สวัสดี, <span id="usernameDisplay">User</span> 👋</h1>
+                <h1>สวัสดี, <span id="usernameDisplay">User</span><span class="greeting-emoji"> 👋</span></h1>
                 <p id="dateDisplay">กำลังโหลด...</p>
             </div>
             <div class="header-right">
                 <div class="notif-btn" onclick="location.href='notification-history.html'">
-                    <i class="fa-solid fa-bell" style="font-size:0.9rem;color:#6b7280;"></i>
+                    <i class="fa-regular fa-bell"></i>
                     <div class="notif-dot" id="notif-badge"></div>
                 </div>
                 <div class="avatar-ring" onclick="location.href='settings.html'">
                     <div class="avatar-inner" id="avatarEl">
-                        <i class="fa-solid fa-user"></i>
+                        <i class="fa-regular fa-circle-user"></i>
                     </div>
                 </div>
             </div>
@@ -454,23 +724,100 @@
         <!-- ---- Scroll Area ---- -->
         <div class="dash-scroll">
 
-            <!-- Horoscope -->
-            <div class="horo-card fade-in">
-                <div class="horo-icon">✨</div>
-                <div>
-                    <div class="horo-title">ดวงสุขภาพวันนี้</div>
-                    <div class="horo-text" id="horoscopeText">กำลังโหลด...</div>
+            <!-- AI Fortune Tellers (Youth Theme Only) -->
+            <div class="tellers-section fade-in">
+                <div class="tellers-header" style="justify-content: space-between; display: flex;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-sparkles" style="color:#9333ea;"></i> ปรึกษา AI หมอดู
+                    </span>
+                    <a href="fortune-teller-reviews.html" style="font-size: 0.8rem; font-weight: 500; color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 0.25rem;">
+                        คะแนนรีวิวทั้งหมด <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
+                    </a>
+                </div>
+                <div class="tellers-scroll">
+                    <div class="teller-item" data-teller-id="love" onclick="openTellerModal('love', 'แม่หมอจันทรา', 'หมอดู AI ด้านความรัก', 'fa-regular fa-heart', 'linear-gradient(135deg, #f472b6, #f43f5e)')">
+                        <div class="teller-icon-wrap">
+                            <div class="teller-icon-box" style="background: linear-gradient(135deg, #f472b6, #f43f5e);">
+                                <i class="fa-regular fa-heart"></i>
+                            </div>
+                            <div class="teller-rating" id="rating-love">
+                                <i class="fa-solid fa-star"></i><span>-</span>
+                            </div>
+                        </div>
+                        <div class="teller-info">
+                            <div class="teller-name">แม่หมอจันทรา</div>
+                            <div class="teller-expert">ความรัก</div>
+                        </div>
+                    </div>
+                    <div class="teller-item" data-teller-id="finance" onclick="openTellerModal('finance', 'ซินแสเศรษฐี', 'หมอดู AI ด้านการเงิน', 'fa-solid fa-coins', 'linear-gradient(135deg, #facc15, #f97316)')">
+                        <div class="teller-badge">ยอดนิยม</div>
+                        <div class="teller-icon-wrap">
+                            <div class="teller-icon-box" style="background: linear-gradient(135deg, #facc15, #f97316);">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div class="teller-rating" id="rating-finance">
+                                <i class="fa-solid fa-star"></i><span>-</span>
+                            </div>
+                        </div>
+                        <div class="teller-info">
+                            <div class="teller-name">ซินแสเศรษฐี</div>
+                            <div class="teller-expert">การเงิน</div>
+                        </div>
+                    </div>
+                    <div class="teller-item" data-teller-id="work" onclick="openTellerModal('work', 'อาจารย์ดวงดาว', 'หมอดู AI ด้านการงาน', 'fa-solid fa-briefcase', 'linear-gradient(135deg, #60a5fa, #4f46e5)')">
+                        <div class="teller-icon-wrap">
+                            <div class="teller-icon-box" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </div>
+                            <div class="teller-rating" id="rating-work">
+                                <i class="fa-solid fa-star"></i><span>-</span>
+                            </div>
+                        </div>
+                        <div class="teller-info">
+                            <div class="teller-name">อาจารย์ดวงดาว</div>
+                            <div class="teller-expert">การงาน</div>
+                        </div>
+                    </div>
+                    <div class="teller-item" data-teller-id="health" onclick="openTellerModal('health', 'ผู้เฒ่าโอสถ', 'หมอดู AI ด้านสุขภาพ', 'fa-solid fa-leaf', 'linear-gradient(135deg, #34d399, #0d9488)')">
+                        <div class="teller-icon-wrap">
+                            <div class="teller-icon-box" style="background: linear-gradient(135deg, #34d399, #0d9488);">
+                                <i class="fa-solid fa-leaf"></i>
+                            </div>
+                            <div class="teller-rating" id="rating-health">
+                                <i class="fa-solid fa-star"></i><span>-</span>
+                            </div>
+                        </div>
+                        <div class="teller-info">
+                            <div class="teller-name">ผู้เฒ่าโอสถ</div>
+                            <div class="teller-expert">สุขภาพ</div>
+                        </div>
+                    </div>
+                    <div class="teller-item" data-teller-id="overall" onclick="openTellerModal('overall', 'เซนมาสเตอร์', 'หมอดู AI ด้านภาพรวมชีวิต', 'fa-solid fa-yin-yang', 'linear-gradient(135deg, #c084fc, #7c3aed)')">
+                        <div class="teller-icon-wrap">
+                            <div class="teller-icon-box" style="background: linear-gradient(135deg, #c084fc, #7c3aed);">
+                                <i class="fa-solid fa-yin-yang"></i>
+                            </div>
+                            <div class="teller-rating" id="rating-overall">
+                                <i class="fa-solid fa-star"></i><span>-</span>
+                            </div>
+                        </div>
+                        <div class="teller-info">
+                            <div class="teller-name">เซนมาสเตอร์</div>
+                            <div class="teller-expert">ภาพรวม</div>
+                        </div>
+                    </div>
+                    <div style="flex-shrink: 0; width: 0.25rem;"></div> <!-- Explicit right spacer for scroll -->
                 </div>
             </div>
 
             <!-- AI Health Summary Card -->
             <div id="healthSummaryCard" class="horo-card fade-in" style="margin-top:0.8rem; animation-delay:0.1s;">
-                <div class="horo-icon">🩺</div>
                 <div style="flex:1;">
-                    <div class="horo-title">สรุปสุขภาพ 7 วัน <span
-                            style="font-size:0.7rem; color:var(--text-muted); font-weight:400;">(AI วิเคราะห์)</span>
+                    <div class="horo-title">
+                        <i class="fa-solid fa-notes-medical" style="color:#a855f7; margin-right:4px;"></i> 
+                        AI สุขภาพ <span style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-left:2px;">7 วัน</span>
                     </div>
-                    <div id="healthSummaryText" class="horo-text"><i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <div id="healthSummaryText" class="horo-text" style="margin-top: 0.5rem;"><i class="fa-solid fa-circle-notch fa-spin"></i>
                         กำลังวิเคราะห์...</div>
                 </div>
             </div>
@@ -483,18 +830,51 @@
 
         <!-- ---- Bottom Nav ---- -->
         <div class="bottom-nav">
-            <button class="nav-btn active" onclick="location.href='dashboard.html'">
-                <i class="fa-solid fa-house"></i>
-            </button>
-            <button class="nav-btn" onclick="location.href='history.html'">
-                <i class="fa-solid fa-chart-pie"></i>
-            </button>
-            <button class="nav-btn" onclick="location.href='chatbot.html'">
-                <i class="fa-solid fa-comment-dots"></i>
-            </button>
-            <button class="nav-btn" onclick="location.href='settings.html'">
-                <i class="fa-solid fa-gear"></i>
-            </button>
+            <div class="nav-item active" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+
+        <!-- Bottom Bar (Home Indicator) -->
+        <div class="home-indicator" style="position:absolute; bottom:0; width:100%; height:32px; display:flex; justify-content:center; align-items:center; z-index:30;">
+            <div class="indicator-bar" style="width:130px; height:5px; background:#cbd5e1; border-radius:9999px;"></div>
+        </div>
+
+        <!-- Fortune Teller Modal -->
+        <div class="teller-modal-overlay" id="tellerModal">
+            <div class="teller-modal">
+                <button class="teller-modal-close" onclick="closeTellerModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <div class="teller-modal-icon" id="tmIcon" style="background: linear-gradient(135deg, #f472b6, #f43f5e);">
+                    <i class="fa-regular fa-heart"></i>
+                </div>
+                
+                <div class="teller-modal-name" id="tmName">แม่หมอจันทรา</div>
+                <div class="teller-modal-subtitle" id="tmSubtitle">หมอดู AI ด้านความรัก</div>
+                
+                <div class="teller-modal-content" id="tmContent">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์ดวงชะตา...
+                </div>
+                
+                <div class="teller-rating-box" id="tmRatingBox" style="display: none;">
+                    <div class="teller-rating-title">ให้คะแนนความแม่นของคำทำนาย:</div>
+                    <div class="teller-stars" id="tmStars">
+                        <i class="fa-solid fa-star" onclick="setTellerRating(1)"></i>
+                        <i class="fa-solid fa-star" onclick="setTellerRating(2)"></i>
+                        <i class="fa-solid fa-star" onclick="setTellerRating(3)"></i>
+                        <i class="fa-solid fa-star" onclick="setTellerRating(4)"></i>
+                        <i class="fa-solid fa-star" onclick="setTellerRating(5)"></i>
+                    </div>
+                    <textarea class="teller-feedback-input" id="tmFeedback" placeholder="บอกความรู้สึกสั้นๆ..."></textarea>
+                    
+                    <button class="teller-submit-btn ready" onclick="submitTellerFeedback()">
+                        บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -506,9 +886,9 @@
         let _supabase;
 
         const featureMeta = {
-            goals: { title: 'ตั้งเป้าหมายการเรียน/ชีวิต', emoji: '⭐', bg: '#FFF9C4', link: 'feature-goals.html', group: 'พิเศษ/ส่วนตัว' },
-            exercise: { title: 'เน้นการเล่นกีฬาและกิจกรรม', emoji: '🏃', bg: '#DCF0FF', link: 'feature-exercise.html', group: 'สุขภาพ' },
-            period: { title: 'บันทึกรอบเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html', group: 'สุขภาพ' },
+            goals: { title: 'เป้าหมาย', emoji: '⭐', bg: '#FFF9C4', link: 'feature-goals.html', group: 'พิเศษ/ส่วนตัว', wIcon: '<i class="fa-regular fa-flag"></i>', wColor: '#d97706' },
+            exercise: { title: 'ออกกำลังกาย', emoji: '🏃', bg: '#DCF0FF', link: 'feature-exercise.html', group: 'สุขภาพ', wIcon: '<i class="fa-solid fa-heart-pulse"></i>', wColor: '#0ea5e9' },
+            period: { title: 'รอบเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html', group: 'สุขภาพ', wIcon: '<i class="fa-regular fa-calendar"></i>', wColor: '#e11d48' },
         };
 
         const GROUP_ORDER = ['สุขภาพ', 'พิเศษ/ส่วนตัว'];
@@ -551,8 +931,8 @@
                 }
 
                 renderFeatures(features);
-                loadHoroscope(theme);
                 loadHealthSummary(theme, username);
+                loadTellerRatings(); // Load real ratings from DB
 
             } catch (e) { console.error(e); }
             finally {
@@ -574,30 +954,124 @@
 
         /* ---- Classic feature metadata (working/elder) ---- */
         const featureMetaClassic = {
-            goals: { title: 'ตั้งเป้าหมายการเรียน/ชีวิต', icon: 'fa-bullseye', link: 'feature-goals.html' },
-            exercise: { title: 'เน้นการเล่นกีฬาและกิจกรรม', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
-            period: { title: 'บันทึกรอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
+            goals: { title: 'เป้าหมาย', icon: 'fa-bullseye', link: 'feature-goals.html' },
+            exercise: { title: 'ออกกำลังกาย', icon: 'fa-dumbbell', link: 'feature-exercise.html' },
+            period: { title: 'รอบเดือน', icon: 'fa-droplet', link: 'feature-period.html' },
         };
 
         function renderFeatures(list) {
             const root = document.getElementById('featuresRoot');
             root.innerHTML = '';
-            const isYouth = document.body.classList.contains('theme-youth');
 
-            // Filter list to only valid features
-            const meta = isYouth ? featureMeta : featureMetaClassic;
-            let validList = list.filter(id => meta[id]);
-
-            // If empty or no valid features, show all (fallback for old users)
+            let validList = list.filter(id => featureMeta[id]);
             if (validList.length === 0) {
-                validList = Object.keys(meta);
+                validList = Object.keys(featureMeta);
             }
-
-            if (isYouth) {
-                renderYouthTiles(root, validList);
+            
+            if (document.body.classList.contains('theme-elder')) {
+                renderElderTiles(root, validList);
+            } else if (document.body.classList.contains('theme-working')) {
+                renderWorkingTiles(root, validList);
             } else {
-                renderClassicCards(root, validList);
+                renderYouthTiles(root, validList);
             }
+        }
+
+        /* ---- Elder Theme: 2x2 Big Grid ---- */
+        function renderElderTiles(root, list) {
+            const sec = document.createElement('div');
+            sec.className = 'fade-in';
+            
+            const title = document.createElement('div');
+            title.className = 'sect-title';
+            title.textContent = 'เมนูหลัก';
+            sec.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0 1.5rem 1.5rem;';
+
+            const elderFeatures = [
+                { title: 'ออกกำลังกาย', emoji: '🚶', bg: '#e0f2fe' },
+                { title: 'ตรวจสุขภาพ', emoji: '🩺', bg: '#dcfce3', link: 'feature-period.html' },
+                { title: 'เป้าหมาย', emoji: '🏆', bg: '#fef08a' },
+                { title: 'ตั้งค่า', emoji: '⚙️', bg: '#f1f5f9', link: 'settings.html' },
+                { title: 'แก้ไข', emoji: '✏️', bg: '#ffedd5', link: 'feature-selection.html' }
+            ];
+
+            elderFeatures.forEach(m => {
+                const tile = document.createElement('button');
+                tile.style.cssText = 'background: white; border: 2px solid #000; border-radius: 32px; padding: 1.5rem 0.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);';
+                tile.onclick = () => {
+                    if(m.link) location.href = m.link;
+                    else location.href = 'feature-selection.html'; // default
+                };
+                
+                // For link mappings
+                if(m.title === 'ออกกำลังกาย') tile.onclick = () => location.href = 'feature-exercise.html';
+                if(m.title === 'เป้าหมาย') tile.onclick = () => location.href = 'feature-goals.html';
+
+                tile.innerHTML = `
+                    <div style="width: 72px; height: 72px; border-radius: 50%; background: ${m.bg}; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 0.5rem;">${m.emoji}</div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: #431407;">${m.title}</div>
+                `;
+                grid.appendChild(tile);
+            });
+
+            sec.appendChild(grid);
+            root.appendChild(sec);
+        }
+
+        /* ---- Working Theme: line-art icons ---- */
+        function renderWorkingTiles(root, list) {
+            const grouped = {};
+            GROUP_ORDER.forEach(g => grouped[g] = []);
+            list.forEach(id => {
+                const m = featureMeta[id]; if (!m) return;
+                if (!grouped[m.group]) grouped[m.group] = [];
+                grouped[m.group].push(id);
+            });
+
+            GROUP_ORDER.forEach((grp, gi) => {
+                const items = grouped[grp] || [];
+                const isLastGroup = gi === GROUP_ORDER.length - 1;
+
+                if (items.length === 0 && !isLastGroup) return;
+
+                const sec = document.createElement('div');
+                sec.className = 'fade-in';
+                sec.style.animationDelay = `${gi * 0.07 + 0.1}s`;
+
+                const title = document.createElement('div');
+                title.className = 'sect-title';
+                title.textContent = grp;
+                sec.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'feat-grid';
+
+                items.forEach(id => {
+                    const m = featureMeta[id];
+                    const tile = document.createElement('button');
+                    tile.className = 'feat-tile';
+                    tile.onclick = () => location.href = m.link;
+                    tile.innerHTML = `
+                        <div class="feat-icon-box" style="background: #ffffff; border: 1px solid ${m.wColor}40; color: ${m.wColor}; font-size: 1.6rem; box-shadow: 0 4px 10px ${m.wColor}15;">${m.wIcon}</div>
+                        <div class="feat-label">${m.title}</div>
+                    `;
+                    grid.appendChild(tile);
+                });
+
+                if (isLastGroup) {
+                    const edit = document.createElement('button');
+                    edit.className = 'feat-tile feat-tile-edit';
+                    edit.onclick = () => location.href = 'feature-selection.html';
+                    edit.innerHTML = `<div class="feat-icon-box" style="background: #ffffff; border: 2px dashed #cbd5e1; color: #64748b; font-size: 1.4rem; box-shadow: none;"><i class="fa-solid fa-pen"></i></div><div class="feat-label">แก้ไข</div>`;
+                    grid.appendChild(edit);
+                }
+
+                sec.appendChild(grid);
+                root.appendChild(sec);
+            });
         }
 
         /* ---- Youth: colorful emoji 4-col grid ---- */
@@ -705,7 +1179,7 @@
 
         async function loadHealthSummary(theme, username) {
             const el = document.getElementById('healthSummaryText');
-            const cacheKey = `healthsummary_v1_${theme}_${new Date().toDateString()}`;
+            const cacheKey = `healthsummary_v2_${theme}_${new Date().toDateString()}`;
             const cached = localStorage.getItem(cacheKey);
             if (cached) { el.innerHTML = cached; return; }
 
@@ -735,31 +1209,302 @@
             }
         }
 
-        async function loadHoroscope(theme) {
-            const el = document.getElementById('horoscopeText');
-            // Cache by date + theme + version to ensure it switches when theme changes
-            const key = `horoscope_v3_${theme}_${new Date().toDateString()}`;
-            const cached = localStorage.getItem(key);
-            if (cached) { el.textContent = `"${cached}"`; return; }
+        // Real-time Status Bar Clock
+        function updateStatusBarTime() {
+            const timeElement = document.getElementById('statusBarTime');
+            if (!timeElement) return;
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            timeElement.textContent = `${hours}:${minutes}`;
+        }
+        updateStatusBarTime();
+        setInterval(updateStatusBarTime, 1000);
 
-            el.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังถาม AI...';
+        /* ---- Fortune Teller Modal Logic ---- */
+        let currentTellerRating = 0;
+        let currentTellerId = null; // Track which teller is open
+
+        async function openTellerModal(id, name, subtitle, iconClass, bgGradient) {
+            currentTellerId = id; // Save which teller is being viewed
+            const modal = document.getElementById('tellerModal');
+            document.getElementById('tmName').textContent = name;
+            document.getElementById('tmSubtitle').textContent = subtitle;
+            document.getElementById('tmIcon').style.background = bgGradient;
+            document.getElementById('tmIcon').innerHTML = `<i class="${iconClass}"></i>`;
+            
+            document.getElementById('tmContent').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์ดวงชะตา...';
+            document.getElementById('tmRatingBox').style.display = 'none';
+            document.getElementById('tmFeedback').value = '';
+            setTellerRating(0);
+
+            modal.style.display = 'flex';
+            modal.offsetHeight;
+            modal.classList.add('show');
+
             try {
-                const ctx = typeof window.getAIHealthContext === 'function'
-                    ? await window.getAIHealthContext(_supabase, 3) : '';
-                const res = await fetch('/api/horoscope', {
+                let dob = '';
+                let sessionUser = null;
+                if (_supabase) {
+                    const { data: { session } } = await _supabase.auth.getSession();
+                    if (session && session.user) {
+                        sessionUser = session.user;
+                        if (session.user.user_metadata && session.user.user_metadata.dob) {
+                            dob = session.user.user_metadata.dob;
+                        }
+                    }
+                }
+
+                const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                console.log(`[Fortune] Checking prediction for ${id} on ${todayStr} for user:`, sessionUser?.id);
+
+                // Check Supabase first for today's prediction
+                let cachedText = null;
+                let foundInSupabase = false;
+                if (_supabase && sessionUser) {
+                    try {
+                        const { data: existing, error } = await _supabase
+                            .from('daily_fortunes')
+                            .select('prediction')
+                            .eq('user_id', sessionUser.id)
+                            .eq('teller_id', id)
+                            .eq('prediction_date', todayStr)
+                            .maybeSingle();
+                        
+                        if (error) {
+                            console.error("[Fortune] Supabase query error:", error);
+                        } else if (existing && existing.prediction) {
+                            cachedText = existing.prediction;
+                            foundInSupabase = true;
+                            console.log("[Fortune] Found prediction in Supabase!");
+                        } else {
+                            console.log("[Fortune] No prediction found in Supabase for today.");
+                        }
+                    } catch (dbErr) {
+                        console.warn("[Fortune] Could not query daily_fortunes from Supabase:", dbErr);
+                    }
+                }
+
+                // If not found in Supabase, fall back to localStorage as backup
+                if (!cachedText) {
+                    const cacheKey = `fortune_${id}_${todayStr}`;
+                    cachedText = localStorage.getItem(cacheKey);
+                    if (cachedText) {
+                        console.log("[Fortune] Found prediction in localStorage fallback.");
+                    }
+                }
+
+                if (cachedText) {
+                    // Show cached prediction instantly (no API call)
+                    const contentEl = document.getElementById('tmContent');
+                    contentEl.innerHTML = '';
+                    let i = 0;
+                    function typeWriterCached() {
+                        if (i < cachedText.length) {
+                            contentEl.innerHTML += cachedText.charAt(i);
+                            i++;
+                            setTimeout(typeWriterCached, 12);
+                        } else {
+                            document.getElementById('tmRatingBox').style.display = 'block';
+                            document.getElementById('tmRatingBox').classList.add('fade-in');
+                        }
+                    }
+                    typeWriterCached();
+
+                    // SMART BACKFILL: If found in localStorage but NOT in Supabase, backfill it to Supabase now
+                    if (!foundInSupabase && _supabase && sessionUser) {
+                        console.log("[Fortune] Backfilling localStorage prediction to Supabase...");
+                        _supabase.from('daily_fortunes').insert({
+                            user_id: sessionUser.id,
+                            teller_id: id,
+                            prediction: cachedText,
+                            prediction_date: todayStr
+                        }).then(({ error }) => {
+                            if (error) {
+                                console.error("[Fortune] Supabase backfill insert error:", error);
+                            } else {
+                                console.log("[Fortune] Supabase backfill success!");
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                console.log("[Fortune] Fetching new prediction from AI backend...");
+                const ctx = typeof window.getAIHealthContext === 'function' ? await window.getAIHealthContext(_supabase, 3) : '';
+                const uName = document.getElementById('usernameDisplay').textContent;
+                
+                const res = await fetch('/api/fortune-teller', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ theme, history_context: ctx })
+                    body: JSON.stringify({ teller_id: id, username: uName, history_context: ctx, birth_date: dob })
                 });
                 const data = await res.json();
+                
                 if (data.status === 'success') {
-                    el.textContent = `"${data.horoscope}"`;
-                    localStorage.setItem(key, data.horoscope);
+                    const text = data.prediction;
+
+                    // Save this prediction to Supabase!
+                    if (_supabase && sessionUser) {
+                        try {
+                            console.log("[Fortune] Saving new prediction to Supabase...");
+                            const { error: dbSaveErr } = await _supabase.from('daily_fortunes').insert({
+                                user_id: sessionUser.id,
+                                teller_id: id,
+                                prediction: text,
+                                prediction_date: todayStr
+                            });
+                            if (dbSaveErr) {
+                                console.error("[Fortune] Supabase save error:", dbSaveErr);
+                            } else {
+                                console.log("[Fortune] Saved new prediction to Supabase successfully!");
+                            }
+                        } catch (dbSaveErr) {
+                            console.warn("[Fortune] Exception saving daily fortune to Supabase:", dbSaveErr);
+                        }
+                    }
+
+                    // Also cache this prediction in localStorage for fast local access
+                    const cacheKey = `fortune_${id}_${todayStr}`;
+                    localStorage.setItem(cacheKey, text);
+
+                    const contentEl = document.getElementById('tmContent');
+                    contentEl.innerHTML = '';
+                    let i = 0;
+                    function typeWriter() {
+                        if (i < text.length) {
+                            contentEl.innerHTML += text.charAt(i);
+                            i++;
+                            setTimeout(typeWriter, 15);
+                        } else {
+                            document.getElementById('tmRatingBox').style.display = 'block';
+                            document.getElementById('tmRatingBox').classList.add('fade-in');
+                        }
+                    }
+                    typeWriter();
                 } else {
-                    el.textContent = 'ไม่สามารถโหลดดวงได้ในขณะนี้';
+                    document.getElementById('tmContent').textContent = 'ไม่สามารถดึงคำทำนายได้ในขณะนี้';
+                    document.getElementById('tmRatingBox').style.display = 'block';
                 }
             } catch (e) {
-                el.textContent = 'ไม่สามารถเชื่อมต่อ AI ได้';
+                console.error("[Fortune] Connection or runtime error:", e);
+                document.getElementById('tmContent').textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+                document.getElementById('tmRatingBox').style.display = 'block';
+            }
+        }
+
+        function closeTellerModal() {
+            const modal = document.getElementById('tellerModal');
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        function setTellerRating(rating) {
+            currentTellerRating = rating;
+            const stars = document.getElementById('tmStars').children;
+            for (let i = 0; i < stars.length; i++) {
+                stars[i].classList.toggle('active', i < rating);
+            }
+            // Enable/style button based on rating
+            const btn = document.querySelector('.teller-submit-btn');
+            if (rating > 0) {
+                btn.classList.add('ready');
+            } else {
+                btn.classList.remove('ready');
+            }
+        }
+
+        async function submitTellerFeedback() {
+            if (currentTellerRating === 0) {
+                alert('กรุณาให้คะแนนก่อนบันทึก');
+                return;
+            }
+            const btn = document.querySelector('.teller-submit-btn');
+            const feedback = document.getElementById('tmFeedback').value.trim();
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            try {
+                if (!_supabase) throw new Error('Supabase ยังไม่พร้อมใช้งาน');
+
+                const { data: { session }, error: sessionError } = await _supabase.auth.getSession();
+                if (sessionError) throw new Error('Session error: ' + sessionError.message);
+                if (!session || !session.user) throw new Error('ไม่ได้เข้าสู่ระบบ กรุณา login ใหม่');
+
+                console.log('Inserting review:', {
+                    user_id: session.user.id,
+                    teller_id: currentTellerId,
+                    rating: currentTellerRating,
+                    feedback: feedback || null
+                });
+
+                const { error } = await _supabase.from('teller_reviews').insert({
+                    user_id: session.user.id,
+                    teller_id: currentTellerId,
+                    rating: currentTellerRating,
+                    feedback: feedback || null
+                });
+
+                if (error) {
+                    console.error('Insert error:', error);
+                    throw new Error(error.message);
+                }
+
+                console.log('Review saved successfully!');
+                await loadTellerRatings();
+                closeTellerModal();
+                btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                btn.disabled = false;
+
+            } catch (e) {
+                console.error('submitTellerFeedback error:', e);
+                // Show error INSIDE modal, don't close it
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${e.message}`;
+                btn.style.background = '#ef4444';
+                btn.disabled = false;
+                // Reset button after 4 seconds
+                setTimeout(() => {
+                    btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 4000);
+            }
+        }
+
+        /* ---- Load real ratings from Supabase ---- */
+        async function loadTellerRatings() {
+            if (!_supabase) return;
+            try {
+                const { data, error } = await _supabase
+                    .from('teller_reviews')
+                    .select('teller_id, rating');
+                
+                if (error || !data) return;
+
+                // Aggregate avg per teller
+                const sums = {};
+                const counts = {};
+                data.forEach(row => {
+                    if (!sums[row.teller_id]) { sums[row.teller_id] = 0; counts[row.teller_id] = 0; }
+                    sums[row.teller_id] += row.rating;
+                    counts[row.teller_id]++;
+                });
+
+                const tellerIds = ['love', 'finance', 'work', 'health', 'overall'];
+                tellerIds.forEach(tid => {
+                    const el = document.getElementById(`rating-${tid}`);
+                    if (!el) return;
+                    const span = el.querySelector('span');
+                    if (counts[tid] && counts[tid] > 0) {
+                        const avg = (sums[tid] / counts[tid]).toFixed(1);
+                        span.textContent = avg;
+                    } else {
+                        span.textContent = '-';
+                    }
+                });
+            } catch (e) {
+                console.warn('Could not load teller ratings:', e);
             }
         }
     </script>

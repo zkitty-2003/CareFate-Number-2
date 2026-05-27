@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CareFate</title>
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=13">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link rel="manifest" href="manifest.json">
@@ -16,51 +16,76 @@
 
 <body>
     <div class="app-container">
-        <div class="background-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
+        <!-- Background Aura -->
+        <div class="aura purple-aura"></div>
+        <div class="aura blue-aura"></div>
+        <div class="aura pink-aura"></div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="time" id="statusBarTime">9:41</span>
+            <div class="status-icons">
+                <div class="battery"></div>
+                <div class="signal"></div>
+            </div>
         </div>
 
-        <main class="login-screen">
+        <main class="login-screen bright-theme">
             <div class="login-header">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-heart-pulse"></i>
+                <div class="logo-icon-container">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="white" width="44" height="44">
+                            <path d="M12 1C12 6.8 16.2 11 22 11C16.2 11 12 15.2 12 21C12 15.2 7.8 11 2 11C7.8 11 12 6.8 12 1Z"/>
+                            <path d="M19 3.5C19 5.2 20.3 6.5 22 6.5C20.3 6.5 19 7.8 19 9.5C19 7.8 17.7 6.5 16 6.5C17.7 6.5 19 5.2 19 3.5Z"/>
+                            <path d="M6 14C6 15.4 7.1 16.5 8.5 16.5C7.1 16.5 6 17.6 6 19C6 17.6 4.9 16.5 3.5 16.5C4.9 16.5 6 15.4 6 14Z"/>
+                        </svg>
+                    </div>
                 </div>
                 <h1 class="app-name">CareFate</h1>
-                <p class="tagline">ชะตาของคุณ เราดูแล</p>
+                <p class="tagline"><i class="fa-regular fa-sun" style="color: #fb923c;"></i> บันทึกกิจกรรมและเช็กดวงชะตา</p>
             </div>
 
             <form class="login-form" id="loginForm">
-                <div class="input-group">
-                    <i class="fa-regular fa-envelope input-icon"></i>
-                    <input type="email" id="email" placeholder="อีเมล" required>
+                <div class="form-group">
+                    <label for="email" class="input-label">อีเมล</label>
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" id="email" placeholder="example@email.com" required>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <i class="fa-solid fa-lock input-icon"></i>
-                    <input type="password" id="password" placeholder="รหัสผ่าน" required>
-                    <button type="button" class="toggle-password" id="togglePassword">
-                        <i class="fa-regular fa-eye-slash"></i>
-                    </button>
+                <div class="form-group">
+                    <label for="password" class="input-label">รหัสผ่าน</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="ระบุรหัสผ่านของคุณ" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-actions">
                     <a href="#" class="forgot-password">ลืมรหัสผ่าน?</a>
                 </div>
 
-                <button type="submit" class="btn-primary">
-                    <span>เข้าสู่ระบบ</span>
-                    <i class="fa-solid fa-arrow-right"></i>
-                </button>
-
-
+                <div class="login-action-container">
+                    <button type="submit" class="btn-primary">
+                        <span>เข้าสู่ระบบ</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
             </form>
 
             <footer class="login-footer">
-                <p>ยังไม่มีบัญชี? <a href="register.html" id="createAccount">สมัครสมาชิก</a></p>
+                <p>ยังไม่มีบัญชี? <a href="register.html" id="createAccount">ลงทะเบียน</a></p>
             </footer>
         </main>
+
+        <!-- Bottom Bar -->
+        <div class="home-indicator">
+            <div class="indicator-bar"></div>
+        </div>
     </div>
 
     <!-- Forgot Password Modal -->
@@ -88,7 +113,23 @@
     </div>
 
     <script src="notifications.js?v=8"></script>
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
+    <script>
+        // Real-time Status Bar Clock
+        function updateStatusBarTime() {
+            const timeElement = document.getElementById('statusBarTime');
+            if (!timeElement) return;
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            // Format to match mobile clock (e.g. 9:05)
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            timeElement.textContent = `${hours}:${minutes}`;
+        }
+        // Update immediately and then every minute
+        updateStatusBarTime();
+        setInterval(updateStatusBarTime, 1000);
+    </script>
 </body>
 
 </html>

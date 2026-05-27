@@ -419,11 +419,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Replace the entire login form with a success message
                 loginScreen.innerHTML = `
                     <div class="logo-container" style="text-align: center; animation: fadeIn 0.5s;">
-                        <div class="logo-icon" style="margin: 0 auto 1.5rem; background: var(--success);">
-                            <i class="fa-solid fa-check"></i>
+                        <div class="logo-icon" style="margin: 0 auto 1.5rem; background: var(--success); box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);">
+                            <i class="fa-solid fa-check" style="color: white; font-size: 2rem;"></i>
                         </div>
-                        <h1 class="app-name">ยืนยันอีเมลเรียบร้อย!</h1>
-                        <p class="tagline" style="margin-top: 1rem; color: #fff;">
+                        <h1 class="app-name" style="font-size: 1.875rem; color: #1e293b; margin-bottom: 0.5rem;">ยืนยันอีเมลเรียบร้อย!</h1>
+                        <p class="tagline" style="margin-top: 1rem; color: #64748b; font-size: 1rem; line-height: 1.5;">
                             บัญชีของคุณได้รับการเปิดใช้งานแล้ว
                         </p>
                         
