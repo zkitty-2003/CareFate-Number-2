@@ -785,6 +785,14 @@
             logs[todayStr].note = noteCtx;
             localStorage.setItem('period_symptoms', JSON.stringify(logs));
 
+            // Invalidate AI Health summary cache
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('healthsummary_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+
             // Sync to Supabase
             saveSymptomToSupabase(logs[todayStr].symptoms, noteCtx);
             if (noteCtx.trim().length > 0) showToast('บันทึกโน้ตแล้ว');
@@ -908,6 +916,13 @@
             list.innerHTML = html;
         }
         async function logToHistory(detail, note) {
+            // Invalidate AI Health summary cache
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('healthsummary_')) {
+                    localStorage.removeItem(key);
+                }
+            }
             try {
                 if (_supabase) {
                     const { data: { user } } = await _supabase.auth.getUser();

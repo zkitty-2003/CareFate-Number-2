@@ -447,6 +447,14 @@
 
                 if (error) throw error;
 
+                // Invalidate AI Health summary cache
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('healthsummary_')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+
                 alert('บันทึกเรียบร้อย!');
                 // Reset form
                 document.getElementById('noteInput').value = '';
@@ -473,6 +481,15 @@
             const logs = JSON.parse(localStorage.getItem('excretion_local') || '[]');
             logs.unshift(log);
             localStorage.setItem('excretion_local', JSON.stringify(logs));
+            
+            // Invalidate AI Health summary cache
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('healthsummary_')) {
+                    localStorage.removeItem(key);
+                }
+            }
+            
             loadLogs();
         }
 
