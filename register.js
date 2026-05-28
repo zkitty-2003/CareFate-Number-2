@@ -36,8 +36,13 @@ function initializeRegisterPage() {
 
     // Date Logic
     const dobInput = document.getElementById('dob');
-    const now = new Date();
-    const today = now.toISOString().split('T')[0]; // Simple YYYY-MM-DD
+    const today = (() => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    })(); // Simple YYYY-MM-DD
     dobInput.setAttribute('max', today);
 
     // Toggle Password Visibility Logic

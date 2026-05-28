@@ -434,8 +434,7 @@
             font-weight: 500;
             font-size: 0.8rem;
         }
-        /* Hide tellers in non-youth themes (now only hidden in working) */
-        body.theme-working .tellers-section { display: none !important; }
+        /* Tellers are now visible in all themes */
         body.theme-youth .header-right,
         body.theme-working .header-right,
         body.theme-elder .header-right { gap: 0.75rem; }
@@ -1227,7 +1226,13 @@
                 if (!session || !session.user) return;
                 const user = session.user;
 
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = (() => {
+                    const d = new Date();
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                })();
                 const todayStart = new Date();
                 todayStart.setHours(0, 0, 0, 0);
                 const todayStartISO = todayStart.toISOString();
@@ -1422,7 +1427,13 @@
                     }
                 }
 
-                const todayStr = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const todayStr = (() => {
+                    const d = new Date();
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                })(); // YYYY-MM-DD
                 console.log(`[Fortune] Checking prediction for ${id} on ${todayStr} for user:`, sessionUser?.id);
 
                 // Check if already rated today
@@ -1652,7 +1663,13 @@
                 if (!session || !session.user) throw new Error('ไม่ได้เข้าสู่ระบบ กรุณา login ใหม่');
 
                 // Double check if already rated today
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = (() => {
+                    const d = new Date();
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                })();
                 const localRatedKey = `rated_${currentTellerId}_${todayStr}`;
                 if (localStorage.getItem(localRatedKey)) {
                     throw new Error('คุณได้บันทึกคะแนนของวันนี้ไปแล้ว');
