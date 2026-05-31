@@ -22,6 +22,7 @@ threading.Thread(target=open_browser).start()
 
 print("2. Running Server (Press Ctrl+C to stop)...")
 try:
-    subprocess.run(cmd)
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    subprocess.run(cmd, env=env)
 except KeyboardInterrupt:
     print("\nServer stopped.")

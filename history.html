@@ -634,6 +634,188 @@
             renderCurrentView();
         }
 
+        function parsePeriodData(items) {
+            const periodLogs = items.filter(item => item.type === 'period');
+            
+            // Sort oldest to newest
+            periodLogs.sort((a, b) => new Date(a.created_at || a.appointment_date) - new Date(b.created_at || b.appointment_date));
+            
+            const cycles = [];
+            let currentCycle = null;
+            const symptomCounts = {};
+            let totalSymptomLogs = 0;
+            
+            periodLogs.forEach(log => {
+                const dateObj = new Date(log.created_at || log.appointment_date);
+                const dateStr = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                
+                const note = (log.note || '').trim();
+                const detail = (log.detail || '').trim();
+                
+                const isStart = note === 'ประจำเดือนเริ่มมา' || detail === 'ประจำเดือนเริ่มมา' || note === 'รอบเดือนใหม่' || detail === 'รอบเดือนใหม่';
+                const isEnd = note === 'ประจำเดือนหมด' || detail === 'ประจำเดือนหมด';
+                const isSymptoms = note === 'บันทึกอาการประจำเดือน' || detail === 'บันทึกอาการประจำเดือน';
+                
+                if (isStart) {
+                    if (cycles.length > 0) {
+                        const prev = cycles[cycles.length - 1];
+                        const diffTime = Math.abs(dateObj - prev.startDateObj);
+                        prev.cycleLength = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    }
+                    
+                    currentCycle = {
+                        id: log.id,
+                        startDate: dateStr,
+                        startDateObj: dateObj,
+                        endDate: null,
+                        periodDuration: 5,
+                        cycleLength: 28,
+                        symptoms: []
+                    };
+                    cycles.push(currentCycle);
+                } else if (isEnd) {
+                    let duration = 5;
+                    const durMatch = detail.match(/ระยะเวลา:\s*(\d+)\s*วัน/) || note.match(/ระยะเวลา:\s*(\d+)\s*วัน/);
+                    if (durMatch) {
+                        duration = parseInt(durMatch[1]);
+                    } else if (currentCycle) {
+                        const diffTime = Math.abs(dateObj - currentCycle.startDateObj);
+                        duration = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    }
+                    
+                    if (currentCycle) {
+                        currentCycle.endDate = dateStr;
+                        currentCycle.periodDuration = duration;
+                    } else {
+                        const placeholderStart = new Date(dateObj);
+                        placeholderStart.setDate(dateObj.getDate() - duration + 1);
+                        currentCycle = {
+                            startDate: placeholderStart.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+                            startDateObj: placeholderStart,
+                            endDate: dateStr,
+                            periodDuration: duration,
+                            cycleLength: 28,
+                            symptoms: []
+                        };
+                        cycles.push(currentCycle);
+                    }
+                } else if (isSymptoms) {
+                    const symText = note === 'บันทึกอาการประจำเดือน' ? detail : note;
+                    if (symText && symText !== '-') {
+                        const parts = symText.split(',').map(s => s.trim());
+                        parts.forEach(s => {
+                            if (s) {
+                                symptomCounts[s] = (symptomCounts[s] || 0) + 1;
+                                totalSymptomLogs++;
+                                if (currentCycle) {
+                                    currentCycle.symptoms.push(s);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            
+            cycles.sort((a, b) => b.startDateObj - a.startDateObj);
+            return { cycles, symptomCounts, totalSymptomLogs };
+        }
+
+        function parseExerciseData(items) {
+            const exerciseLogs = items.filter(item => item.type === 'exercise');
+            
+            // Sort oldest to newest
+            exerciseLogs.sort((a, b) => new Date(a.created_at || a.appointment_date) - new Date(b.created_at || b.appointment_date));
+            
+            let totalDuration = 0;
+            let totalCalories = 0;
+            const activityCounts = {};
+            const recentSessions = [];
+            
+            exerciseLogs.forEach(log => {
+                let duration = 30; // Default
+                const durMatch = (log.note || '').match(/(\d+)\s*นาที/) || (log.detail || '').match(/(\d+)\s*นาที/);
+                if (durMatch) {
+                    duration = parseInt(durMatch[1]);
+                } else if (log.duration) {
+                    duration = parseInt(log.duration);
+                }
+                
+                let calories = log.calories || 0;
+                if (!calories) {
+                    const kcalMatch = (log.note || '').match(/(\d+)\s*kcal/);
+                    if (kcalMatch) {
+                        calories = parseInt(kcalMatch[1]);
+                    }
+                }
+                
+                const activity = log.detail || log.activity || 'ออกกำลังกาย';
+                
+                totalDuration += duration;
+                totalCalories += calories;
+                activityCounts[activity] = (activityCounts[activity] || 0) + 1;
+                
+                recentSessions.push({
+                    date: new Date(log.created_at || log.appointment_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }),
+                    activity: activity,
+                    duration: duration,
+                    calories: calories,
+                    note: log.note || ''
+                });
+            });
+            
+            let topActivity = 'ไม่มี';
+            let maxCount = 0;
+            for (const [act, count] of Object.entries(activityCounts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    topActivity = act;
+                }
+            }
+            
+            recentSessions.reverse();
+            const topActivityText = maxCount > 0 ? `${topActivity} (${maxCount} ครั้ง)` : 'ไม่มีการบันทึก';
+            
+            return {
+                totalDuration,
+                totalCalories,
+                topActivityText,
+                recentSessions: recentSessions.slice(0, 5)
+            };
+        }
+
+        function parseGoalData(items) {
+            const goalLogs = items.filter(item => item.type === 'goal');
+            
+            // Sort oldest to newest
+            goalLogs.sort((a, b) => new Date(a.created_at || a.appointment_date) - new Date(b.created_at || b.appointment_date));
+            
+            const goalStates = {};
+            
+            goalLogs.forEach(log => {
+                const name = log.detail || 'เป้าหมาย';
+                const status = (log.note || '').trim();
+                const isCompleted = status === 'เป้าหมายสำเร็จ' || status === 'สำเร็จแล้ว' || status === 'สำเร็จ';
+                
+                goalStates[name] = {
+                    name: name,
+                    isCompleted: isCompleted,
+                    date: new Date(log.created_at || log.appointment_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                };
+            });
+            
+            const uniqueGoals = Object.values(goalStates);
+            const totalGoals = uniqueGoals.length;
+            const completedCount = uniqueGoals.filter(g => g.isCompleted).length;
+            const completionRate = totalGoals > 0 ? Math.round((completedCount / totalGoals) * 100) : 0;
+            
+            return {
+                totalGoals,
+                completedCount,
+                completionRate,
+                goalsList: uniqueGoals.reverse()
+            };
+        }
+
         async function sendReport() {
             const btn = document.querySelector('.report-section .btn-primary');
             const originalHTML = btn.innerHTML;
@@ -650,15 +832,12 @@
                     return;
                 }
 
-                const email = user.email;
-
-                // Get Filter Names for Title
-                const timeSelect = document.getElementById('timeFilterSelect');
-                const catSelect = document.getElementById('filterSelect');
-                const timeText = timeSelect.options[timeSelect.selectedIndex].text;
-                const catText = catSelect.options[catSelect.selectedIndex].text;
-
-                const reportTitle = `สรุปรายงานสุขภาพ (${catText} - ${timeText})`;
+                 const email = user.email;
+                 const timeSelect = document.getElementById('timeFilterSelect');
+                 const catSelect = document.getElementById('filterSelect');
+                 const timeText = timeSelect.options[timeSelect.selectedIndex].text;
+                 const catText = catSelect.options[catSelect.selectedIndex].text;
+                 const reportTitle = `สรุปรายงานสุขภาพ (${catText} - ${timeText})`;
 
                 // Generate detailed list from visible cards
                 let dataRows = '';
@@ -686,6 +865,348 @@
                     }
                 });
 
+                // Parse Period Data for visual graphs inside the report
+                const selectedCat = catSelect.value;
+
+                // 1. Period Analytics Dashboard
+                const hasPeriodLogs = cachedHealthItems.some(i => i.type === 'period');
+                let periodAnalyticsHtml = '';
+                
+                if (hasPeriodLogs && (selectedCat === 'all' || selectedCat === 'period')) {
+                    const { cycles, symptomCounts, totalSymptomLogs } = parsePeriodData(cachedHealthItems);
+                    
+                    if (cycles.length > 0) {
+                        // Compute Averages
+                        const totalPeriodDays = cycles.reduce((sum, c) => sum + c.periodDuration, 0);
+                        const avgPeriodDays = (totalPeriodDays / cycles.length).toFixed(1);
+                        
+                        // Find Top Symptom
+                        let topSymptom = 'ไม่มี';
+                        let maxCount = 0;
+                        for (const [sym, count] of Object.entries(symptomCounts)) {
+                            if (count > maxCount) {
+                                maxCount = count;
+                                topSymptom = sym;
+                            }
+                        }
+                        const topSymptomText = maxCount > 0 ? `${topSymptom} (${maxCount} ครั้ง)` : 'ไม่มีการบันทึกอาการ';
+                        
+                        // Generate Cycle Duration Bar Graph Rows (using percentage widths)
+                        let cycleRows = '';
+                        cycles.slice(0, 5).forEach(c => {
+                            // Cap cycle length visual scale between 21 and 45 days
+                            const displayCycleLen = Math.max(21, Math.min(45, c.cycleLength || 28));
+                            const periodPercent = Math.max(10, Math.min(100, ((c.periodDuration / displayCycleLen) * 100).toFixed(0)));
+                            const remainingPercent = 100 - periodPercent;
+                            
+                            cycleRows += `
+                                <div style="margin-bottom: 12px; font-family: 'Sarabun', sans-serif;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                        <tr>
+                                            <td style="width: 130px; color: #475569; font-weight: 600; padding: 2px 0;">📅 เริ่ม ${c.startDate}</td>
+                                            <td style="padding: 2px 0;">
+                                                <div style="height: 18px; background-color: #f1f5f9; border-radius: 9px; overflow: hidden; display: block; position: relative;">
+                                                    <div style="float: left; width: ${periodPercent}%; height: 100%; background: linear-gradient(90deg, #f43f5e, #be123c); border-radius: 9px; text-align: center; color: white; font-size: 10px; line-height: 18px; font-weight: bold; min-width: 45px;">
+                                                        ${c.periodDuration} วัน
+                                                    </div>
+                                                    <div style="float: left; width: ${remainingPercent}%; height: 100%; background-color: #ffe4e6; opacity: 0.6;"></div>
+                                                </div>
+                                            </td>
+                                            <td style="width: 60px; color: #be123c; font-weight: bold; text-align: right; padding: 2px 0;">${c.cycleLength} วัน</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            `;
+                        });
+
+                        // Generate Symptom Frequency Graph Rows
+                        let symptomRows = '';
+                        const sortedSymptoms = Object.entries(symptomCounts).sort((a, b) => b[1] - a[1]);
+                        
+                        if (sortedSymptoms.length > 0) {
+                            sortedSymptoms.forEach(([sym, count]) => {
+                                const symPercent = Math.max(5, ((count / totalSymptomLogs) * 100).toFixed(0));
+                                symptomRows += `
+                                    <div style="margin-bottom: 8px; font-family: 'Sarabun', sans-serif;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                            <tr>
+                                                <td style="width: 110px; color: #475569; font-weight: 600; padding: 2px 0;">🩺 ${sym}</td>
+                                                <td style="padding: 2px 0;">
+                                                    <div style="height: 12px; background-color: #f1f5f9; border-radius: 6px; overflow: hidden; display: block;">
+                                                        <div style="width: ${symPercent}%; height: 100%; background-color: #d946ef; border-radius: 6px;"></div>
+                                                    </div>
+                                                </td>
+                                                <td style="width: 45px; color: #6b21a8; font-weight: bold; text-align: right; padding: 2px 0;">${count} ครั้ง</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            symptomRows = '<div style="text-align: center; color: #94a3b8; font-size: 12px; padding: 10px 0;">ไม่มีข้อมูลอาการประจำเดือนในช่วงนี้</div>';
+                        }
+                        
+                        // Select personalized insights based on top symptom
+                        let insightMessage = 'สุขภาพรอบเดือนของคุณอยู่ในเกณฑ์ปกติ ควรสังเกตอาการและบันทึกข้อมูลอย่างสม่ำเสมอเพื่อความแม่นยำในการคาดการณ์รอบถัดไป';
+                        if (topSymptom === 'ปวดท้อง') {
+                            insightMessage = 'พบอาการ <strong>"ปวดท้อง"</strong> บ่อยที่สุด แนะนำให้ดื่มน้ำอุ่น ประคบร้อนบริเวณท้องน้อย หลีกเลี่ยงน้ำเย็นและของทอด และนอนหลับพักผ่อนให้เพียงพอ หากมีอาการปวดรุนแรงผิดปกติควรปรึกษาแพทย์โดยเร็ว';
+                        } else if (topSymptom === 'หงุดหงิด') {
+                            insightMessage = 'พบอาการ <strong>"หงุดหงิด"</strong> บ่อยที่สุด ซึ่งสัมพันธ์กับการเปลี่ยนแปลงของระดับฮอร์โมน แนะนำให้ทำกิจกรรมผ่อนคลายความเครียด เช่น นั่งสมาธิ สูดหายใจลึกๆ หรือฟังเพลงเบาๆ';
+                        } else if (topSymptom === 'อ่อนเพลีย' || topSymptom === 'ง่วงนอน') {
+                            insightMessage = 'พบอาการ <strong>"อ่อนเพลีย/ง่วงนอน"</strong> บ่อยที่สุด แนะนำให้จัดตารางเวลานอนหลับให้ครบ 7-8 ชั่วโมง และรับประทานอาหารที่มีธาตุเหล็กสูง เช่น ผักใบเขียว ตับ หรือเนื้อแดง เพื่อเสริมสร้างเม็ดเลือด';
+                        } else if (topSymptom === 'อยากทานของหวาน') {
+                            insightMessage = 'พบอาการ <strong>"อยากทานของหวาน"</strong> บ่อย แนะนำให้ทดแทนด้วยดาร์กช็อกโกแลต (ช็อกโกแลตเข้มข้น) หรือผลไม้รสเปรี้ยวอมหวาน เพื่อชดเชยการลดระดับฮอร์โมนโดยรักษาสุขภาพน้ำตาลในเลือด';
+                        }
+
+                        periodAnalyticsHtml = `
+                            <!-- Period Health Analytics Dashboard -->
+                            <div style="margin-top: 20px; margin-bottom: 25px; background: #fff; border: 1.5px solid #fecdd3; border-radius: 16px; padding: 20px; font-family: 'Sarabun', sans-serif;">
+                                <div style="display: block; padding-bottom: 12px; border-bottom: 2px dashed #fecdd3; margin-bottom: 15px;">
+                                    <h2 style="color: #be123c; margin: 0; font-size: 16px; font-weight: 700; display: inline-block; vertical-align: middle;">📊 รายงานวิเคราะห์สุขภาพประจำเดือน (Period Health Analytics)</h2>
+                                </div>
+                                
+                                <!-- Metrics Row -->
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                    <tr>
+                                        <td style="width: 50%; padding-right: 8px; vertical-align: top;">
+                                            <div style="background-color: #fff1f2; border: 1px solid #ffe4e6; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                                <span style="font-size: 11px; color: #9f1239; font-weight: bold; text-transform: uppercase;">มีประจำเดือนเฉลี่ย</span>
+                                                <div style="font-size: 20px; font-weight: bold; color: #be123c; margin-top: 4px;">${avgPeriodDays} วัน</div>
+                                            </div>
+                                        </td>
+                                        <td style="width: 50%; padding-left: 8px; vertical-align: top;">
+                                            <div style="background-color: #faf5ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                                <span style="font-size: 11px; color: #6b21a8; font-weight: bold; text-transform: uppercase;">อาการที่พบบ่อยที่สุด</span>
+                                                <div style="font-size: 13px; font-weight: bold; color: #6b21a8; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${topSymptomText}</div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Graph Section 1: Cycle Length -->
+                                <div style="margin-bottom: 20px;">
+                                    <div style="font-size: 13px; font-weight: bold; color: #be123c; margin-bottom: 10px; display: block;">
+                                        🟥 ระยะเวลาประจำเดือน vs ⬜ รอบเดือนทั้งหมด (วัน)
+                                    </div>
+                                    ${cycleRows}
+                                </div>
+
+                                <!-- Graph Section 2: Symptoms -->
+                                <div style="margin-bottom: 20px; border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                                    <div style="font-size: 13px; font-weight: bold; color: #6b21a8; margin-bottom: 10px;">
+                                        🟪 ความถี่ของอาการที่พบ (Symptom Frequency)
+                                    </div>
+                                    ${symptomRows}
+                                </div>
+
+                                <!-- Insights Card -->
+                                <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                                    <div style="font-size: 12px; font-weight: bold; color: #b45309; margin-bottom: 4px;">
+                                        💡 คำแนะนำด้านสุขภาพส่วนบุคคล (Personalized Insights)
+                                    </div>
+                                    <div style="font-size: 12px; color: #78350f; line-height: 1.5;">
+                                        ${insightMessage}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                // 2. Exercise Analytics Dashboard
+                const hasExerciseLogs = cachedHealthItems.some(i => i.type === 'exercise');
+                let exerciseAnalyticsHtml = '';
+                
+                if (hasExerciseLogs && (selectedCat === 'all' || selectedCat === 'exercise')) {
+                    const { totalDuration, totalCalories, topActivityText, recentSessions } = parseExerciseData(cachedHealthItems);
+                    
+                    let sessionRows = '';
+                    recentSessions.forEach(s => {
+                        const progressPercent = Math.max(10, Math.min(100, ((s.duration / 90) * 100).toFixed(0)));
+                        sessionRows += `
+                            <div style="margin-bottom: 12px; font-family: 'Sarabun', sans-serif;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                    <tr>
+                                        <td style="width: 130px; color: #475569; font-weight: 600; padding: 2px 0;">🏃 ${s.activity} (${s.date})</td>
+                                        <td style="padding: 2px 0;">
+                                            <div style="height: 18px; background-color: #f1f5f9; border-radius: 9px; overflow: hidden; display: block; position: relative;">
+                                                <div style="float: left; width: ${progressPercent}%; height: 100%; background: linear-gradient(90deg, #f97316, #ea580c); border-radius: 9px; text-align: center; color: white; font-size: 10px; line-height: 18px; font-weight: bold; min-width: 50px;">
+                                                    ${s.duration} นาที
+                                                </div>
+                                                <div style="float: left; width: ${100 - progressPercent}%; height: 100%; background-color: #ffedd5; opacity: 0.6;"></div>
+                                            </div>
+                                        </td>
+                                        <td style="width: 70px; color: #ea580c; font-weight: bold; text-align: right; padding: 2px 0;">🔥 ${s.calories} kcal</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        `;
+                    });
+                    
+                    if (sessionRows === '') {
+                        sessionRows = '<div style="text-align: center; color: #94a3b8; font-size: 12px; padding: 10px 0;">ไม่มีข้อมูลการออกกำลังกายที่บันทึกไว้</div>';
+                    }
+
+                    const avgDuration = recentSessions.length > 0 ? (totalDuration / recentSessions.length) : 0;
+                    let exerciseInsight = 'การเคลื่อนไหวร่างกายอย่างสม่ำเสมอเป็นสิ่งสำคัญต่อสุขภาพหัวใจและปอด พยายามสะสมการออกกำลังกายระดับปานกลางอย่างต่อเนื่อง';
+                    if (avgDuration > 0 && avgDuration < 30) {
+                        exerciseInsight = 'ระยะเวลาการออกกำลังกายเฉลี่ยของคุณคือ <strong>' + avgDuration.toFixed(0) + ' นาทีต่อครั้ง</strong> ซึ่งน้อยกว่า 30 นาที แนะนำให้ค่อยๆ เพิ่มการออกกำลังกายระดับปานกลางเป็น 30-45 นาทีต่อครั้ง เพื่อช่วยเพิ่มประสิทธิภาพของระบบหมุนเวียนเลือดและสร้างความฟิตได้อย่างเต็มที่';
+                    } else if (avgDuration >= 30) {
+                        exerciseInsight = 'ยอดเยี่ยมมาก! ระยะเวลาออกกำลังกายเฉลี่ยของคุณอยู่ที่ <strong>' + avgDuration.toFixed(0) + ' นาทีต่อครั้ง</strong> ซึ่งอยู่ในเกณฑ์แนะนำของแพทย์ ช่วยกระตุ้นระบบเผาผลาญและรักษาสุขภาพหัวใจได้อย่างดีเยี่ยม ควรควบคุมความสม่ำเสมอสัปดาห์ละ 3-5 วัน';
+                    }
+
+                    exerciseAnalyticsHtml = `
+                        <!-- Exercise Health Analytics Dashboard -->
+                        <div style="margin-top: 20px; margin-bottom: 25px; background: #fff; border: 1.5px solid #ffedd5; border-radius: 16px; padding: 20px; font-family: 'Sarabun', sans-serif;">
+                            <div style="display: block; padding-bottom: 12px; border-bottom: 2px dashed #ffedd5; margin-bottom: 15px;">
+                                <h2 style="color: #ea580c; margin: 0; font-size: 16px; font-weight: 700; display: inline-block; vertical-align: middle;">🏃 รายงานวิเคราะห์กิจกรรมและการออกกำลังกาย (Exercise Analytics)</h2>
+                            </div>
+                            
+                            <!-- Metrics Row -->
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                <tr>
+                                    <td style="width: 33.3%; padding-right: 4px; vertical-align: top;">
+                                        <div style="background-color: #fff7ed; border: 1px solid #ffedd5; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #c2410c; font-weight: bold;">เวลารวม</span>
+                                            <div style="font-size: 16px; font-weight: bold; color: #ea580c; margin-top: 6px;">${totalDuration} นาที</div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 33.3%; padding: 0 4px; vertical-align: top;">
+                                        <div style="background-color: #fff7ed; border: 1px solid #ffedd5; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #c2410c; font-weight: bold;">แคลอรีสะสม</span>
+                                            <div style="font-size: 16px; font-weight: bold; color: #ea580c; margin-top: 6px;">${totalCalories} kcal</div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 33.3%; padding-left: 4px; vertical-align: top;">
+                                        <div style="background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #15803d; font-weight: bold;">กิจกรรมยอดฮิต</span>
+                                            <div style="font-size: 12px; font-weight: bold; color: #16a34a; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${topActivityText}">${topActivityText}</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Graph Section -->
+                            <div style="margin-bottom: 20px;">
+                                <div style="font-size: 13px; font-weight: bold; color: #ea580c; margin-bottom: 10px; display: block;">
+                                    🟧 ระยะเวลากิจกรรม (นาที) vs พลังงานที่เผาผลาญ (kcal)
+                                </div>
+                                ${sessionRows}
+                            </div>
+
+                            <!-- Insights Card -->
+                            <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                                <div style="font-size: 12px; font-weight: bold; color: #b45309; margin-bottom: 4px;">
+                                    💡 คำแนะนำด้านกิจกรรมส่วนบุคคล (Personalized Insights)
+                                </div>
+                                <div style="font-size: 12px; color: #78350f; line-height: 1.5;">
+                                    ${exerciseInsight}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // 3. Goal Analytics Dashboard
+                const hasGoalLogs = cachedHealthItems.some(i => i.type === 'goal');
+                let goalAnalyticsHtml = '';
+                
+                if (hasGoalLogs && (selectedCat === 'all' || selectedCat === 'goal')) {
+                    const { totalGoals, completedCount, completionRate, goalsList } = parseGoalData(cachedHealthItems);
+                    
+                    let goalListRows = '';
+                    goalsList.slice(0, 5).forEach(g => {
+                        const badgeColor = g.isCompleted ? '#10b981' : '#3b82f6';
+                        const badgeBg = g.isCompleted ? '#e8fdf4' : '#eff6ff';
+                        const statusLabel = g.isCompleted ? 'สำเร็จแล้ว' : 'กำลังดำเนินการ';
+                        
+                        goalListRows += `
+                            <tr style="border-bottom: 1px solid #f1f5f9; font-family: 'Sarabun', sans-serif; font-size: 12px;">
+                                <td style="padding: 8px 10px; font-weight: 600; color: #334155;">🎯 ${g.name}</td>
+                                <td style="padding: 8px 10px; color: #64748b;">${g.date}</td>
+                                <td style="padding: 8px 10px; text-align: right;">
+                                    <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; background-color: ${badgeBg}; color: ${badgeColor}; font-weight: bold; font-size: 10px;">
+                                        ${statusLabel}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    if (goalListRows === '') {
+                        goalListRows = '<tr><td colspan="3" style="text-align: center; color: #94a3b8; font-size: 12px; padding: 15px 0;">ไม่มีข้อมูลเป้าหมายที่บันทึกไว้</td></tr>';
+                    }
+
+                    let goalInsight = 'การตั้งเป้าหมายช่วยชี้แนวทางและพัฒนาศักยภาพชีวิต แนะนำให้เริ่มจากสิ่งเล็กๆ ที่ทำได้ทุกวันเพื่อสร้างนิสัยที่ดี';
+                    if (completionRate >= 70) {
+                        goalInsight = 'สุดยอดมาก! อัตราความสำเร็จในการทำตามเป้าหมายของคุณอยู่ที่ <strong>' + completionRate + '%</strong> ซึ่งถือว่าสูงและยอดเยี่ยมมาก แสดงถึงความมีวินัยและการจัดสรรเวลาได้อย่างมีประสิทธิภาพสูงสุด รักษาจังหวะและมาตรฐานนี้ไว้เพื่อไปสู่ความสำเร็จขั้นถัดไปครับ';
+                    } else if (completionRate > 0 && completionRate < 70) {
+                        goalInsight = 'คืบหน้าได้ดีทีเดียว! อัตราความสำเร็จอยู่ที่ <strong>' + completionRate + '%</strong> แนะนำเพิ่มเติมให้นำเป้าหมายใหญ่มาซอยย่อยลงเป็นเป้าหมายเล็กๆ รายวัน (Micro-goals) ที่สามารถทำเสร็จได้ในระยะเวลา 5-15 นาที จะช่วยกระตุ้นสมองและส่งเสริมอัตราการทำสำเร็จให้มากขึ้นในแต่ละวัน';
+                    }
+
+                    goalAnalyticsHtml = `
+                        <!-- Goal Health Analytics Dashboard -->
+                        <div style="margin-top: 20px; margin-bottom: 25px; background: #fff; border: 1.5px solid #e0e7ff; border-radius: 16px; padding: 20px; font-family: 'Sarabun', sans-serif;">
+                            <div style="display: block; padding-bottom: 12px; border-bottom: 2px dashed #e0e7ff; margin-bottom: 15px;">
+                                <h2 style="color: #4f46e5; margin: 0; font-size: 16px; font-weight: 700; display: inline-block; vertical-align: middle;">🎯 รายงานวิเคราะห์การตั้งเป้าหมายและพัฒนาตนเอง (Goal Analytics)</h2>
+                            </div>
+                            
+                            <!-- Metrics Row -->
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                <tr>
+                                    <td style="width: 33.3%; padding-right: 4px; vertical-align: top;">
+                                        <div style="background-color: #eef2ff; border: 1px solid #e0e7ff; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #3730a3; font-weight: bold;">เป้าหมายทั้งหมด</span>
+                                            <div style="font-size: 16px; font-weight: bold; color: #4f46e5; margin-top: 6px;">${totalGoals} รายการ</div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 33.3%; padding: 0 4px; vertical-align: top;">
+                                        <div style="background-color: #ecfdf5; border: 1px solid #d1fae5; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #065f46; font-weight: bold;">เป้าหมายที่สำเร็จ</span>
+                                            <div style="font-size: 16px; font-weight: bold; color: #059669; margin-top: 6px;">${completedCount} รายการ</div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 33.3%; padding-left: 4px; vertical-align: top;">
+                                        <div style="background-color: #eef2ff; border: 1px solid #e0e7ff; border-radius: 12px; padding: 12px; text-align: center; height: 50px;">
+                                            <span style="font-size: 10px; color: #3730a3; font-weight: bold;">อัตราความสำเร็จ</span>
+                                            <div style="font-size: 16px; font-weight: bold; color: #4f46e5; margin-top: 6px;">${completionRate}%</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- List Section -->
+                            <div style="margin-bottom: 20px;">
+                                <div style="font-size: 13px; font-weight: bold; color: #4f46e5; margin-bottom: 10px; display: block;">
+                                    🟦 บันทึกความก้าวหน้าเป้าหมายล่าสุด (Goal Progress Log)
+                                </div>
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background-color: #fafafb; border-bottom: 1.5px solid #e2e8f0; font-size: 11px; color: #64748b; font-weight: bold; text-align: left;">
+                                            <th style="padding: 6px 10px;">เป้าหมาย</th>
+                                            <th style="padding: 6px 10px;">บันทึกล่าสุด</th>
+                                            <th style="padding: 6px 10px; text-align: right;">สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${goalListRows}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Insights Card -->
+                            <div style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 15px; margin-top: 15px;">
+                                <div style="font-size: 12px; font-weight: bold; color: #b45309; margin-bottom: 4px;">
+                                    💡 คำแนะนำด้านความพยายามส่วนบุคคล (Personalized Insights)
+                                </div>
+                                <div style="font-size: 12px; color: #78350f; line-height: 1.5;">
+                                    ${goalInsight}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 const reportContent = `
                     <div style="font-family: 'Sarabun', sans-serif; padding: 20px; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;">
                         <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #a855f7;">
@@ -698,6 +1219,11 @@
                             <p>นี่คือข้อมูลบันทึกสุขภาพของคุณจากแอปพลิเคชัน CareFate</p>
                         </div>
 
+                        ${periodAnalyticsHtml}
+                        ${exerciseAnalyticsHtml}
+                        ${goalAnalyticsHtml}
+
+                        <div style="margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #333;">📋 ประวัติการบันทึกข้อมูลอย่างละเอียด (All Logs)</div>
                         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
                             <thead>
                                 <tr style="background-color: #f8f0fc; color: #6b21a8;">

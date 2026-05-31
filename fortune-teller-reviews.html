@@ -154,6 +154,207 @@
             color: #94a3b8;
             font-size: 0.9rem;
         }
+
+        /* Tabs Selection Styling */
+        .tab-btn.active {
+            background: #ffffff !important;
+            color: #7c3aed !important;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+        }
+        
+        body.theme-youth .tab-btn.active { color: #a855f7 !important; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.15); }
+        body.theme-working .tab-btn.active { color: #0284c7 !important; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15); }
+        body.theme-elder .tab-btn.active { color: #ea580c !important; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15); }
+
+        .clickable-card {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .clickable-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+        body.theme-youth .clickable-card:hover { border-color: rgba(168, 85, 247, 0.3); }
+        body.theme-working .clickable-card:hover { border-color: rgba(2, 132, 199, 0.3); }
+        body.theme-elder .clickable-card:hover { border-color: rgba(234, 88, 12, 0.3); }
+
+        /* Star rating grid */
+        .stars-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .star-category-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 1);
+            border-radius: 20px;
+            padding: 1.25rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .star-category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .star-badge-icon {
+            font-size: 1.8rem;
+            color: #facc15;
+            text-shadow: 0 2px 5px rgba(250, 204, 21, 0.3);
+            margin-bottom: 0.2rem;
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .star-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .star-count {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+            background: #f1f5f9;
+            padding: 0.25rem 0.6rem;
+            border-radius: 99px;
+            margin-top: 0.2rem;
+        }
+
+        /* Detail View Header */
+        .detail-header-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 1);
+            border-radius: 24px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .detail-back-btn {
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0;
+            align-self: flex-start;
+            transition: color 0.2s;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-back-btn:hover {
+            color: #0f172a;
+        }
+
+        /* Rating breakdown progress bar */
+        .rating-breakdown-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .rating-breakdown-fill {
+            height: 100%;
+            background: #facc15;
+            border-radius: 3px;
+        }
+
+        .rating-breakdown-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.4rem 0.6rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+            border: 1.5px solid transparent;
+            user-select: none;
+        }
+
+        .rating-breakdown-row:hover {
+            background: rgba(0, 0, 0, 0.03);
+            color: #1e293b;
+        }
+
+        .rating-breakdown-row.active {
+            background: rgba(124, 58, 237, 0.06);
+            border-color: rgba(124, 58, 237, 0.2);
+            color: #7c3aed;
+            font-weight: 700;
+        }
+
+        body.theme-youth .rating-breakdown-row.active {
+            background: rgba(168, 85, 247, 0.06);
+            border-color: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        body.theme-working .rating-breakdown-row.active {
+            background: rgba(2, 132, 199, 0.06);
+            border-color: rgba(2, 132, 199, 0.2);
+            color: #0284c7;
+        }
+
+        body.theme-elder .rating-breakdown-row.active {
+            background: rgba(234, 88, 12, 0.06);
+            border-color: rgba(234, 88, 12, 0.2);
+            color: #ea580c;
+        }
+
+        /* ===== GLOBAL THEME REDESIGN OVERRIDES (Identical to Dashboard) ===== */
+        body.theme-youth,
+        body.theme-working,
+        body.theme-elder {
+            background: #d1d5db !important;
+            position: relative;
+        }
+
+        body.theme-youth .background-shapes,
+        body.theme-working .background-shapes,
+        body.theme-elder .background-shapes {
+            display: none !important;
+        }
+
+        body.theme-youth .app-container,
+        body.theme-working .app-container,
+        body.theme-elder .app-container {
+            border: 10px solid #ffffff !important;
+            border-radius: 64px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto !important;
+        }
     </style>
 </head>
 
@@ -165,13 +366,22 @@
 
     <div class="app-container" style="display:flex; flex-direction:column; padding:0 !important; overflow:hidden; position:relative;">
         
+        <!-- Status Bar -->
+        <div class="status-bar" style="position:relative; z-index:20;">
+            <span class="time" id="statusBarTime">9:41</span>
+            <div class="status-icons">
+                <div class="battery" style="width:20px;height:10px;background:#cbd5e1;border-radius:2px;"></div>
+                <div class="signal" style="width:12px;height:12px;background:#cbd5e1;border-radius:50%;"></div>
+            </div>
+        </div>
+
         <!-- Background Aura -->
         <div style="position:absolute; top:-5%; right:-10%; width:400px; height:400px; background:rgba(216,180,254,0.3); filter:blur(100px); border-radius:50%; z-index:0; pointer-events:none;"></div>
         <div style="position:absolute; top:20%; left:-15%; width:350px; height:350px; background:rgba(191,219,254,0.4); filter:blur(90px); border-radius:50%; z-index:0; pointer-events:none;"></div>
 
         <!-- Header -->
-        <div style="padding: 1.5rem 1.5rem 0.5rem; display:flex; align-items:center; background: transparent; z-index: 10; flex-shrink: 0;">
-            <button onclick="history.back()"
+        <div style="padding: 0.5rem 1.5rem 0.5rem; display:flex; align-items:center; background: transparent; z-index: 10; flex-shrink: 0;">
+            <button onclick="handleHeaderBack()"
                 style="background:none; border:none; padding:0.5rem; cursor:pointer; color:#1e293b; display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background:#ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition:background 0.2s;">
                 <i class="fa-solid fa-arrow-left" style="font-size:1.1rem;"></i>
             </button>
@@ -181,12 +391,35 @@
         </div>
 
         <!-- Content -->
-        <div class="scrollable-content" style="flex:1; overflow-y:auto; padding: 1rem 1.5rem; padding-bottom: 2rem; z-index: 10; position:relative;">
-            <div id="loadingSpinner">
+        <div class="scrollable-content" style="flex:1; overflow-y:auto; padding: 1rem 1.5rem; padding-bottom: 100px !important; z-index: 10; position:relative;">
+            <!-- Category Tabs Selector (only visible on main view) -->
+            <div id="tabsContainer" class="reviews-tabs" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.6); padding: 0.35rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.8); z-index: 10; position: relative;">
+                <button id="tabTellers" class="tab-btn active" onclick="switchTab('tellers')" style="flex: 1; padding: 0.75rem; border: none; background: none; border-radius: 12px; font-family: inherit; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-yin-yang"></i> หมวดหมู่หมอดู
+                </button>
+                <button id="tabStars" class="tab-btn" onclick="switchTab('stars')" style="flex: 1; padding: 0.75rem; border: none; background: none; border-radius: 12px; font-family: inherit; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-star"></i> หมวดหมู่คะแนนดาว
+                </button>
+            </div>
+
+            <div id="loadingSpinner" style="text-align: center; padding: 3rem; color: #94a3b8; font-size: 0.9rem;">
                 <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.5rem; margin-bottom:0.5rem; display:block;"></i>
                 กำลังโหลดรีวิว...
             </div>
             <div id="reviewsContainer"></div>
+        </div>
+
+        <!-- ---- Bottom Nav ---- -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
+            <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment"></i></div>
+            <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
+        </div>
+
+        <!-- Bottom Bar (Home Indicator) -->
+        <div class="home-indicator" style="position:absolute; bottom:0; width:100%; height:32px; display:flex; justify-content:center; align-items:center; z-index:30;">
+            <div class="indicator-bar" style="width:130px; height:5px; background:#cbd5e1; border-radius:9999px;"></div>
         </div>
     </div>
 
@@ -234,18 +467,116 @@
             return `${diffWk} สัปดาห์ที่แล้ว`;
         }
 
-        function renderReviews(allReviews, profiles) {
-            const container = document.getElementById('reviewsContainer');
-            container.innerHTML = '';
+        // State variables
+        let currentView = 'main'; // 'main' | 'teller-detail' | 'star-detail'
+        let activeTab = 'tellers';  // 'tellers' | 'stars'
+        let selectedTellerId = null;
+        let selectedStarRating = null;
+        let activeDetailStarFilter = null; // Filter within the teller detail view (null | 1-5)
+        let reviewsData = [];
+        let profilesData = [];
 
+        function switchTab(tab) {
+            if (currentView !== 'main') {
+                currentView = 'main';
+            }
+            activeTab = tab;
+            activeDetailStarFilter = null; // Reset filter
+            
+            // Update tab button styles
+            const tabTellers = document.getElementById('tabTellers');
+            const tabStars = document.getElementById('tabStars');
+            if (tab === 'tellers') {
+                tabTellers.classList.add('active');
+                tabStars.classList.remove('active');
+            } else {
+                tabTellers.classList.remove('active');
+                tabStars.classList.add('active');
+            }
+            
+            render();
+        }
+
+        function showTellerDetail(tellerId) {
+            currentView = 'teller-detail';
+            selectedTellerId = tellerId;
+            activeDetailStarFilter = null; // Reset filter on entry
+            render();
+        }
+
+        function showStarDetail(rating) {
+            currentView = 'star-detail';
+            selectedStarRating = rating;
+            render();
+        }
+
+        function toggleDetailStarFilter(rating) {
+            if (activeDetailStarFilter === rating) {
+                activeDetailStarFilter = null;
+            } else {
+                activeDetailStarFilter = rating;
+            }
+            render();
+        }
+
+        function goBack() {
+            currentView = 'main';
+            activeDetailStarFilter = null; // Reset filter
+            render();
+        }
+
+        function handleHeaderBack() {
+            if (currentView !== 'main') {
+                goBack();
+            } else {
+                history.back();
+            }
+        }
+
+        function updateStatusBarTime() {
+            const timeEl = document.getElementById('statusBarTime');
+            if (!timeEl) return;
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            timeEl.textContent = `${hours}:${minutes}`;
+        }
+
+        function render() {
+            const container = document.getElementById('reviewsContainer');
+            const tabsContainer = document.getElementById('tabsContainer');
+            
             // Map user_id → username
             const usernameMap = {};
-            (profiles || []).forEach(p => { usernameMap[p.id] = p.username || 'ผู้ใช้'; });
+            (profilesData || []).forEach(p => { usernameMap[p.id] = p.username || 'ผู้ใช้'; });
 
+            // Hide/Show tabs selector based on view
+            if (currentView === 'main') {
+                tabsContainer.style.display = 'flex';
+            } else {
+                tabsContainer.style.display = 'none';
+            }
+
+            if (currentView === 'main') {
+                if (activeTab === 'tellers') {
+                    renderMainTellers(container, usernameMap);
+                } else {
+                    renderMainStars(container);
+                }
+            } else if (currentView === 'teller-detail') {
+                renderTellerDetail(container, usernameMap);
+            } else if (currentView === 'star-detail') {
+                renderStarDetail(container, usernameMap);
+            }
+        }
+
+        function renderMainTellers(container, usernameMap) {
+            container.innerHTML = '';
+            
             // Group reviews by teller_id
             const grouped = {};
             TELLERS.forEach(t => { grouped[t.id] = []; });
-            allReviews.forEach(r => {
+            reviewsData.forEach(r => {
                 if (grouped[r.teller_id] !== undefined) {
                     grouped[r.teller_id].push(r);
                 }
@@ -255,51 +586,35 @@
 
             TELLERS.forEach((teller, idx) => {
                 const reviews = grouped[teller.id];
-                if (reviews.length === 0) return; // Skip tellers with no reviews
-                hasAnyReview = true;
-
-                const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
                 const count = reviews.length;
-
-                // Sort newest first, take latest 3 with feedback
-                const withFeedback = reviews
-                    .filter(r => r.feedback && r.feedback.trim() !== '')
-                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                    .slice(0, 3);
+                if (count > 0) hasAnyReview = true;
+                const avg = count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : 0;
 
                 const card = document.createElement('div');
-                card.className = 'review-card';
-                card.style.animationDelay = `${idx * 0.07}s`;
-
-                const reviewsHTML = withFeedback.length > 0
-                    ? withFeedback.map(r => `
-                        <div class="user-review">
-                            <div class="ur-header">
-                                <div class="ur-name">${usernameMap[r.user_id] || 'ผู้ใช้'}</div>
-                                <div class="ur-stars">${starsHTML(r.rating)}</div>
-                            </div>
-                            <div class="ur-text">"${r.feedback}"</div>
-                            <div class="ur-time">${timeAgo(r.created_at)}</div>
-                        </div>
-                    `).join('')
-                    : `<div class="user-review"><div class="ur-text no-feedback">ยังไม่มีความคิดเห็น</div></div>`;
+                card.className = 'review-card clickable-card';
+                card.style.animationDelay = `${idx * 0.05}s`;
+                card.onclick = () => showTellerDetail(teller.id);
 
                 card.innerHTML = `
-                    <div class="review-header">
-                        <div class="teller-icon-box" style="background: ${teller.gradient};">
-                            <i class="${teller.icon}"></i>
+                    <div class="review-header" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="teller-icon-box" style="background: ${teller.gradient};">
+                                <i class="${teller.icon}"></i>
+                            </div>
+                            <div class="teller-info">
+                                <div class="teller-name">${teller.name}</div>
+                                <div class="teller-expert">${teller.expert}</div>
+                            </div>
                         </div>
-                        <div class="teller-info">
-                            <div class="teller-name">${teller.name}</div>
-                            <div class="teller-expert">${teller.expert}</div>
-                        </div>
-                        <div class="rating-summary">
-                            <div class="score-big">${avg.toFixed(1)}</div>
-                            <div class="score-stars">${starsHTML(avg)}</div>
-                            <div class="review-count">(${count} รีวิว)</div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="rating-summary" style="text-align: right;">
+                                <div class="score-big" style="margin-bottom: 0;">${count > 0 ? avg.toFixed(1) : '0.0'}</div>
+                                <div class="score-stars" style="font-size: 0.65rem;">${starsHTML(avg)}</div>
+                                <div class="review-count">(${count} รีวิว)</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right" style="color: #cbd5e1; font-size: 0.9rem;"></i>
                         </div>
                     </div>
-                    ${reviewsHTML}
                 `;
 
                 container.appendChild(card);
@@ -313,6 +628,212 @@
                     </div>
                 `;
             }
+        }
+
+        function renderMainStars(container) {
+            container.innerHTML = '';
+            
+            // Count ratings
+            const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            reviewsData.forEach(r => {
+                if (counts[r.rating] !== undefined) {
+                    counts[r.rating]++;
+                }
+            });
+
+            const grid = document.createElement('div');
+            grid.className = 'stars-grid';
+
+            [5, 4, 3, 2, 1].forEach((rating, idx) => {
+                const count = counts[rating];
+                const card = document.createElement('div');
+                card.className = 'star-category-card clickable-card';
+                card.style.animationDelay = `${idx * 0.05}s`;
+                card.onclick = () => showStarDetail(rating);
+
+                card.innerHTML = `
+                    <div class="star-badge-icon">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="star-title">${rating} ดาว</div>
+                    <div class="star-count">${count} รีวิว</div>
+                `;
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        function renderTellerDetail(container, usernameMap) {
+            container.innerHTML = '';
+            const teller = TELLERS.find(t => t.id === selectedTellerId);
+            if (!teller) return;
+
+            const reviews = reviewsData.filter(r => r.teller_id === selectedTellerId);
+            const count = reviews.length;
+            const avg = count > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / count : 0;
+
+            const headerCard = document.createElement('div');
+            headerCard.className = 'detail-header-card';
+            
+            // Calculate star breakdown
+            const starBreakdownHTML = [5, 4, 3, 2, 1].map(r => {
+                const rCount = reviews.filter(rev => rev.rating === r).length;
+                const pct = count > 0 ? (rCount / count) * 100 : 0;
+                const isActive = activeDetailStarFilter === r;
+                return `
+                    <div class="rating-breakdown-row ${isActive ? 'active' : ''}" onclick="toggleDetailStarFilter(${r})">
+                        <span style="width: 35px; font-weight: 600; text-align: right;">${r} ดาว</span>
+                        <div class="rating-breakdown-bar">
+                            <div class="rating-breakdown-fill" style="width: ${pct}%"></div>
+                        </div>
+                        <span style="width: 30px; text-align: left; font-weight: 600;">${rCount}</span>
+                    </div>
+                `;
+            }).join('');
+
+            headerCard.innerHTML = `
+                <button class="detail-back-btn" onclick="goBack()">
+                    <i class="fa-solid fa-chevron-left"></i> กลับไปหมวดหมู่
+                </button>
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div class="teller-icon-box" style="width: 60px; height: 60px; border-radius: 20px; font-size: 1.6rem; background: ${teller.gradient};">
+                        <i class="${teller.icon}"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 0.15rem 0;">${teller.name}</h2>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; background: rgba(0,0,0,0.04); padding: 0.2rem 0.6rem; border-radius: 99px;">${teller.expert}</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1.5rem; border-top: 1px solid #f1f5f9; padding-top: 1rem; margin-top: 0.5rem;">
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1;">${count > 0 ? avg.toFixed(1) : '0.0'}</div>
+                        <div class="score-stars" style="font-size: 0.75rem; margin: 0.3rem 0;">${starsHTML(avg)}</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8;">คะแนนเฉลี่ย</div>
+                    </div>
+                    <div style="border-left: 1px solid #f1f5f9; height: 50px;"></div>
+                    <div style="text-align: center; flex: 1;">
+                        <div style="font-size: 2rem; font-weight: 800; color: #1e293b; line-height: 1;">${count}</div>
+                        <div style="font-size: 0.75rem; color: #475569; margin: 0.3rem 0; font-weight: 600;">รีวิวทั้งหมด</div>
+                        <div style="font-size: 0.7rem; color: #94a3b8;">จากผู้ใช้อ่านดวง</div>
+                    </div>
+                </div>
+                <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; border-top: 1px solid #f1f5f9; padding-top: 1rem;">
+                    <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.2rem; padding-left: 0.6rem;">คลิกที่แถวด้านล่างเพื่อกรองดาว:</div>
+                    ${starBreakdownHTML}
+                </div>
+            `;
+            container.appendChild(headerCard);
+
+            // Filter reviews if activeDetailStarFilter is set
+            let displayedReviews = reviews;
+            if (activeDetailStarFilter !== null) {
+                displayedReviews = reviews.filter(r => r.rating === activeDetailStarFilter);
+            }
+
+            // Create filter active indicator
+            let filterIndicatorHTML = '';
+            if (activeDetailStarFilter !== null) {
+                filterIndicatorHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(254, 240, 138, 0.4); border: 1px solid rgba(250, 204, 21, 0.4); padding: 0.5rem 0.75rem; border-radius: 12px; margin-bottom: 0.75rem; animation: fadeIn 0.2s ease;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: #854d0e;">
+                            <i class="fa-solid fa-filter" style="margin-right: 0.25rem;"></i> แสดงเฉพาะรีวิวระดับ ${activeDetailStarFilter} ดาว
+                        </span>
+                        <button onclick="toggleDetailStarFilter(${activeDetailStarFilter})" style="background: none; border: none; font-size: 0.7rem; font-weight: 700; color: #a16207; cursor: pointer; display: flex; align-items: center; gap: 0.2rem; padding: 0;">
+                            แสดงทั้งหมด [x]
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Reviews List
+            const listDiv = document.createElement('div');
+            listDiv.style.marginTop = '1.5rem';
+            
+            const reviewsHTML = displayedReviews.length > 0 ? displayedReviews.map(r => `
+                <div class="user-review" style="margin-bottom: 0.75rem;">
+                    <div class="ur-header">
+                        <div class="ur-name">${usernameMap[r.user_id] || 'ผู้ใช้'}</div>
+                        <div class="ur-stars">${starsHTML(r.rating)}</div>
+                    </div>
+                    <div class="ur-text">${r.feedback && r.feedback.trim() !== '' ? `"${r.feedback}"` : `<span class="no-feedback">ไม่ได้ระบุข้อความความคิดเห็น</span>`}</div>
+                    <div class="ur-time">${timeAgo(r.created_at)}</div>
+                </div>
+            `).join('') : `
+                <div class="user-review" style="text-align: center; padding: 2.5rem 1rem; color: #94a3b8;">
+                    <i class="fa-regular fa-comment-dots" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    ยังไม่มีความคิดเห็นระดับ ${activeDetailStarFilter} ดาว สำหรับหมอดูท่านนี้
+                </div>
+            `;
+
+            listDiv.innerHTML = `
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-bottom: 0.75rem; padding-left: 0.25rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>ความคิดเห็นจากผู้ใช้</span>
+                    <span style="font-size: 0.75rem; font-weight: 500; color: #94a3b8;">แสดง ${displayedReviews.length} จาก ${reviews.length}</span>
+                </h3>
+                ${filterIndicatorHTML}
+                ${reviewsHTML}
+            `;
+            container.appendChild(listDiv);
+        }
+
+        function renderStarDetail(container, usernameMap) {
+            container.innerHTML = '';
+            
+            const reviews = reviewsData.filter(r => r.rating === selectedStarRating);
+            
+            const headerCard = document.createElement('div');
+            headerCard.className = 'detail-header-card';
+            headerCard.innerHTML = `
+                <button class="detail-back-btn" onclick="goBack()">
+                    <i class="fa-solid fa-chevron-left"></i> กลับไปหมวดหมู่
+                </button>
+                <div style="display: flex; align-items: center; gap: 1.25rem;">
+                    <div class="teller-icon-box" style="width: 60px; height: 60px; border-radius: 20px; font-size: 1.8rem; background: linear-gradient(135deg, #facc15, #eab308);">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0 0 0.15rem 0;">รีวิวระดับ ${selectedStarRating} ดาว</h2>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600; background: rgba(0,0,0,0.04); padding: 0.2rem 0.6rem; border-radius: 99px;">พบทั้งหมด ${reviews.length} รีวิว</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(headerCard);
+
+            // Reviews List
+            const listDiv = document.createElement('div');
+            listDiv.style.marginTop = '1.5rem';
+            
+            const reviewsHTML = reviews.length > 0 ? reviews.map(r => {
+                const teller = TELLERS.find(t => t.id === r.teller_id) || { name: 'หมอดู AI', gradient: 'linear-gradient(135deg, #94a3b8, #64748b)', icon: 'fa-solid fa-yin-yang' };
+                return `
+                    <div class="user-review" style="margin-bottom: 0.75rem; border-left: 4px solid #facc15;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; background: #ffffff; padding: 0.4rem 0.6rem; border-radius: 10px; border: 1px solid #f1f5f9; align-self: flex-start; width: fit-content;">
+                            <div class="teller-icon-box" style="width: 20px; height: 20px; border-radius: 6px; font-size: 0.55rem; background: ${teller.gradient}; margin: 0;">
+                                <i class="${teller.icon}"></i>
+                            </div>
+                            <span style="font-size: 0.7rem; font-weight: 700; color: #475569;">รีวิวให้: ${teller.name}</span>
+                        </div>
+                        <div class="ur-header">
+                            <div class="ur-name">${usernameMap[r.user_id] || 'ผู้ใช้'}</div>
+                            <div class="ur-stars">${starsHTML(r.rating)}</div>
+                        </div>
+                        <div class="ur-text">${r.feedback && r.feedback.trim() !== '' ? `"${r.feedback}"` : `<span class="no-feedback">ไม่ได้ระบุข้อความความคิดเห็น</span>`}</div>
+                        <div class="ur-time">${timeAgo(r.created_at)}</div>
+                    </div>
+                `;
+            }).join('') : `
+                <div class="user-review" style="text-align: center; padding: 2.5rem 1rem; color: #94a3b8;">
+                    <i class="fa-regular fa-comment-dots" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    ยังไม่มีรีวิวระดับดาวนี้ในระบบ
+                </div>
+            `;
+
+            listDiv.innerHTML = `
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-bottom: 0.75rem; padding-left: 0.25rem;">ความคิดเห็นจากผู้ใช้</h3>
+                ${reviewsHTML}
+            `;
+            container.appendChild(listDiv);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -344,21 +865,25 @@
                 }
 
                 console.log('Reviews loaded:', reviews);
+                reviewsData = reviews || [];
 
                 // Load usernames from profiles
-                let profiles = [];
-                if (reviews && reviews.length > 0) {
-                    const userIds = [...new Set(reviews.map(r => r.user_id))];
+                if (reviewsData.length > 0) {
+                    const userIds = [...new Set(reviewsData.map(r => r.user_id))];
                     const { data: profileData, error: profErr } = await _supabase
                         .from('profiles')
                         .select('id, username')
                         .in('id', userIds);
                     if (profErr) console.warn('Profile fetch error:', profErr);
-                    profiles = profileData || [];
+                    profilesData = profileData || [];
                 }
 
                 spinner.style.display = 'none';
-                renderReviews(reviews || [], profiles);
+                render();
+
+                // Initialize dynamic status bar time
+                updateStatusBarTime();
+                setInterval(updateStatusBarTime, 60000);
 
             } catch (e) {
                 console.error('Error loading reviews:', e);

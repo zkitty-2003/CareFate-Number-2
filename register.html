@@ -42,21 +42,24 @@
 
             <form class="login-form" id="registerForm">
                 <div class="form-group">
-                    <label for="username" class="input-label">ชื่อผู้ใช้</label>
+                    <label for="username" class="input-label">ชื่อเรียกขานในระบบ</label>
                     <div class="input-group">
                         <i class="fa-regular fa-user input-icon"></i>
-                        <input type="text" id="username" placeholder="ชื่อเล่นหรือชื่อจริงของคุณ" required>
+                        <input type="text" id="username" placeholder="ระบุชื่อที่ต้องการให้ระบบใช้เรียกคุณ" required>
                     </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0.5rem;">
-                    <label for="dob" class="input-label">วัน/เดือน/ปี เกิด</label>
+                    <label for="dob" class="input-label" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span>วัน/เดือน/ปี เกิด</span>
+                        <span style="font-size: 0.6875rem; color: #ef4444; font-weight: 600; background: #fee2e2; padding: 2px 8px; border-radius: 9999px; display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-circle-exclamation"></i>อายุ 13+</span>
+                    </label>
                     <div class="input-group">
                         <i class="fa-regular fa-calendar input-icon"></i>
                         <input type="date" id="dob" required style="color: #1e293b;">
                     </div>
                 </div>
-                <p style="font-size: 0.6875rem; color: #94a3b8; margin: 0 0 1rem 0.25rem;">* ข้อมูลนี้จะใช้ในการคำนวณดวงชะตาของคุณ</p>
+                <p style="font-size: 0.6875rem; color: #94a3b8; margin: 0 0 1rem 0.25rem;">* ข้อมูลนี้จะใช้ในการคำนวณดวงชะตาของคุณ (ผู้สมัครต้องมีอายุ 13 ปีขึ้นไป)</p>
 
                 <div class="form-group">
                     <label for="email" class="input-label">อีเมล</label>
@@ -77,27 +80,46 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label for="confirmPassword" class="input-label">ยืนยันรหัสผ่าน</label>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านของคุณอีกครั้ง" required>
+                        <button type="button" class="toggle-password" id="toggleConfirmPasswordBtn">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Password Requirements Hint -->
                 <div class="password-rules" style="background-color: #f8fafc; padding: 1rem; border-radius: 1rem; border: 1px solid #f1f5f9; margin-top: -0.5rem; margin-bottom: 1.5rem;">
                     <p style="font-size: 0.75rem; font-weight: 700; color: #475569; margin-bottom: 0.5rem;">ความปลอดภัยของรหัสผ่าน:</p>
                     <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        <div id="req-length" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
-                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                        <div id="req-length" style="display:flex; align-items:center; gap:6px; color: #1e293b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #64748b;"></i>
                             <span style="font-size: 0.6875rem; font-weight: 500;">ความยาว 7-20 ตัวอักษร</span>
                         </div>
-                        <div id="req-english" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
-                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                        <div id="req-english" style="display:flex; align-items:center; gap:6px; color: #1e293b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #64748b;"></i>
                             <span style="font-size: 0.6875rem; font-weight: 500;">ใช้ภาษาอังกฤษ (ตัวเล็กและตัวใหญ่)</span>
                         </div>
-                        <div id="req-complexity" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
-                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                        <div id="req-complexity" style="display:flex; align-items:center; gap:6px; color: #1e293b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #64748b;"></i>
                             <span style="font-size: 0.6875rem; font-weight: 500;">ต้องมีตัวเลขประกอบด้วย</span>
                         </div>
-                        <div id="req-special" style="display:flex; align-items:center; gap:6px; color: #64748b; transition: all 0.3s;">
-                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #cbd5e1;"></i>
+                        <div id="req-special" style="display:flex; align-items:center; gap:6px; color: #1e293b; transition: all 0.3s;">
+                            <i class="fa-regular fa-circle-check" style="font-size: 0.75rem; color: #64748b;"></i>
                             <span style="font-size: 0.6875rem; font-weight: 500;">ห้ามมีอักขระพิเศษ (@ # $ %)</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Email Verification Hint -->
+                <div class="verify-hint" style="background-color: rgba(99, 102, 241, 0.05); padding: 1rem; border-radius: 1rem; border: 1px dashed rgba(99, 102, 241, 0.25); margin-bottom: 1.5rem; text-align: left; display: flex; gap: 8px; align-items: flex-start;">
+                    <i class="fa-solid fa-lightbulb" style="color: #8b5cf6; margin-top: 2px; font-size: 0.95rem; flex-shrink: 0;"></i>
+                    <p style="font-size: 0.725rem; color: #475569; line-height: 1.5; margin: 0; font-weight: 500;">
+                        <strong style="color: #1e293b;">คำแนะนำหลังลงทะเบียน:</strong> ต้องกดยืนยันอีเมลในกล่องข้อความ **ภายใน 24 ชม.** หากไม่ได้กด ลิงก์เดิมจะหมดอายุ ให้คุณนำอีเมลและรหัสผ่านนี้ไปเข้าสู่ระบบ (Login) เพื่อให้ระบบส่งลิงก์ยืนยันตัวตนใหม่ได้โดยอัตโนมัติทันที 📬
+                    </p>
                 </div>
 
                 <div class="login-action-container">
@@ -116,7 +138,7 @@
     </div>
 
     <script src="notifications.js?v=8"></script>
-    <script src="register.js?v=6"></script>
+    <script src="register.js?v=17"></script>
     <script>
         // Real-time Status Bar Clock
         function updateStatusBarTime() {

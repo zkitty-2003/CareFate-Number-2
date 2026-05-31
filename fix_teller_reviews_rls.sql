@@ -15,3 +15,11 @@ DROP POLICY IF EXISTS "Users can insert own reviews" ON public.teller_reviews;
 CREATE POLICY "Users can insert own reviews"
     ON public.teller_reviews FOR INSERT
     WITH CHECK (auth.uid() = user_id);
+
+-- Create policy for UPDATE to allow users to update their own reviews
+DROP POLICY IF EXISTS "Users can update own reviews" ON public.teller_reviews;
+
+CREATE POLICY "Users can update own reviews"
+    ON public.teller_reviews FOR UPDATE
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);

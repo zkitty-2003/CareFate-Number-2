@@ -13,7 +13,6 @@
     <script src="ai-logic.js"></script>
 
     <style>
-
         /* ===== HEADER ===== */
         .dash-top {
             padding: 2rem 1.4rem 0.6rem;
@@ -366,7 +365,8 @@
         body.theme-youth,
         body.theme-working,
         body.theme-elder {
-            background: #d1d5db !important; /* Gray outer background like React preview */
+            background: #d1d5db !important;
+            /* Gray outer background like React preview */
             position: relative;
         }
 
@@ -382,9 +382,18 @@
             overflow: hidden;
             margin: 0 auto !important;
         }
-        body.theme-youth .dashboard-container { background: #FAF9FF !important; }
-        body.theme-working .dashboard-container { background: #f0f9ff !important; }
-        body.theme-elder .dashboard-container { background: #fffcf8 !important; }
+
+        body.theme-youth .dashboard-container {
+            background: #FAF9FF !important;
+        }
+
+        body.theme-working .dashboard-container {
+            background: #f0f9ff !important;
+        }
+
+        body.theme-elder .dashboard-container {
+            background: #fffcf8 !important;
+        }
 
         /* Aura Backgrounds (moved inside container) */
         body.theme-youth .dashboard-container::before {
@@ -400,6 +409,7 @@
             z-index: 0;
             pointer-events: none;
         }
+
         body.theme-youth .dashboard-container::after {
             content: '';
             position: absolute;
@@ -421,12 +431,14 @@
             padding: 1.5rem 1.5rem 1rem;
             align-items: flex-start;
         }
+
         body.theme-youth .dash-greeting h1,
         body.theme-working .dash-greeting h1,
         body.theme-elder .dash-greeting h1 {
             font-size: 1.5rem;
             color: var(--text-color);
         }
+
         body.theme-youth .dash-greeting p,
         body.theme-working .dash-greeting p,
         body.theme-elder .dash-greeting p {
@@ -434,147 +446,380 @@
             font-weight: 500;
             font-size: 0.8rem;
         }
+
         /* Tellers are now visible in all themes */
         body.theme-youth .header-right,
         body.theme-working .header-right,
-        body.theme-elder .header-right { gap: 0.75rem; }
+        body.theme-elder .header-right {
+            gap: 0.75rem;
+        }
+
         body.theme-youth .notif-btn,
         body.theme-working .notif-btn,
         body.theme-elder .notif-btn {
-            width: 44px; height: 44px; border-radius: 16px;
-            background: #ffffff !important; border: 1px solid #f1f5f9 !important;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            background: #ffffff !important;
+            border: 1px solid #f1f5f9 !important;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
         }
+
         body.theme-youth .avatar-ring,
         body.theme-working .avatar-ring,
         body.theme-elder .avatar-ring {
-            width: 44px; height: 44px; border-radius: 16px;
-            background: #f3e8ff !important; border: 1px solid #e9d5ff !important;
-            padding: 0; box-shadow: none; display: flex; align-items: center; justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 16px;
+            background: #f3e8ff !important;
+            border: 1px solid #e9d5ff !important;
+            padding: 0;
+            box-shadow: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         body.theme-youth .avatar-inner,
         body.theme-working .avatar-inner,
-        body.theme-elder .avatar-inner { background: transparent; }
+        body.theme-elder .avatar-inner {
+            background: transparent;
+        }
+
         body.theme-youth .avatar-inner i,
         body.theme-working .avatar-inner i,
-        body.theme-elder .avatar-inner i { color: #9333ea; font-size: 1.2rem; }
+        body.theme-elder .avatar-inner i {
+            color: #9333ea;
+            font-size: 1.2rem;
+        }
 
         /* AI Tellers Section */
-        .tellers-section { z-index: 10; position: relative; margin-bottom: 1.5rem; display: block; }
+        .tellers-section {
+            z-index: 10;
+            position: relative;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
         body .tellers-header {
-            padding: 0 1.5rem; font-size: 1rem; font-weight: 600; color: var(--text-color);
-            margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+            padding: 0 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
+
         body .tellers-scroll {
-            display: flex; overflow-x: auto; padding: 12px 1rem 0.5rem; gap: 0.75rem;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            display: flex;
+            overflow-x: auto;
+            padding: 12px 1rem 0.5rem;
+            gap: 0.75rem;
+            -webkit-overflow-scrolling: touch;
+            /* Smooth scrolling on iOS */
         }
-        body .tellers-scroll::-webkit-scrollbar { display: none; }
+
+        body .tellers-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
         body .tellers-scroll::after {
             content: '';
-            flex: 0 0 0.5rem; /* Spacer to ensure right margin on scroll */
+            flex: 0 0 0.5rem;
+            /* Spacer to ensure right margin on scroll */
         }
+
         body .teller-item {
-            display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
-            flex-shrink: 0; cursor: pointer; transition: transform 0.15s; position: relative;
-            width: 66px; /* reduced width so more items fit */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.15s;
+            position: relative;
+            width: 66px;
+            /* reduced width so more items fit */
         }
-        body .teller-item:active { transform: scale(0.95); }
-        body .teller-icon-wrap { position: relative; }
+
+        body .teller-item:active {
+            transform: scale(0.95);
+        }
+
+        body .teller-icon-wrap {
+            position: relative;
+        }
+
         body .teller-icon-box {
-            width: 54px; height: 54px; border-radius: 18px; display: flex;
-            align-items: center; justify-content: center; color: white; font-size: 1.4rem;
-            border: 2px solid white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            border: 2px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
+
         body .teller-rating {
-            position: absolute; bottom: -4px; right: -8px; background: white; padding: 2px 4px;
-            border-radius: 8px; display: flex; align-items: center; gap: 2px;
-            border: 1px solid #f8fafc; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            position: absolute;
+            bottom: -4px;
+            right: -8px;
+            background: white;
+            padding: 2px 4px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            border: 1px solid #f8fafc;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
-        body .teller-rating i { font-size: 0.5rem; color: #eab308; }
-        body .teller-rating span { font-size: 0.55rem; font-weight: 700; color: #1e293b; }
-        body .teller-info { text-align: center; width: 100%; }
-        body .teller-name { font-size: 0.65rem; font-weight: 600; color: var(--text-color); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        body .teller-expert { font-size: 0.55rem; font-weight: 500; color: var(--text-muted); }
+
+        body .teller-rating i {
+            font-size: 0.5rem;
+            color: #eab308;
+        }
+
+        body .teller-rating span {
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        body .teller-info {
+            text-align: center;
+            width: 100%;
+        }
+
+        body .teller-name {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-color);
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        body .teller-expert {
+            font-size: 0.55rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
         body .teller-badge {
-            position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 10; background: #f97316; color: white;
-            font-size: 0.55rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
-            border: 1px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); white-space: nowrap;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: #f97316;
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 99px;
+            border: 1px solid white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            white-space: nowrap;
         }
 
         /* Horoscope Card */
         body .horo-card {
-            margin: 0 1.5rem 1.5rem; background: #ffffff !important; border-radius: 28px !important;
-            padding: 1.25rem 1.25rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
-            border: 1px solid #fdf4ff !important; 
-            display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
+            margin: 0 1.5rem 1.5rem;
+            background: #ffffff !important;
+            border-radius: 28px !important;
+            padding: 1.25rem 1.25rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
+            border: 1px solid #fdf4ff !important;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
         }
-        body .horo-card > div { display: contents; }
+
+        body .horo-card>div {
+            display: contents;
+        }
+
         body .horo-icon {
-            width: 40px; height: 40px; border-radius: 12px; background: #0f172a !important;
-            color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: #0f172a !important;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
         }
-        body .horo-title { font-size: 1.05rem; font-weight: 600; color: var(--text-color); margin: 0; }
-        body .horo-text { font-size: 0.9rem; color: var(--text-color); font-weight: 500; line-height: 1.6; width: 100%; margin-top: 0.25rem; }
+
+        body .horo-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        body .horo-text {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            font-weight: 500;
+            line-height: 1.6;
+            width: 100%;
+            margin-top: 0.25rem;
+        }
 
         /* Sections */
-        body .sect-title { font-size: 1.15rem; font-weight: 700; color: var(--text-color); padding: 0 1.5rem 1rem; }
-        body .feat-grid { padding: 0 1.5rem 1.5rem; gap: 1rem; }
-        body .feat-icon-box {
-            width: 64px; height: 64px; border-radius: 22px; font-size: 1.8rem;
-            border: 1px solid white; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        body .sect-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-color);
+            padding: 0 1.5rem 1rem;
         }
-        body .feat-label { font-size: 0.8rem; color: var(--text-color); font-weight: 700; }
-        body .feat-tile-edit .feat-icon-box { background: transparent !important; border: 2px dashed #cbd5e1 !important; box-shadow: none !important; }
+
+        body .feat-grid {
+            padding: 0 1.5rem 1.5rem;
+            gap: 1rem;
+        }
+
+        body .feat-icon-box {
+            width: 64px;
+            height: 64px;
+            border-radius: 22px;
+            font-size: 1.8rem;
+            border: 1px solid white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        body .feat-label {
+            font-size: 0.8rem;
+            color: var(--text-color);
+            font-weight: 700;
+        }
+
+        body .feat-tile-edit .feat-icon-box {
+            background: transparent !important;
+            border: 2px dashed #cbd5e1 !important;
+            box-shadow: none !important;
+        }
 
         /* Bottom Nav (Flush to bottom) */
         body.theme-youth .bottom-nav,
         body.theme-working .bottom-nav,
         body.theme-elder .bottom-nav {
-            position: absolute !important; margin: 0 !important;
-            bottom: 0; left: 0; right: 0; height: 86px; border-radius: 0;
-            width: 100% !important; padding-bottom: 15px; /* space for home indicator */
-            background: rgba(255, 255, 255, 0.98) !important; 
-            border: none !important; border-top: 2px solid rgba(0, 0, 0, 0.05) !important;
+            position: absolute !important;
+            margin: 0 !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 86px;
+            border-radius: 0;
+            width: 100% !important;
+            padding-bottom: 15px;
+            /* space for home indicator */
+            background: rgba(255, 255, 255, 0.98) !important;
+            border: none !important;
+            border-top: 2px solid rgba(0, 0, 0, 0.05) !important;
             box-shadow: none !important;
             z-index: 40;
-            display: flex; justify-content: space-around; align-items: center;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
         }
+
         /* Set theme colors for bottom nav */
-        body.theme-youth { --nav-color: #a855f7; }
-        body.theme-working { --nav-color: #4f46e5; }
-        body.theme-elder { --nav-color: #10b981; }
+        body.theme-youth {
+            --nav-color: #a855f7;
+        }
+
+        body.theme-working {
+            --nav-color: #4f46e5;
+        }
+
+        body.theme-elder {
+            --nav-color: #10b981;
+        }
 
         body.theme-youth .nav-item,
         body.theme-working .nav-item,
-        body.theme-elder .nav-item { 
-            width: 60px; height: 60px; border-radius: 50%; background: transparent !important;
-            position: relative; display: flex; align-items: center; justify-content: center;
-            color: #9ca3af; transition: all 0.3s; z-index: 2;
+        body.theme-elder .nav-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: transparent !important;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            transition: all 0.3s;
+            z-index: 2;
         }
+
         body.theme-youth .nav-item i,
         body.theme-working .nav-item i,
-        body.theme-elder .nav-item i { font-size: 1.4rem; z-index: 2; transition: all 0.3s; }
-        
+        body.theme-elder .nav-item i {
+            font-size: 1.4rem;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
         body.theme-youth .nav-item.active i,
-        body.theme-elder .nav-item.active i { color: var(--nav-color) !important; transform: scale(1.1); }
-        
+        body.theme-elder .nav-item.active i {
+            color: var(--nav-color) !important;
+            transform: scale(1.1);
+        }
+
         /* Glowing effect for active icon */
         body.theme-youth .nav-item::before,
         body.theme-working .nav-item::before,
         body.theme-elder .nav-item::before {
-            content: ''; position: absolute; width: 36px; height: 36px; border-radius: 50%;
-            background: var(--nav-color); filter: blur(14px); opacity: 0; transition: opacity 0.3s; z-index: 1;
+            content: '';
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--nav-color);
+            filter: blur(14px);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1;
         }
+
         body.theme-youth .nav-item.active::before,
-        body.theme-elder .nav-item.active::before { opacity: 0.35; }
+        body.theme-elder .nav-item.active::before {
+            opacity: 0.35;
+        }
 
         /* ===== WORKING THEME SPECIFIC OVERRIDES ===== */
-        body.theme-working .nav-item { width: 55px; height: 55px; }
-        body.theme-working .nav-item.active { background: rgba(16, 185, 129, 0.12) !important; border-radius: 20px !important; }
-        body.theme-working .nav-item i { color: #94a3b8 !important; opacity: 1 !important; }
-        body.theme-working .nav-item.active i { color: #0891b2 !important; transform: scale(1.05); }
-        body.theme-working .nav-item::before { display: none !important; }
+        body.theme-working .nav-item {
+            width: 55px;
+            height: 55px;
+        }
+
+        body.theme-working .nav-item.active {
+            background: rgba(16, 185, 129, 0.12) !important;
+            border-radius: 20px !important;
+        }
+
+        body.theme-working .nav-item i {
+            color: #94a3b8 !important;
+            opacity: 1 !important;
+        }
+
+        body.theme-working .nav-item.active i {
+            color: #0891b2 !important;
+            transform: scale(1.05);
+        }
+
+        body.theme-working .nav-item::before {
+            display: none !important;
+        }
 
         .fade-in {
             animation: fadeUp 0.35s ease both;
@@ -582,91 +827,312 @@
 
         /* ===== ELDER THEME SPECIFIC OVERRIDES ===== */
         /* Typography */
-        body.theme-elder .dash-greeting h1 { font-size: 1.6rem !important; color: #431407 !important; }
-        body.theme-elder .greeting-emoji { display: none; }
-        body.theme-elder #dateDisplay { font-size: 0.85rem !important; color: #ea580c !important; font-weight: 700; }
-        body.theme-elder .tellers-header { font-size: 1.15rem !important; color: #431407 !important; }
-        body.theme-elder .tellers-header i.fa-sparkles { display: none; }
+        body.theme-elder .dash-greeting h1 {
+            font-size: 1.6rem !important;
+            color: #431407 !important;
+        }
+
+        body.theme-elder .greeting-emoji {
+            display: none;
+        }
+
+        body.theme-elder #dateDisplay {
+            font-size: 0.85rem !important;
+            color: #ea580c !important;
+            font-weight: 700;
+        }
+
+        body.theme-elder .tellers-header {
+            font-size: 1.15rem !important;
+            color: #431407 !important;
+        }
+
+        body.theme-elder .tellers-header i.fa-sparkles {
+            display: none;
+        }
+
         /* Protect Tellers Section from Global Elder Enlargement */
-        body.theme-elder .teller-badge { font-size: 0.6rem !important; line-height: 1.2 !important; }
-        body.theme-elder .teller-rating { font-size: 0.75rem !important; line-height: 1.2 !important; }
-        body.theme-elder .teller-rating span { font-size: 0.75rem !important; line-height: 1.2 !important; }
-        body.theme-elder .teller-icon-box i { font-size: 1.6rem !important; line-height: 1 !important; color: white !important; }
-        body.theme-elder .teller-name { font-size: 0.8rem !important; line-height: 1.2 !important; color: #431407 !important; font-weight: 800; }
-        body.theme-elder .teller-expert { font-size: 0.7rem !important; line-height: 1.2 !important; color: #ea580c !important; font-weight: 700; }
-        body.theme-elder .sect-title { font-size: 1.3rem !important; color: #431407 !important; font-weight: 800; }
-        
+        body.theme-elder .teller-badge {
+            font-size: 0.6rem !important;
+            line-height: 1.2 !important;
+        }
+
+        body.theme-elder .teller-rating {
+            font-size: 0.75rem !important;
+            line-height: 1.2 !important;
+        }
+
+        body.theme-elder .teller-rating span {
+            font-size: 0.75rem !important;
+            line-height: 1.2 !important;
+        }
+
+        body.theme-elder .teller-icon-box i {
+            font-size: 1.6rem !important;
+            line-height: 1 !important;
+            color: white !important;
+        }
+
+        body.theme-elder .teller-name {
+            font-size: 0.8rem !important;
+            line-height: 1.2 !important;
+            color: #431407 !important;
+            font-weight: 800;
+        }
+
+        body.theme-elder .teller-expert {
+            font-size: 0.7rem !important;
+            line-height: 1.2 !important;
+            color: #ea580c !important;
+            font-weight: 700;
+        }
+
+        body.theme-elder .sect-title {
+            font-size: 1.3rem !important;
+            color: #431407 !important;
+            font-weight: 800;
+        }
+
         /* Health Summary Card */
         body.theme-elder .horo-card {
             border: 2px solid #fdba74 !important;
             box-shadow: 0 15px 30px -5px rgba(234, 88, 12, 0.1) !important;
         }
-        body.theme-elder .horo-icon { background: #fff7ed !important; color: #ea580c !important; font-size: 1.6rem !important; width: 48px !important; height: 48px !important; }
-        body.theme-elder .horo-title { font-size: 1.25rem !important; color: #ea580c !important; font-weight: 800; }
-        body.theme-elder .horo-text { font-size: 1.05rem !important; line-height: 1.7; color: #431407 !important; }
-        
+
+        body.theme-elder .horo-icon {
+            background: #fff7ed !important;
+            color: #ea580c !important;
+            font-size: 1.6rem !important;
+            width: 48px !important;
+            height: 48px !important;
+        }
+
+        body.theme-elder .horo-title {
+            font-size: 1.25rem !important;
+            color: #ea580c !important;
+            font-weight: 800;
+        }
+
+        body.theme-elder .horo-text {
+            font-size: 1.05rem !important;
+            line-height: 1.7;
+            color: #431407 !important;
+        }
+
         /* Bottom Nav (Flush but with Elder colors) */
-        body.theme-elder .nav-item.active { background: #dcfce3 !important; border-radius: 20px !important; width: 60px; height: 60px; }
-        body.theme-elder .nav-item i { color: #fdbab7 !important; opacity: 1 !important; }
-        body.theme-elder .nav-item.active i { color: #059669 !important; }
-        body.theme-elder .nav-item::before { display: none !important; }
-        
+        body.theme-elder .nav-item.active {
+            background: #dcfce3 !important;
+            border-radius: 20px !important;
+            width: 60px;
+            height: 60px;
+        }
+
+        body.theme-elder .nav-item i {
+            color: #fdbab7 !important;
+            opacity: 1 !important;
+        }
+
+        body.theme-elder .nav-item.active i {
+            color: #059669 !important;
+        }
+
+        body.theme-elder .nav-item::before {
+            display: none !important;
+        }
+
         /* Background Overrides */
-        body.theme-elder .dashboard-container { background: #fffcf8 !important; }
+        body.theme-elder .dashboard-container {
+            background: #fffcf8 !important;
+        }
 
         /* Fortune Teller Modal */
         .teller-modal-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
-            z-index: 100; display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s; border-radius: 64px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 64px;
         }
-        .teller-modal-overlay.show { opacity: 1; }
+
+        .teller-modal-overlay.show {
+            opacity: 1;
+        }
+
         .teller-modal {
-            background: #ffffff; width: 85%; max-width: 340px; border-radius: 32px;
-            padding: 1.5rem; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(0.95) translateY(10px); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            display: flex; flex-direction: column; align-items: center;
+            background: #ffffff;
+            width: 85%;
+            max-width: 340px;
+            border-radius: 32px;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .teller-modal-overlay.show .teller-modal { transform: scale(1) translateY(0); }
+
+        .teller-modal-overlay.show .teller-modal {
+            transform: scale(1) translateY(0);
+        }
+
         .teller-modal-close {
-            position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px;
-            background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: #64748b; cursor: pointer; border: none; font-size: 1rem; transition: background 0.2s;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+            transition: background 0.2s;
         }
-        .teller-modal-close:active { background: #e2e8f0; }
+
+        .teller-modal-close:active {
+            background: #e2e8f0;
+        }
+
         .teller-modal-icon {
-            width: 80px; height: 80px; border-radius: 28px; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 2.2rem; margin-top: -3.5rem; margin-bottom: 0.8rem;
-            border: 4px solid white; box-shadow: 0 15px 25px -5px rgba(0,0,0,0.15);
+            width: 80px;
+            height: 80px;
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.2rem;
+            margin-top: -3.5rem;
+            margin-bottom: 0.8rem;
+            border: 4px solid white;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.15);
         }
-        .teller-modal-name { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-bottom: 0.2rem; }
-        .teller-modal-subtitle { font-size: 0.75rem; font-weight: 600; color: #a855f7; margin-bottom: 1.25rem; }
+
+        .teller-modal-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.2rem;
+        }
+
+        .teller-modal-subtitle {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #a855f7;
+            margin-bottom: 1.25rem;
+        }
+
         .teller-modal-content {
-            background: #f8fafc; border-radius: 20px; padding: 1.25rem; width: 100%;
-            font-size: 0.85rem; color: #1e293b; line-height: 1.6; text-align: center;
-            margin-bottom: 1.25rem; font-weight: 500; min-height: 80px; display: flex; align-items: center; justify-content: center;
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 1.25rem;
+            width: 100%;
+            font-size: 0.85rem;
+            color: #1e293b;
+            line-height: 1.6;
+            text-align: left;
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+            min-height: 80px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: block;
+            white-space: pre-wrap;
         }
+
         .teller-rating-box {
-            width: 100%; border-top: 1px solid #f1f5f9; padding-top: 1.25rem; text-align: center;
+            width: 100%;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1.25rem;
+            text-align: center;
         }
-        .teller-rating-title { font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 0.5rem; }
-        .teller-stars { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; }
-        .teller-stars i { font-size: 1.5rem; color: #e2e8f0; cursor: pointer; transition: color 0.2s; }
-        .teller-stars i.active { color: #f472b6; } /* Pinkish for the youth theme */
+
+        .teller-rating-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .teller-stars {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .teller-stars i {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .teller-stars i.active {
+            color: #f472b6;
+        }
+
+        /* Pinkish for the youth theme */
         .teller-feedback-input {
-            width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
-            padding: 0.75rem 1rem; font-size: 0.85rem; color: #334155; font-family: inherit;
-            resize: none; outline: none; margin-bottom: 1rem; transition: border-color 0.2s; box-sizing: border-box;
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: #334155;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            margin-bottom: 1rem;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
         }
-        .teller-feedback-input:focus { border-color: #a855f7; }
+
+        .teller-feedback-input:focus {
+            border-color: #a855f7;
+        }
+
         .teller-submit-btn {
-            width: 100%; background: #f1f5f9; color: #64748b; border: none; border-radius: 14px;
-            padding: 0.8rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            width: 100%;
+            background: #f1f5f9;
+            color: #64748b;
+            border: none;
+            border-radius: 14px;
+            padding: 0.8rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        .teller-submit-btn.ready { background: #0f172a; color: white; }
-        .teller-submit-btn.ready:active { transform: scale(0.97); }
+
+        .teller-submit-btn.ready {
+            background: #0f172a;
+            color: white;
+        }
+
+        .teller-submit-btn.ready:active {
+            transform: scale(0.97);
+        }
     </style>
 </head>
 
@@ -699,7 +1165,9 @@
         </div>
 
         <!-- Pink aura layer 3 (Youth Only) -->
-        <div class="aura-pink" style="display:none; position:absolute; bottom:-10%; left:10%; width:450px; height:450px; background:rgba(251,207,232,0.3); filter:blur(120px); border-radius:50%; z-index:0; pointer-events:none;"></div>
+        <div class="aura-pink"
+            style="display:none; position:absolute; bottom:-10%; left:10%; width:450px; height:450px; background:rgba(251,207,232,0.3); filter:blur(120px); border-radius:50%; z-index:0; pointer-events:none;">
+        </div>
 
         <!-- ---- Header ---- -->
         <div class="dash-top" style="position:relative; z-index:10; padding-top:1rem;">
@@ -727,14 +1195,16 @@
             <div class="tellers-section fade-in">
                 <div class="tellers-header" style="justify-content: space-between; display: flex;">
                     <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-sparkles" style="color:#9333ea;"></i> ปรึกษา AI หมอดู
+                        <i class="fa-solid fa-sparkles" style="color:#9333ea;"></i> หมอดู AI
                     </span>
-                    <a href="fortune-teller-reviews.html" style="font-size: 0.8rem; font-weight: 500; color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 0.25rem;">
+                    <a href="fortune-teller-reviews.html"
+                        style="font-size: 0.8rem; font-weight: 500; color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 0.25rem;">
                         คะแนนรีวิวทั้งหมด <i class="fa-solid fa-chevron-right" style="font-size: 0.7rem;"></i>
                     </a>
                 </div>
                 <div class="tellers-scroll">
-                    <div class="teller-item" data-teller-id="love" onclick="openTellerModal('love', 'แม่หมอจันทรา', 'หมอดู AI ด้านความรัก', 'fa-regular fa-heart', 'linear-gradient(135deg, #f472b6, #f43f5e)')">
+                    <div class="teller-item" data-teller-id="love"
+                        onclick="openTellerModal('love', 'แม่หมอจันทรา', 'หมอดู AI ด้านความรัก', 'fa-regular fa-heart', 'linear-gradient(135deg, #f472b6, #f43f5e)')">
                         <div class="teller-icon-wrap">
                             <div class="teller-icon-box" style="background: linear-gradient(135deg, #f472b6, #f43f5e);">
                                 <i class="fa-regular fa-heart"></i>
@@ -748,8 +1218,8 @@
                             <div class="teller-expert">ความรัก</div>
                         </div>
                     </div>
-                    <div class="teller-item" data-teller-id="finance" onclick="openTellerModal('finance', 'ซินแสเศรษฐี', 'หมอดู AI ด้านการเงิน', 'fa-solid fa-coins', 'linear-gradient(135deg, #facc15, #f97316)')">
-                        <div class="teller-badge">ยอดนิยม</div>
+                    <div class="teller-item" data-teller-id="finance"
+                        onclick="openTellerModal('finance', 'ซินแสเศรษฐี', 'หมอดู AI ด้านการเงิน', 'fa-solid fa-coins', 'linear-gradient(135deg, #facc15, #f97316)')">
                         <div class="teller-icon-wrap">
                             <div class="teller-icon-box" style="background: linear-gradient(135deg, #facc15, #f97316);">
                                 <i class="fa-solid fa-coins"></i>
@@ -763,7 +1233,8 @@
                             <div class="teller-expert">การเงิน</div>
                         </div>
                     </div>
-                    <div class="teller-item" data-teller-id="work" onclick="openTellerModal('work', 'อาจารย์ดวงดาว', 'หมอดู AI ด้านการงาน', 'fa-solid fa-briefcase', 'linear-gradient(135deg, #60a5fa, #4f46e5)')">
+                    <div class="teller-item" data-teller-id="work"
+                        onclick="openTellerModal('work', 'อาจารย์ดวงดาว', 'หมอดู AI ด้านการงาน', 'fa-solid fa-briefcase', 'linear-gradient(135deg, #60a5fa, #4f46e5)')">
                         <div class="teller-icon-wrap">
                             <div class="teller-icon-box" style="background: linear-gradient(135deg, #60a5fa, #4f46e5);">
                                 <i class="fa-solid fa-briefcase"></i>
@@ -777,7 +1248,8 @@
                             <div class="teller-expert">การงาน</div>
                         </div>
                     </div>
-                    <div class="teller-item" data-teller-id="health" onclick="openTellerModal('health', 'ผู้เฒ่าโอสถ', 'หมอดู AI ด้านสุขภาพ', 'fa-solid fa-leaf', 'linear-gradient(135deg, #34d399, #0d9488)')">
+                    <div class="teller-item" data-teller-id="health"
+                        onclick="openTellerModal('health', 'ผู้เฒ่าโอสถ', 'หมอดู AI ด้านสุขภาพ', 'fa-solid fa-leaf', 'linear-gradient(135deg, #34d399, #0d9488)')">
                         <div class="teller-icon-wrap">
                             <div class="teller-icon-box" style="background: linear-gradient(135deg, #34d399, #0d9488);">
                                 <i class="fa-solid fa-leaf"></i>
@@ -791,7 +1263,8 @@
                             <div class="teller-expert">สุขภาพ</div>
                         </div>
                     </div>
-                    <div class="teller-item" data-teller-id="overall" onclick="openTellerModal('overall', 'เซนมาสเตอร์', 'หมอดู AI ด้านภาพรวมชีวิต', 'fa-solid fa-yin-yang', 'linear-gradient(135deg, #c084fc, #7c3aed)')">
+                    <div class="teller-item" data-teller-id="overall"
+                        onclick="openTellerModal('overall', 'เซนมาสเตอร์', 'หมอดู AI ด้านภาพรวมชีวิต', 'fa-solid fa-yin-yang', 'linear-gradient(135deg, #c084fc, #7c3aed)')">
                         <div class="teller-icon-wrap">
                             <div class="teller-icon-box" style="background: linear-gradient(135deg, #c084fc, #7c3aed);">
                                 <i class="fa-solid fa-yin-yang"></i>
@@ -813,15 +1286,20 @@
             <div id="healthSummaryCard" class="horo-card fade-in" style="margin-top:0.8rem; animation-delay:0.1s;">
                 <div style="flex:1;">
                     <div class="horo-title">
-                        <i class="fa-solid fa-notes-medical" style="color:#a855f7; margin-right:4px;"></i> 
-                        AI สุขภาพ <span style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-left:2px;">7 วัน</span>
+                        <i class="fa-solid fa-notes-medical" style="color:#a855f7; margin-right:4px;"></i>
+                        AI สุขภาพ <span
+                            style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-left:2px;">7
+                            วัน</span>
                     </div>
-                    <div id="healthSummaryText" class="horo-text" style="margin-top: 0.5rem;"><i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <div id="healthSummaryText" class="horo-text" style="margin-top: 0.5rem;"><i
+                            class="fa-solid fa-circle-notch fa-spin"></i>
                         กำลังวิเคราะห์...</div>
-                    
+
                     <!-- Today's Logs Display -->
-                    <div id="todayHealthLogs" style="margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(0,0,0,0.08); display:none;">
-                        <div style="font-size:0.8rem; font-weight:700; color: #1e293b; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.25rem;">
+                    <div id="todayHealthLogs"
+                        style="margin-top:0.8rem; padding-top:0.8rem; border-top:1px dashed rgba(0,0,0,0.08); display:none;">
+                        <div
+                            style="font-size:0.8rem; font-weight:700; color: #1e293b; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.25rem;">
                             <i class="fa-solid fa-circle-check" style="color:#22c55e;"></i> บันทึกสุขภาพของคุณวันนี้:
                         </div>
                         <div id="todayLogsList" style="display:flex; flex-direction:column; gap:0.35rem;">
@@ -839,14 +1317,16 @@
 
         <!-- ---- Bottom Nav ---- -->
         <div class="bottom-nav">
-            <div class="nav-item active" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item active" onclick="location.href='dashboard.html'"><i class="fa-solid fa-house"></i>
+            </div>
             <div class="nav-item" onclick="location.href='history.html'"><i class="fa-solid fa-chart-pie"></i></div>
             <div class="nav-item" onclick="location.href='chatbot.html'"><i class="fa-solid fa-comment"></i></div>
             <div class="nav-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i></div>
         </div>
 
         <!-- Bottom Bar (Home Indicator) -->
-        <div class="home-indicator" style="position:absolute; bottom:0; width:100%; height:32px; display:flex; justify-content:center; align-items:center; z-index:30;">
+        <div class="home-indicator"
+            style="position:absolute; bottom:0; width:100%; height:32px; display:flex; justify-content:center; align-items:center; z-index:30;">
             <div class="indicator-bar" style="width:130px; height:5px; background:#cbd5e1; border-radius:9999px;"></div>
         </div>
 
@@ -856,18 +1336,19 @@
                 <button class="teller-modal-close" onclick="closeTellerModal()">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
-                
-                <div class="teller-modal-icon" id="tmIcon" style="background: linear-gradient(135deg, #f472b6, #f43f5e);">
+
+                <div class="teller-modal-icon" id="tmIcon"
+                    style="background: linear-gradient(135deg, #f472b6, #f43f5e);">
                     <i class="fa-regular fa-heart"></i>
                 </div>
-                
+
                 <div class="teller-modal-name" id="tmName">แม่หมอจันทรา</div>
                 <div class="teller-modal-subtitle" id="tmSubtitle">หมอดู AI ด้านความรัก</div>
-                
+
                 <div class="teller-modal-content" id="tmContent">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์ดวงชะตา...
                 </div>
-                
+
                 <div class="teller-rating-box" id="tmRatingBox" style="display: none;">
                     <div class="teller-rating-title">ให้คะแนนความแม่นของคำทำนาย:</div>
                     <div class="teller-stars" id="tmStars">
@@ -877,8 +1358,9 @@
                         <i class="fa-solid fa-star" onclick="setTellerRating(4)"></i>
                         <i class="fa-solid fa-star" onclick="setTellerRating(5)"></i>
                     </div>
-                    <textarea class="teller-feedback-input" id="tmFeedback" placeholder="บอกความรู้สึกสั้นๆ..."></textarea>
-                    
+                    <textarea class="teller-feedback-input" id="tmFeedback"
+                        placeholder="บอกความรู้สึกสั้นๆ..."></textarea>
+
                     <button class="teller-submit-btn ready" onclick="submitTellerFeedback()">
                         บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>
                     </button>
@@ -907,13 +1389,14 @@
                 document.getElementById('dateDisplay').textContent =
                     new Date().toLocaleDateString('th-TH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-                let theme = 'youth', username = 'User', features = [], avatarUrl = null;
+                let theme = 'youth', username = 'User', features = [], avatarUrl = null, userId = 'guest';
 
                 if (window.supabase) {
                     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     const { data: { session } } = await _supabase.auth.getSession();
                     if (!session) { location.href = 'index.html'; return; }
                     const user = session.user;
+                    userId = user.id;
 
                     const { data: profile } = await _supabase.from('profiles')
                         .select('theme,username,avatar_url,features').eq('id', user.id).single();
@@ -929,6 +1412,11 @@
 
                     let raw = profile?.features || user.user_metadata?.features || [];
                     features = Array.isArray(raw) ? raw : (typeof raw === 'string' ? JSON.parse(raw) : []);
+
+                    if (features.length === 0) {
+                        location.href = 'feature-selection.html?warning=select_at_least_one';
+                        return;
+                    }
                 }
 
                 applyTheme(theme);
@@ -940,7 +1428,7 @@
                 }
 
                 renderFeatures(features);
-                loadHealthSummary(theme, username);
+                loadHealthSummary(theme, username, userId);
                 loadTodayHealthLogs();
                 loadTellerRatings(); // Load real ratings from DB
 
@@ -977,7 +1465,7 @@
             if (validList.length === 0) {
                 validList = Object.keys(featureMeta);
             }
-            
+
             if (document.body.classList.contains('theme-elder')) {
                 renderElderTiles(root, validList);
             } else if (document.body.classList.contains('theme-working')) {
@@ -991,7 +1479,7 @@
         function renderElderTiles(root, list) {
             const sec = document.createElement('div');
             sec.className = 'fade-in';
-            
+
             const title = document.createElement('div');
             title.className = 'sect-title';
             title.textContent = 'เมนูหลัก';
@@ -1001,24 +1489,27 @@
             grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 0 1.5rem 1.5rem;';
 
             const elderFeatures = [
-                { title: 'ออกกำลังกาย', emoji: '🚶', bg: '#e0f2fe' },
-                { title: 'ตรวจสุขภาพ', emoji: '🩺', bg: '#dcfce3', link: 'feature-period.html' },
-                { title: 'เป้าหมาย', emoji: '🏆', bg: '#fef08a' },
-                { title: 'ตั้งค่า', emoji: '⚙️', bg: '#f1f5f9', link: 'settings.html' },
-                { title: 'แก้ไข', emoji: '✏️', bg: '#ffedd5', link: 'feature-selection.html' }
+                { id: 'exercise', title: 'ออกกำลังกาย', emoji: '🚶', bg: '#e0f2fe' },
+                { id: 'period', title: 'รอบเดือน', emoji: '📅', bg: '#FFD6EC', link: 'feature-period.html' },
+                { id: 'goals', title: 'เป้าหมาย', emoji: '🏆', bg: '#fef08a' },
+                { id: 'settings', title: 'ตั้งค่า', emoji: '⚙️', bg: '#f1f5f9', link: 'settings.html', always: true },
+                { id: 'edit', title: 'แก้ไข', emoji: '✏️', bg: '#ffedd5', link: 'feature-selection.html', always: true }
             ];
 
-            elderFeatures.forEach(m => {
+            // Filter features: keep if marked 'always' or present in the selected list
+            const activeFeatures = elderFeatures.filter(m => m.always || list.includes(m.id));
+
+            activeFeatures.forEach(m => {
                 const tile = document.createElement('button');
                 tile.style.cssText = 'background: white; border: 2px solid #000; border-radius: 32px; padding: 1.5rem 0.5rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05);';
                 tile.onclick = () => {
-                    if(m.link) location.href = m.link;
+                    if (m.link) location.href = m.link;
                     else location.href = 'feature-selection.html'; // default
                 };
-                
+
                 // For link mappings
-                if(m.title === 'ออกกำลังกาย') tile.onclick = () => location.href = 'feature-exercise.html';
-                if(m.title === 'เป้าหมาย') tile.onclick = () => location.href = 'feature-goals.html';
+                if (m.title === 'ออกกำลังกาย') tile.onclick = () => location.href = 'feature-exercise.html';
+                if (m.title === 'เป้าหมาย') tile.onclick = () => location.href = 'feature-goals.html';
 
                 tile.innerHTML = `
                     <div style="width: 72px; height: 72px; border-radius: 50%; background: ${m.bg}; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin-bottom: 0.5rem;">${m.emoji}</div>
@@ -1187,9 +1678,9 @@
 
 
 
-        async function loadHealthSummary(theme, username) {
+        async function loadHealthSummary(theme, username, userId = 'guest') {
             const el = document.getElementById('healthSummaryText');
-            const cacheKey = `healthsummary_v2_${theme}_${new Date().toDateString()}`;
+            const cacheKey = `healthsummary_v5_${userId}_${theme}_${new Date().toDateString()}`;
             const cached = localStorage.getItem(cacheKey);
             if (cached) { el.innerHTML = cached; return; }
 
@@ -1203,6 +1694,9 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
+                    // ตรวจสอบว่าผลลัพธ์เป็นข้อความแจ้งข้อผิดพลาด/ล่าช้าหรือไม่ (ถ้าใช่ จะไม่บันทึกลงแคช เพื่อให้รีเฟรชแล้วลองใหม่ได้)
+                    const isErrorMsg = data.summary.includes('ขออภัย') || data.summary.includes('ไม่สามารถ');
+
                     // Format bullet points nicely
                     const formatted = data.summary
                         .replace(/^•/gm, '<br>•')
@@ -1210,7 +1704,10 @@
                         .trim()
                         .replace(/^<br>/, '');
                     el.innerHTML = formatted;
-                    localStorage.setItem(cacheKey, formatted);
+
+                    if (!isErrorMsg) {
+                        localStorage.setItem(cacheKey, formatted);
+                    }
                 } else {
                     el.textContent = 'ไม่สามารถวิเคราะห์ข้อมูลได้';
                 }
@@ -1228,14 +1725,21 @@
 
                 const todayStr = (() => {
                     const d = new Date();
+                    if (d.getHours() < 5) {
+                        d.setDate(d.getDate() - 1);
+                    }
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
                     return `${year}-${month}-${day}`;
                 })();
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
-                const todayStartISO = todayStart.toISOString();
+
+                const parts = todayStr.split('-');
+                const yearVal = parseInt(parts[0], 10);
+                const monthVal = parseInt(parts[1], 10) - 1;
+                const dayVal = parseInt(parts[2], 10);
+
+                const todayStartISO = new Date(yearVal, monthVal, dayVal, 5, 0, 0, 0).toISOString();
 
                 let logs = [];
 
@@ -1394,7 +1898,7 @@
             document.getElementById('tmSubtitle').textContent = subtitle;
             document.getElementById('tmIcon').style.background = bgGradient;
             document.getElementById('tmIcon').innerHTML = `<i class="${iconClass}"></i>`;
-            
+
             document.getElementById('tmContent').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์ดวงชะตา...';
             document.getElementById('tmRatingBox').style.display = 'none';
             document.getElementById('tmFeedback').value = '';
@@ -1425,10 +1929,25 @@
                             dob = session.user.user_metadata.dob;
                         }
                     }
+                    // SMART FALLBACK: Fetch fresh user object directly from Supabase API to bypass stale session metadata
+                    if (!dob) {
+                        try {
+                            const { data: { user } } = await _supabase.auth.getUser();
+                            if (user && user.user_metadata && user.user_metadata.dob) {
+                                dob = user.user_metadata.dob;
+                                console.log("[Fortune] Fresh dob retrieved via getUser:", dob);
+                            }
+                        } catch (e) {
+                            console.warn("[Fortune] getUser metadata fetch failed:", e);
+                        }
+                    }
                 }
 
                 const todayStr = (() => {
                     const d = new Date();
+                    if (d.getHours() < 5) {
+                        d.setDate(d.getDate() - 1);
+                    }
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
@@ -1438,25 +1957,32 @@
 
                 // Check if already rated today
                 let alreadyRated = null;
-                const localRatedKey = `rated_${id}_${todayStr}`;
+                const localRatedKey = `rated_${sessionUser ? sessionUser.id : 'anon'}_${id}_${todayStr}`;
                 const localRatedVal = localStorage.getItem(localRatedKey);
                 if (localRatedVal) {
                     try {
                         alreadyRated = JSON.parse(localRatedVal);
                         console.log("[Rating] Found rating in localStorage for today:", alreadyRated);
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 if (!alreadyRated && _supabase && sessionUser) {
                     try {
-                        const todayStart = new Date();
-                        todayStart.setHours(0, 0, 0, 0);
+                        const parts = todayStr.split('-');
+                        const yearVal = parseInt(parts[0], 10);
+                        const monthVal = parseInt(parts[1], 10) - 1;
+                        const dayVal = parseInt(parts[2], 10);
+
+                        const todayStartISO = new Date(yearVal, monthVal, dayVal, 5, 0, 0, 0).toISOString();
+                        const todayEndISO = new Date(yearVal, monthVal, dayVal + 1, 4, 59, 59, 999).toISOString();
+
                         const { data: existingReview, error: reviewErr } = await _supabase
                             .from('teller_reviews')
                             .select('rating, feedback')
                             .eq('user_id', sessionUser.id)
                             .eq('teller_id', id)
-                            .gte('created_at', todayStart.toISOString())
+                            .gte('created_at', todayStartISO)
+                            .lte('created_at', todayEndISO)
                             .order('created_at', { ascending: false })
                             .limit(1)
                             .maybeSingle();
@@ -1471,37 +1997,24 @@
                     }
                 }
 
-                if (alreadyRated) {
-                    // Set rating stars and make read-only
-                    setTellerRating(alreadyRated.rating);
-                    document.getElementById('tmStars').style.pointerEvents = 'none';
 
-                    // Set feedback text and make read-only
-                    document.getElementById('tmFeedback').value = alreadyRated.feedback || '';
-                    document.getElementById('tmFeedback').disabled = true;
-
-                    // Update submit button to be disabled with message
-                    const submitBtn = document.querySelector('.teller-submit-btn');
-                    if (submitBtn) {
-                        submitBtn.innerHTML = 'คุณได้บันทึกคะแนนของวันนี้ไปแล้ว <i class="fa-solid fa-circle-check"></i>';
-                        submitBtn.disabled = true;
-                        submitBtn.classList.remove('ready');
-                    }
-                }
+                // Check if we want to bypass cache for developer testing (?nocache=true)
+                const urlParams = new URLSearchParams(window.location.search);
+                const bypassCache = urlParams.get('nocache') === 'true';
 
                 // Check Supabase first for today's prediction
                 let cachedText = null;
                 let foundInSupabase = false;
-                if (_supabase && sessionUser) {
+                if (_supabase && sessionUser && !bypassCache) {
                     try {
                         const { data: existing, error } = await _supabase
                             .from('daily_fortunes')
                             .select('prediction')
                             .eq('user_id', sessionUser.id)
-                            .eq('teller_id', id)
+                            .eq('teller_id', id + '_v5')
                             .eq('prediction_date', todayStr)
                             .maybeSingle();
-                        
+
                         if (error) {
                             console.error("[Fortune] Supabase query error:", error);
                         } else if (existing && existing.prediction) {
@@ -1517,44 +2030,39 @@
                 }
 
                 // If not found in Supabase, fall back to localStorage as backup
-                if (!cachedText) {
-                    const cacheKey = `fortune_${id}_${todayStr}`;
+                if (!cachedText && !bypassCache) {
+                    const cacheKey = `fortune_${sessionUser ? sessionUser.id : 'anon'}_${id}_v5_${todayStr}`;
                     cachedText = localStorage.getItem(cacheKey);
                     if (cachedText) {
                         console.log("[Fortune] Found prediction in localStorage fallback.");
                     }
                 }
 
+                // Defensive check: If cached text is too short (corrupted/incomplete), ignore it to self-heal
+                if (cachedText && cachedText.length < 100) {
+                    console.warn("[Fortune] Cached prediction is suspiciously short/corrupted. Bypassing cache to fetch fresh complete prediction.");
+                    cachedText = null;
+                }
+
                 if (cachedText) {
-                    // Show cached prediction instantly (no API call)
+                    // Show cached prediction instantly
                     const contentEl = document.getElementById('tmContent');
-                    contentEl.innerHTML = '';
-                    let i = 0;
-                    function typeWriterCached() {
-                        if (i < cachedText.length) {
-                            contentEl.innerHTML += cachedText.charAt(i);
-                            i++;
-                            setTimeout(typeWriterCached, 12);
-                        } else {
-                            document.getElementById('tmRatingBox').style.display = 'block';
-                            document.getElementById('tmRatingBox').classList.add('fade-in');
-                        }
-                    }
-                    typeWriterCached();
+                    contentEl.textContent = cachedText;
+                    checkAndShowRating(id, todayStr, sessionUser ? sessionUser.id : 'anon', cachedText, alreadyRated);
 
                     // SMART BACKFILL: If found in localStorage but NOT in Supabase, backfill it to Supabase now
                     if (!foundInSupabase && _supabase && sessionUser) {
                         console.log("[Fortune] Backfilling localStorage prediction to Supabase...");
                         _supabase.from('daily_fortunes').insert({
                             user_id: sessionUser.id,
-                            teller_id: id,
+                            teller_id: id + '_v5',
                             prediction: cachedText,
                             prediction_date: todayStr
                         }).then(({ error }) => {
                             if (error) {
                                 console.error("[Fortune] Supabase backfill insert error:", error);
                             } else {
-                                console.log("[Fortune] Supabase backfill success!");
+                                // console.log("[Fortune] Supabase backfill success!");
                             }
                         });
                     }
@@ -1564,14 +2072,14 @@
                 console.log("[Fortune] Fetching new prediction from AI backend...");
                 const ctx = typeof window.getAIHealthContext === 'function' ? await window.getAIHealthContext(_supabase, 3) : '';
                 const uName = document.getElementById('usernameDisplay').textContent;
-                
+
                 const res = await fetch('/api/fortune-teller', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ teller_id: id, username: uName, history_context: ctx, birth_date: dob })
                 });
                 const data = await res.json();
-                
+
                 if (data.status === 'success') {
                     const text = data.prediction;
 
@@ -1581,7 +2089,7 @@
                             console.log("[Fortune] Saving new prediction to Supabase...");
                             const { error: dbSaveErr } = await _supabase.from('daily_fortunes').insert({
                                 user_id: sessionUser.id,
-                                teller_id: id,
+                                teller_id: id + '_v5',
                                 prediction: text,
                                 prediction_date: todayStr
                             });
@@ -1596,32 +2104,49 @@
                     }
 
                     // Also cache this prediction in localStorage for fast local access
-                    const cacheKey = `fortune_${id}_${todayStr}`;
+                    const cacheKey = `fortune_${sessionUser ? sessionUser.id : 'anon'}_${id}_v5_${todayStr}`;
                     localStorage.setItem(cacheKey, text);
 
                     const contentEl = document.getElementById('tmContent');
-                    contentEl.innerHTML = '';
-                    let i = 0;
-                    function typeWriter() {
-                        if (i < text.length) {
-                            contentEl.innerHTML += text.charAt(i);
-                            i++;
-                            setTimeout(typeWriter, 15);
-                        } else {
-                            document.getElementById('tmRatingBox').style.display = 'block';
-                            document.getElementById('tmRatingBox').classList.add('fade-in');
-                        }
-                    }
-                    typeWriter();
+                    contentEl.textContent = text;
+                    checkAndShowRating(id, todayStr, sessionUser ? sessionUser.id : 'anon', text, alreadyRated);
                 } else {
                     document.getElementById('tmContent').textContent = 'ไม่สามารถดึงคำทำนายได้ในขณะนี้';
-                    document.getElementById('tmRatingBox').style.display = 'block';
+                    checkAndShowRating(id, todayStr, sessionUser ? sessionUser.id : 'anon', '', alreadyRated);
                 }
             } catch (e) {
                 console.error("[Fortune] Connection or runtime error:", e);
                 document.getElementById('tmContent').textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
-                document.getElementById('tmRatingBox').style.display = 'block';
+                checkAndShowRating(id, todayStr, sessionUser ? sessionUser.id : 'anon', '', alreadyRated);
             }
+        }
+
+        function checkAndShowRating(id, todayStr, userId, predictionText, todayReview) {
+            const localRatedPredKey = `rated_prediction_${userId}_${id}_${todayStr}`;
+            const ratedPrediction = localStorage.getItem(localRatedPredKey);
+            const submitBtn = document.querySelector('.teller-submit-btn');
+
+            if (todayReview && ratedPrediction === predictionText) {
+                setTellerRating(todayReview.rating);
+                document.getElementById('tmFeedback').value = todayReview.feedback || '';
+                document.getElementById('tmFeedback').disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'บันทึกคะแนนใหม่ <i class="fa-regular fa-paper-plane"></i>';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.add('ready');
+                }
+            } else {
+                setTellerRating(0);
+                document.getElementById('tmFeedback').value = '';
+                document.getElementById('tmFeedback').disabled = false;
+                if (submitBtn) {
+                    submitBtn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('ready');
+                }
+            }
+            document.getElementById('tmRatingBox').style.display = 'block';
+            document.getElementById('tmRatingBox').classList.add('fade-in');
         }
 
         function closeTellerModal() {
@@ -1662,61 +2187,85 @@
                 if (sessionError) throw new Error('Session error: ' + sessionError.message);
                 if (!session || !session.user) throw new Error('ไม่ได้เข้าสู่ระบบ กรุณา login ใหม่');
 
-                // Double check if already rated today
                 const todayStr = (() => {
                     const d = new Date();
+                    if (d.getHours() < 5) {
+                        d.setDate(d.getDate() - 1);
+                    }
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, '0');
                     const day = String(d.getDate()).padStart(2, '0');
                     return `${year}-${month}-${day}`;
                 })();
-                const localRatedKey = `rated_${currentTellerId}_${todayStr}`;
-                if (localStorage.getItem(localRatedKey)) {
-                    throw new Error('คุณได้บันทึกคะแนนของวันนี้ไปแล้ว');
-                }
+                const localRatedKey = `rated_${session.user.id}_${currentTellerId}_${todayStr}`;
 
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
+                const parts = todayStr.split('-');
+                const yearVal = parseInt(parts[0], 10);
+                const monthVal = parseInt(parts[1], 10) - 1;
+                const dayVal = parseInt(parts[2], 10);
+
+                const todayStartISO = new Date(yearVal, monthVal, dayVal, 5, 0, 0, 0).toISOString();
+                const todayEndISO = new Date(yearVal, monthVal, dayVal + 1, 4, 59, 59, 999).toISOString();
                 const { data: existingReview, error: reviewErr } = await _supabase
                     .from('teller_reviews')
                     .select('id')
                     .eq('user_id', session.user.id)
                     .eq('teller_id', currentTellerId)
-                    .gte('created_at', todayStart.toISOString())
+                    .gte('created_at', todayStartISO)
+                    .lte('created_at', todayEndISO)
                     .limit(1)
                     .maybeSingle();
 
                 if (existingReview) {
-                    localStorage.setItem(localRatedKey, JSON.stringify({ rating: currentTellerRating, feedback: feedback }));
-                    throw new Error('คุณได้บันทึกคะแนนของวันนี้ไปแล้ว');
-                }
+                    console.log('Updating review:', {
+                        id: existingReview.id,
+                        rating: currentTellerRating,
+                        feedback: feedback || null
+                    });
+                    const { error } = await _supabase
+                        .from('teller_reviews')
+                        .update({
+                            rating: currentTellerRating,
+                            feedback: feedback || null
+                        })
+                        .eq('id', existingReview.id);
 
-                console.log('Inserting review:', {
-                    user_id: session.user.id,
-                    teller_id: currentTellerId,
-                    rating: currentTellerRating,
-                    feedback: feedback || null
-                });
+                    if (error) {
+                        console.error('Update error:', error);
+                        throw new Error(error.message);
+                    }
+                } else {
+                    console.log('Inserting new review:', {
+                        user_id: session.user.id,
+                        teller_id: currentTellerId,
+                        rating: currentTellerRating,
+                        feedback: feedback || null
+                    });
 
-                const { error } = await _supabase.from('teller_reviews').insert({
-                    user_id: session.user.id,
-                    teller_id: currentTellerId,
-                    rating: currentTellerRating,
-                    feedback: feedback || null
-                });
+                    const { error } = await _supabase.from('teller_reviews').insert({
+                        user_id: session.user.id,
+                        teller_id: currentTellerId,
+                        rating: currentTellerRating,
+                        feedback: feedback || null
+                    });
 
-                if (error) {
-                    console.error('Insert error:', error);
-                    throw new Error(error.message);
+                    if (error) {
+                        console.error('Insert error:', error);
+                        throw new Error(error.message);
+                    }
                 }
 
                 console.log('Review saved successfully!');
-                
+
                 // Cache the saved rating and feedback
                 localStorage.setItem(localRatedKey, JSON.stringify({
                     rating: currentTellerRating,
                     feedback: feedback
                 }));
+
+                // Cache the exact prediction text that was rated
+                const currentPrediction = document.getElementById('tmContent').textContent;
+                localStorage.setItem(`rated_prediction_${session.user.id}_${currentTellerId}_${todayStr}`, currentPrediction);
 
                 await loadTellerRatings();
                 closeTellerModal();
@@ -1729,20 +2278,13 @@
                 btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${e.message}`;
                 btn.style.background = '#ef4444';
                 btn.disabled = false;
-                
-                if (e.message !== 'คุณได้บันทึกคะแนนของวันนี้ไปแล้ว') {
-                    // Reset button after 4 seconds if it's not the already-rated error
-                    setTimeout(() => {
-                        btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
-                        btn.style.background = '';
-                        btn.disabled = false;
-                    }, 4000);
-                } else {
-                    // For already rated, lock inputs and button
-                    btn.disabled = true;
-                    document.getElementById('tmStars').style.pointerEvents = 'none';
-                    document.getElementById('tmFeedback').disabled = true;
-                }
+
+                // Reset button after 4 seconds
+                setTimeout(() => {
+                    btn.innerHTML = 'บันทึกและน้อมรับ <i class="fa-regular fa-paper-plane"></i>';
+                    btn.style.background = '';
+                    btn.disabled = false;
+                }, 4000);
             }
         }
 
@@ -1753,7 +2295,7 @@
                 const { data, error } = await _supabase
                     .from('teller_reviews')
                     .select('teller_id, rating');
-                
+
                 if (error || !data) return;
 
                 // Aggregate avg per teller
@@ -1766,7 +2308,20 @@
                 });
 
                 const tellerIds = ['love', 'finance', 'work', 'health', 'overall'];
+
+                // Remove all existing teller badges first to prevent duplication
+                document.querySelectorAll('.teller-item .teller-badge').forEach(el => el.remove());
+
+                let maxReviewsTid = null;
+                let maxCount = 0;
+
                 tellerIds.forEach(tid => {
+                    const cnt = counts[tid] || 0;
+                    if (cnt > maxCount) {
+                        maxCount = cnt;
+                        maxReviewsTid = tid;
+                    }
+
                     const el = document.getElementById(`rating-${tid}`);
                     if (!el) return;
                     const span = el.querySelector('span');
@@ -1777,6 +2332,17 @@
                         span.textContent = '-';
                     }
                 });
+
+                // Dynamically insert the Popular badge on the most reviewed teller
+                if (maxReviewsTid && maxCount > 0) {
+                    const popularEl = document.querySelector(`.teller-item[data-teller-id="${maxReviewsTid}"]`);
+                    if (popularEl) {
+                        const badge = document.createElement('div');
+                        badge.className = 'teller-badge';
+                        badge.textContent = 'ยอดนิยม';
+                        popularEl.insertBefore(badge, popularEl.firstChild);
+                    }
+                }
             } catch (e) {
                 console.warn('Could not load teller ratings:', e);
             }

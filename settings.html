@@ -251,13 +251,19 @@
 
                 <div class="input-group" style="margin-bottom:1rem;">
                     <i class="fa-solid fa-user input-icon"></i>
-                    <input type="text" id="usernameInput" placeholder="ชื่อที่แสดง (Display Name)">
+                    <input type="text" id="usernameInput" placeholder="ชื่อเรียกขานในระบบ">
                 </div>
 
                 <div class="input-group" style="margin-bottom:1rem;">
                     <i class="fa-solid fa-envelope input-icon"></i>
                     <input type="email" id="emailInput" placeholder="อีเมลใหม่">
                 </div>
+
+                <div class="input-group" style="margin-bottom:0.5rem;">
+                    <i class="fa-solid fa-calendar-days input-icon"></i>
+                    <input type="date" id="dobInput" style="color: #1e293b;" placeholder="วัน/เดือน/ปี เกิด">
+                </div>
+                <p style="font-size: 0.6875rem; color: #ef4444; margin: 0 0 1rem 0.25rem; font-weight: 600; display: flex; align-items: center; gap: 4px;"><i class="fa-solid fa-circle-exclamation"></i>ผู้ใช้งานต้องมีอายุ 13 ปีขึ้นไปเท่านั้น</p>
 
                 <button id="updateProfileBtn" class="btn-primary"
                     style="margin-top:0.5rem; font-size:0.9rem; padding:0.8rem;">
@@ -272,17 +278,17 @@
                     <div class="theme-mini-card" onclick="selectTheme('youth')" id="theme-btn-youth">
                         <div class="theme-color-preview" style="background:linear-gradient(135deg, #f472b6, #ec4899);">
                         </div>
-                        <div style="font-size:0.8rem;">วัยรุ่น</div>
+                        <div style="font-size:0.68rem; font-weight:600; line-height:1.2; color:var(--text-color);">สดใส มีชีวิตชีวา</div>
                     </div>
                     <div class="theme-mini-card" onclick="selectTheme('working')" id="theme-btn-working">
                         <div class="theme-color-preview" style="background:linear-gradient(135deg, #6366f1, #3b82f6);">
                         </div>
-                        <div style="font-size:0.8rem;">ทำงาน</div>
+                        <div style="font-size:0.68rem; font-weight:600; line-height:1.2; color:var(--text-color);">เรียบหรู มืออาชีพ</div>
                     </div>
                     <div class="theme-mini-card" onclick="selectTheme('elder')" id="theme-btn-elder">
                         <div class="theme-color-preview" style="background:linear-gradient(135deg, #10b981, #059669);">
                         </div>
-                        <div style="font-size:0.8rem;">สูงอายุ</div>
+                        <div style="font-size:0.68rem; font-weight:600; line-height:1.2; color:var(--text-color);">ชัดเจน สบายตา</div>
                     </div>
                 </div>
                 <button id="saveThemeBtn" class="btn-primary"

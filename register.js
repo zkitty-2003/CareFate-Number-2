@@ -36,14 +36,14 @@ function initializeRegisterPage() {
 
     // Date Logic
     const dobInput = document.getElementById('dob');
-    const today = (() => {
+    const maxDob = (() => {
         const d = new Date();
-        const year = d.getFullYear();
+        const year = d.getFullYear() - 13;
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
-    })(); // Simple YYYY-MM-DD
-    dobInput.setAttribute('max', today);
+    })(); // 13 years ago today
+    dobInput.setAttribute('max', maxDob);
 
     // Toggle Password Visibility Logic
     const setupToggle = (btnId, inputId) => {
@@ -61,6 +61,7 @@ function initializeRegisterPage() {
     };
 
     setupToggle('togglePasswordBtn', 'password');
+    setupToggle('toggleConfirmPasswordBtn', 'confirmPassword');
 
     // --- Dynamic Password Validation ---
     const passwordInput = document.getElementById('password');
@@ -76,18 +77,18 @@ function initializeRegisterPage() {
             icon.className = 'fa-solid fa-circle-check';
             icon.style.color = 'var(--success)';
         } else {
-            el.style.color = '#cbd5e1';
+            el.style.color = '#1e293b'; // สีเข้มขึ้น/สีดำตามที่ผู้ใช้ร้องขอ เพื่อให้อ่านชัดเจน
             icon.className = 'fa-solid fa-circle-info';
-            icon.style.color = '#94a3b8';
+            icon.style.color = '#64748b'; // ปรับสีไอคอนให้ออกเทาเข้ม ชัดเจนขึ้น
         }
     };
 
     const validateRules = (pass) => {
         return {
             length: pass.length >= 7 && pass.length <= 20,
-            english: /^[a-zA-Z0-9]*$/.test(pass), // Simplified: will be refined by complexity
-            complexity: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/.test(pass),
-            noSpecial: !/[^a-zA-Z0-9]/.test(pass)
+            english: /[a-z]/.test(pass) && /[A-Z]/.test(pass),
+            number: /\d/.test(pass),
+            noSpecial: /^[a-zA-Z0-9]+$/.test(pass)
         };
     };
 
@@ -96,16 +97,31 @@ function initializeRegisterPage() {
         const rules = validateRules(pass);
 
         updateReqUI(reqLength, rules.length);
-        updateReqUI(reqEnglish, /^[a-zA-Z0-9]*$/.test(pass) && pass.length > 0);
-        updateReqUI(reqComplexity, rules.complexity);
-        updateReqUI(reqSpecial, rules.noSpecial && pass.length > 0);
+        updateReqUI(reqEnglish, rules.english);
+        updateReqUI(reqComplexity, rules.number);
+        updateReqUI(reqSpecial, rules.noSpecial);
     });
+
+    // เรียกอัปเดต UI ทันทีเมื่อโหลดหน้า เพื่อให้สีตัวหนังสือดำชัดเจนและไอคอนถูกต้องตามสภาพเริ่มต้น
+    updateReqUI(reqLength, false);
+    updateReqUI(reqEnglish, false);
+    updateReqUI(reqComplexity, false);
+    updateReqUI(reqSpecial, false);
 
     // Validation
     const validateDate = (input) => {
-        if (input.value > today) {
-            showInAppNotification('ข้อผิดพลาด', "วันเกิดไม่สามารถอยู่ในอนาคตได้");
-            input.value = today;
+        if (!input.value) return;
+        const birthDate = new Date(input.value);
+        const todayDate = new Date();
+        let age = todayDate.getFullYear() - birthDate.getFullYear();
+        const m = todayDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && todayDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        if (age < 13) {
+            showInAppNotification('ข้อผิดพลาด', "ผู้สมัครต้องมีอายุอย่างน้อย 13 ปีขึ้นไป");
+            input.value = maxDob;
         }
     };
     dobInput.addEventListener('change', (e) => validateDate(e.target));
@@ -119,10 +135,19 @@ function initializeRegisterPage() {
         const dob = document.getElementById('dob').value;
         const email = document.getElementById('email').value.trim();
         const password = passwordInput.value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
 
-        // Validation 1: Date
-        if (dob > today) {
-            showInAppNotification('ข้อผิดพลาด', "วันเกิดไม่สามารถอยู่ในอนาคตได้");
+        // Validation 1: Date & Age (Strict 13+)
+        const birthDate = new Date(dob);
+        const todayDate = new Date();
+        let age = todayDate.getFullYear() - birthDate.getFullYear();
+        const m = todayDate.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && todayDate.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        if (age < 13) {
+            showInAppNotification('ข้อผิดพลาด', "ผู้สมัครต้องมีอายุอย่างน้อย 13 ปีขึ้นไป");
             return;
         }
 
@@ -132,10 +157,10 @@ function initializeRegisterPage() {
 
         if (!rules.length) {
             errorMsg = "รหัสผ่านต้องมีความยาว 7-20 ตัวอักษร";
-        } else if (!/[a-zA-Z]/.test(password)) {
-            errorMsg = "รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษ";
-        } else if (!rules.complexity) {
-            errorMsg = "รหัสผ่านต้องประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ และตัวพิมพ์เล็ก";
+        } else if (!rules.english) {
+            errorMsg = "รหัสผ่านต้องมีตัวอักษรภาษาอังกฤษ (ตัวเล็กและตัวใหญ่)";
+        } else if (!rules.number) {
+            errorMsg = "รหัสผ่านต้องมีตัวเลขประกอบด้วย";
         } else if (!rules.noSpecial) {
             errorMsg = "รหัสผ่านห้ามมีอักขระพิเศษ (@ # $ %)";
         }
@@ -144,8 +169,8 @@ function initializeRegisterPage() {
             showInAppNotification('รหัสผ่านไม่ปลอดภัย', errorMsg);
             // Highlight the specific failing requirement in red temporarily
             const failId = !rules.length ? 'req-length' :
-                (!/[a-zA-Z]/.test(password) ? 'req-english' :
-                    (!rules.complexity ? 'req-complexity' : 'req-special'));
+                (!rules.english ? 'req-english' :
+                    (!rules.number ? 'req-complexity' : 'req-special'));
             const failEl = document.getElementById(failId);
             if (failEl) {
                 failEl.style.color = 'var(--danger)';
@@ -155,13 +180,13 @@ function initializeRegisterPage() {
             return;
         }
 
+        // Validation 3: Password Confirmation Match
+        if (password !== confirmPassword) {
+            showInAppNotification('ข้อผิดพลาด', 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+            return;
+        }
 
-
-        // Calculate Age
-        const birthDate = new Date(dob);
-        const ageDifMs = Date.now() - birthDate.getTime();
-        const ageDate = new Date(ageDifMs);
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        // Precise age already calculated and validated above as `age`
 
         // UI Feedback
         const btn = form.querySelector('.btn-primary');
@@ -171,6 +196,30 @@ function initializeRegisterPage() {
 
         try {
             const _supabase = getSupabase();
+
+            // Check if the email already exists in the system and if it is verified/confirmed
+            try {
+                const { data: checkData, error: checkError } = await _supabase.rpc('check_email_verified', { input_email: email });
+                if (checkError) {
+                    console.warn("check_email_verified failed:", checkError);
+                } else if (checkData) {
+                    if (checkData.exists) {
+                        if (!checkData.verified) {
+                            showInAppNotification('อีเมลเคยสมัครแล้วแต่ยังไม่ได้ยืนยัน', 'กรุณาเช็กในกล่อง Inbox หรืออีเมลขยะเพื่อกดยืนยันตัวตนก่อนเข้าใช้งาน หรือลองเข้าสู่ระบบด้วยอีเมลและรหัสผ่านเพื่อขอรับลิงก์ยืนยันตัวตนใหม่โดยอัตโนมัติครับ 📬');
+                            btn.innerHTML = originalContent;
+                            btn.disabled = false;
+                            return;
+                        } else {
+                            showInAppNotification('อีเมลถูกใช้งานแล้ว', 'อีเมลนี้ได้ลงทะเบียนและยืนยันตัวตนเสร็จเรียบร้อยแล้ว หากเป็นบัญชีของคุณ สามารถกดเข้าสู่ระบบได้ทันทีครับ');
+                            btn.innerHTML = originalContent;
+                            btn.disabled = false;
+                            return;
+                        }
+                    }
+                }
+            } catch (checkEx) {
+                console.warn("Exception during email verification check:", checkEx);
+            }
 
             // Sign Up with Metadata
             const { data: authData, error: authError } = await _supabase.auth.signUp({
@@ -191,13 +240,37 @@ function initializeRegisterPage() {
             // Supabase returns empty identities when email is already registered
             // (it hides this for security, but we can detect it this way)
             if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-                showInAppNotification('อีเมลซ้ำ', 'อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น');
+                showInAppNotification('อีเมลถูกใช้งานแล้ว', 'หากเป็นอีเมลของคุณแต่ยังไม่ได้กดยืนยันตัวตน กรุณาตรวจสอบกล่องข้อความหรือกล่องจดหมายขยะเพื่อกดยืนยันก่อนเข้าใช้งานครับ');
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
                 return;
             }
 
             console.log("Signup success:", authData);
+
+            // ตั้งค่า Cooldown ป้องกันสแปมสำหรับผู้สมัครใหม่ครั้งแรก (ต้องรอ 5 นาทีหากต้องการกดล็อกอินขอลิงก์ใหม่)
+            try {
+                localStorage.setItem('carefate_resend_count', '1');
+                localStorage.setItem('carefate_next_resend_allowed_time', (Date.now() + 5 * 60 * 1000).toString());
+            } catch (e) {
+                console.warn("localStorage set failed:", e);
+            }
+
+            // บันทึกโปรไฟล์ลงในตาราง profiles ทันทีแบบ Best-effort (กรณีที่สิทธิ์ RLS หรือการตั้งค่าเปิดให้บันทึกได้เลย)
+            if (authData.user) {
+                try {
+                    await _supabase.from('profiles').upsert({
+                        id: authData.user.id,
+                        username: username,
+                        dob: dob,
+                        resend_count: 1,
+                        next_resend_allowed_time: Date.now() + 5 * 60 * 1000
+                    });
+                    console.log("Profile created successfully during registration with cooldown.");
+                } catch (pe) {
+                    console.warn("Failed to create profile row immediately:", pe);
+                }
+            }
 
             // Hide Form & Show Success Message
             const mainContainer = document.querySelector('.login-screen');
@@ -210,8 +283,9 @@ function initializeRegisterPage() {
                     <p class="tagline" style="margin-top: 1rem; color: #475569; font-size: 1rem; line-height: 1.5;">
                         เราได้ส่งลิงก์ยืนยันไปที่ <br><strong style="color: #6366f1;">${email}</strong>
                     </p>
-                    <p style="margin-top: 1.5rem; color: #64748b; font-size: 0.875rem; background: #f8fafc; padding: 1rem; border-radius: 12px; border: 1px solid #f1f5f9;">
-                        คลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชีของคุณ
+                    <p style="margin-top: 1.5rem; color: #475569; font-size: 0.825rem; background: #f8fafc; padding: 1.2rem; border-radius: 16px; border: 1px solid #f1f5f9; text-align: left; line-height: 1.6;">
+                        • กรุณาคลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชีของคุณ **ภายใน 24 ชั่วโมง**<br>
+                        • หากไม่ได้ยืนยันภายใน 24 ชม. ลิงก์จะหมดอายุ คุณสามารถกรอก **อีเมลและรหัสผ่าน** นี้เข้าสู่ระบบได้เลย เพื่อให้ระบบส่งลิงก์ยืนยันตัวตนใหม่ให้โดยอัตโนมัติ 💡
                     </p>
                     <a href="index.html" class="btn-primary" style="margin-top: 2rem; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #0f172a; box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3);">
                         กลับสู่หน้าเข้าสู่ระบบ
@@ -390,8 +464,11 @@ async function initializeThemePage() {
                 data: { theme: selectedThemeId, theme_selected: true }
             });
 
-            // Also try update profiles table if possible (UPSERT)
-            await _supabase.from('profiles').upsert({ id: user.id, theme: selectedThemeId });
+            // Also try update profiles table if possible (UPDATE to preserve other columns like dob)
+            await _supabase
+                .from('profiles')
+                .update({ theme: selectedThemeId })
+                .eq('id', user.id);
 
             // Redirect to Feature Selection
             window.location.href = 'feature-selection.html';
@@ -428,12 +505,20 @@ async function initializeFeaturePage() {
     const saveBtn = document.getElementById('saveFeaturesBtn');
     const ageTagline = document.getElementById('ageTagline');
 
-    // Get Age
+    // Get Age and Theme
     let age = 25; // Default
     if (user.user_metadata?.age) age = user.user_metadata.age;
+    
+    let theme = user.user_metadata?.theme || 'working';
 
     if (ageTagline) {
-        ageTagline.innerHTML = `แนะนำสำหรับวัย <strong>${age} ปี</strong>`;
+        if (theme === 'elder') {
+            ageTagline.innerHTML = `แนะนำสำหรับวัย <strong>60 ปีขึ้นไป (ธีมชัดเจน สบายตา)</strong>`;
+        } else if (theme === 'working') {
+            ageTagline.innerHTML = `แนะนำสำหรับวัย <strong>20 - 59 ปี (ธีมเรียบหรู มืออาชีพ)</strong>`;
+        } else {
+            ageTagline.innerHTML = `แนะนำสำหรับวัย <strong>ต่ำกว่า 20 ปี (ธีมสดใส มีชีวิตชีวา)</strong>`;
+        }
     }
 
     // Define Features & Logic
@@ -442,19 +527,19 @@ async function initializeFeaturePage() {
             id: 'goals',
             title: 'เป้าหมาย',
             icon: 'fa-bullseye',
-            recommend: (a) => a >= 6 && a <= 59
+            recommend: (a, t) => true // Goals are good for everyone!
         },
         {
             id: 'exercise',
-            title: 'ออกกำลัง',
+            title: 'ออกกำลังกาย',
             icon: 'fa-dumbbell',
-            recommend: (a) => a >= 6 && a <= 59
+            recommend: (a, t) => true // Exercise is good for everyone!
         },
         {
             id: 'period',
             title: 'รอบเดือน',
             icon: 'fa-droplet',
-            recommend: (a) => a >= 12 && a <= 50
+            recommend: (a, t) => t === 'youth' || (t === 'working' && a >= 12 && a <= 50)
         }
     ];
 
@@ -508,7 +593,7 @@ async function initializeFeaturePage() {
 
     // Apply Logic
     features.forEach(feat => {
-        const isRecommended = feat.recommend(age);
+        const isRecommended = feat.recommend(age, theme);
 
         if (useSaved) {
             // Restore user choice
@@ -540,6 +625,32 @@ async function initializeFeaturePage() {
         grid.appendChild(card);
     });
 
+    function updateWarningBanner() {
+        const banner = document.getElementById('feature-warning-banner');
+        if (!banner) return;
+        
+        const count = selectedFeatures.size;
+        if (count === 0) {
+            banner.style.background = 'rgba(239, 68, 68, 0.1)';
+            banner.style.borderColor = 'rgba(239, 68, 68, 0.2)';
+            banner.style.color = '#b91c1c';
+            banner.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>กรุณาเลือกฟีเจอร์อย่างน้อย 1 ฟีเจอร์เพื่อเสร็จสิ้นการตั้งค่า (จำเป็น)</span>`;
+            
+            // Highlight save button as disabled-looking
+            saveBtn.style.opacity = '0.6';
+            saveBtn.style.cursor = 'not-allowed';
+        } else {
+            banner.style.background = 'rgba(16, 185, 129, 0.1)';
+            banner.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+            banner.style.color = '#047857';
+            banner.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>เลือกแล้ว ${count} ฟีเจอร์ (พร้อมใช้งาน)</span>`;
+            
+            // Restore save button style
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+        }
+    }
+
     function toggleFeature(cardDom, id) {
         if (selectedFeatures.has(id)) {
             selectedFeatures.delete(id);
@@ -548,12 +659,35 @@ async function initializeFeaturePage() {
             selectedFeatures.add(id);
             cardDom.classList.add('selected');
         }
+        updateWarningBanner();
+    }
+
+    // Initialize Warning Banner on startup
+    updateWarningBanner();
+
+    // Notify immediately if 0 features are selected on load, or if redirected from dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('warning') === 'select_at_least_one' || selectedFeatures.size === 0) {
+        setTimeout(() => {
+            if (typeof showInAppNotification === 'function') {
+                showInAppNotification('ระบบตั้งค่า', 'กรุณาเลือกฟีเจอร์อย่างน้อย 1 ฟีเจอร์เพื่อเริ่มต้นการใช้งาน');
+            }
+        }, 300);
     }
 
     // Save Logic
     saveBtn.addEventListener('click', async () => {
         const btn = saveBtn;
         const originalContent = btn.innerHTML;
+
+        if (selectedFeatures.size === 0) {
+            alert('กรุณาเลือกฟีเจอร์อย่างน้อย 1 ฟีเจอร์เพื่อเสร็จสิ้นการตั้งค่า');
+            if (typeof showInAppNotification === 'function') {
+                showInAppNotification('กรุณาเลือกฟีเจอร์', 'กรุณาเลือกฟีเจอร์อย่างน้อย 1 ฟีเจอร์เพื่อเสร็จสิ้นการตั้งค่า');
+            }
+            return;
+        }
+
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึก...';
         btn.disabled = true;
 
@@ -568,15 +702,13 @@ async function initializeFeaturePage() {
                 }
             });
 
-            // Update Profile Table (UPSERT for robustness)
-            // upsert will insert if it doesn't exist, or update if it does.
-            await _supabase.from('profiles').upsert({
-                id: user.id,
-                features: featuresArray
-            });
+            // Update Profile Table (UPDATE to preserve other columns like dob)
+            await _supabase
+                .from('profiles')
+                .update({ features: featuresArray })
+                .eq('id', user.id);
 
             // Success redirect to dashboard
-            // alert('ตั้งค่าสำเร็จ! เริ่มต้นใช้งาน CareFate'); // Redirecting anyway
             window.location.href = 'dashboard.html';
 
         } catch (error) {

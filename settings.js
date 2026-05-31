@@ -14,7 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.location.href = 'index.html';
         return;
     }
-    currentUser = session.user;
+    
+    // Fetch fresh user object to ensure up-to-date metadata
+    try {
+        const { data: { user } } = await _supabase.auth.getUser();
+        currentUser = user || session.user;
+    } catch (e) {
+        currentUser = session.user;
+    }
 
     // Load Profile
     await loadUserProfile();
@@ -42,11 +49,24 @@ async function loadUserProfile() {
 
         const username = currentProfile.username || currentUser.user_metadata.username || '';
         const theme = currentProfile.theme || currentUser.user_metadata.theme || 'working';
+        const dob = currentProfile.dob || currentUser.user_metadata.dob || '';
         const avatarUrl = currentProfile.avatar_url; // Assuming this column exists or will be added
 
         // UI Populate
         document.getElementById('usernameInput').value = username;
         document.getElementById('emailInput').value = currentUser.email;
+        if (document.getElementById('dobInput')) {
+            document.getElementById('dobInput').value = dob;
+            // Set max date for dobInput dynamically to 13 years ago today
+            const maxDob = (() => {
+                const d = new Date();
+                const year = d.getFullYear() - 13;
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            })();
+            document.getElementById('dobInput').setAttribute('max', maxDob);
+        }
 
         // Theme UI
         applyTheme(theme);
@@ -94,12 +114,11 @@ async function saveTheme() {
     btn.disabled = true;
 
     try {
-        // 1. Update Profile (Priority)
-        const { error } = await _supabase.from('profiles').upsert({
-            id: currentUser.id,
-            theme: selectedThemeToSave
-            // updated_at removed due to schema mismatch
-        });
+        // 1. Update Profile (Priority - using update to preserve other columns)
+        const { error } = await _supabase
+            .from('profiles')
+            .update({ theme: selectedThemeToSave })
+            .eq('id', currentUser.id);
 
         if (error) throw error;
 
@@ -180,11 +199,11 @@ async function uploadAvatar(e) {
                     .from('avatars')
                     .getPublicUrl(filePath);
 
-                // Update Profile with URL
-                await _supabase.from('profiles').upsert({
-                    id: currentUser.id,
-                    avatar_url: publicUrl
-                });
+                // Update Profile with URL (using update to preserve other columns)
+                await _supabase
+                    .from('profiles')
+                    .update({ avatar_url: publicUrl })
+                    .eq('id', currentUser.id);
                 showInAppNotification('สำเร็จ', 'อัปโหลดรูปโปรไฟล์เรียบร้อย');
             }
 
@@ -213,7 +232,7 @@ async function saveAvatarToLocal(base64) {
     }
 }
 
-// 3. Update Profile (Name & Email)
+// 3. Update Profile (Name, Email & Birthday)
 async function updateProfile() {
     const btn = document.getElementById('updateProfileBtn');
     const originalText = btn.innerHTML;
@@ -222,16 +241,49 @@ async function updateProfile() {
 
     const newName = document.getElementById('usernameInput').value.trim();
     const newEmail = document.getElementById('emailInput').value.trim();
+    const newDob = document.getElementById('dobInput') ? document.getElementById('dobInput').value : '';
 
     try {
-        // Update Name
-        if (newName) {
-            await _supabase.from('profiles').upsert({
-                id: currentUser.id,
-                username: newName
-            });
-            // Update Metadata as fallback
-            await _supabase.auth.updateUser({ data: { username: newName } });
+        // Update Name & Birthday
+        if (newName || newDob) {
+            const updates = {};
+            if (newName) updates.username = newName;
+            if (newDob) {
+                // Precise age calculation
+                const birthDate = new Date(newDob);
+                const todayDate = new Date();
+                let age = todayDate.getFullYear() - birthDate.getFullYear();
+                const m = todayDate.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && todayDate.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 13) {
+                    showInAppNotification('ข้อผิดพลาด', 'ผู้ใช้งานต้องมีอายุ 13 ปีขึ้นไป');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                updates.dob = newDob;
+                updates.age = age;
+            }
+
+            const profileUpdates = {};
+            if (newName) profileUpdates.username = newName;
+            if (newDob) profileUpdates.dob = newDob;
+            
+            if (Object.keys(profileUpdates).length > 0) {
+                const { error: profErr } = await _supabase
+                    .from('profiles')
+                    .update(profileUpdates)
+                    .eq('id', currentUser.id);
+                if (profErr) throw profErr;
+            }
+            
+            // Update Metadata
+            const { error: metaErr } = await _supabase.auth.updateUser({ data: updates });
+            if (metaErr) throw metaErr;
         }
 
         // Update Email (if changed)

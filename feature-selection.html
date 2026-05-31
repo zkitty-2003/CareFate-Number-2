@@ -296,6 +296,11 @@
                     สามารถเลือกได้มากกว่า 1 ข้อ (เลือกภายหลังได้)
                 </p>
 
+                <div id="feature-warning-banner" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 16px; font-size: 0.85rem; color: #b91c1c; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>กรุณาเลือกฟีเจอร์อย่างน้อย 1 ฟีเจอร์เพื่อเสร็จสิ้นการตั้งค่า (จำเป็น)</span>
+                </div>
+
                 <div class="feature-grid" id="featureGrid">
                     <!-- Features will be injected here by JS -->
                 </div>
@@ -314,7 +319,8 @@
 
     <div id="notification-area"></div>
 
-    <script src="register.js"></script>
+    <script src="notifications.js?v=8"></script>
+    <script src="register.js?v=16"></script>
     <script>
         // Real-time Status Bar Clock
         function updateStatusBarTime() {

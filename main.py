@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 # Load environment variables (.env overrides OS-level env vars)
 load_dotenv(override=True)
 
+from fortune_data import get_base_fortune
+
 app = FastAPI()
 
 # Allow CORS
@@ -26,6 +28,35 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 @app.get("/api/health")
 def health_check():
     return {"status": "ok"}
+
+# Centralized External Horoscope API Integration
+@app.get("/api/external/horoscope")
+def get_external_horoscope(weekday: str, category: str):
+    """
+    Simulated External Horoscope API hosted on the central server.
+    Returns raw daily horoscope prediction based on weekday of birth and category.
+    """
+    base_text = get_base_fortune(weekday, category)
+    return {
+        "status": "success",
+        "weekday": weekday,
+        "category": category,
+        "horoscope": base_text
+    }
+
+@app.get("/api/external/horoscope/all")
+def get_all_external_horoscope():
+    """
+    Returns the complete centralized pre-calculated horoscope database (all weekdays and categories)
+    to serve as a comprehensive mock external data API resource.
+    """
+    from fortune_data import FORTUNE_DATABASE
+    return {
+        "status": "success",
+        "description": "CareFate Centralized Mock External Horoscope Database - 35 Complete Datasets (7 Days x 5 Categories)",
+        "total_records": len(FORTUNE_DATABASE) * 5,
+        "database": FORTUNE_DATABASE
+    }
 
 # Email Configuration
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
@@ -68,21 +99,31 @@ DISABLED_MODELS: set = set()      # models that hit 402 billing limits
 # 3-Layer Fallback Configuration
 PRIORITY_MODELS = [
     # Layer 1: Groq Primary (Extremely fast)
-    # Using more stable/available IDs
     {"provider": "groq",       "id": "llama-3.3-70b-versatile", "name": "Llama 3.3 70B (Groq)"},
     {"provider": "groq",       "id": "llama-3.1-70b-versatile", "name": "Llama 3.1 70B (Groq)"},
     {"provider": "groq",       "id": "llama3-70b-8192",         "name": "Llama 3 70B (Groq)"},
+    {"provider": "groq",       "id": "mixtral-8x7b-32768",      "name": "Mixtral 8x7B (Groq)"},
+    {"provider": "groq",       "id": "gemma2-9b-it",            "name": "Gemma 2 9B (Groq)"},
     {"provider": "groq",       "id": "llama-3.1-8b-instant",    "name": "Llama 3.1 8B (Groq)"},
+    {"provider": "groq",       "id": "llama-3.2-3b-preview",    "name": "Llama 3.2 3B (Groq)"},
 
-    # Layer 2: OpenRouter (If Groq fails)
-    {"provider": "openrouter", "id": "openai/gpt-4o-mini", "name": "GPT-4o Mini"},
+    # Layer 2: Direct Gemini (Highly stable Google API - bypasses OpenRouter limits)
+    {"provider": "gemini",     "id": "gemini-2.5-flash",        "name": "Gemini 2.5 Flash (Direct)"},
+    {"provider": "gemini",     "id": "gemini-1.5-flash",        "name": "Gemini 1.5 Flash (Direct)"},
+    {"provider": "gemini",     "id": "gemini-1.5-pro",          "name": "Gemini 1.5 Pro (Direct)"},
+
+    # Layer 3: OpenRouter (If Groq and Direct Gemini are both rate-limited)
+    {"provider": "openrouter", "id": "openai/gpt-4o-mini",      "name": "GPT-4o Mini (OpenRouter)"},
     {"provider": "openrouter", "id": "google/gemini-2.0-flash-001", "name": "Gemini 2.0 Flash (Paid)"},
-    
-    # Layer 3: Emergency Fallback (Free / High rate-limit models)
+    {"provider": "openrouter", "id": "google/gemini-2.5-flash",  "name": "Gemini 2.5 Flash (OpenRouter)"},
+    {"provider": "openrouter", "id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama 3.3 70B (OpenRouter)"},
+    {"provider": "openrouter", "id": "qwen/qwen-2.5-72b-instruct", "name": "Qwen 2.5 72B (OpenRouter)"},
+    {"provider": "openrouter", "id": "deepseek/deepseek-chat",  "name": "DeepSeek V3 (OpenRouter)"},
+
+    # Layer 4: Emergency Free Fallbacks on OpenRouter
     {"provider": "openrouter", "id": "deepseek/deepseek-r1-distill-llama-70b:free", "name": "DeepSeek R1 (Free)"},
     {"provider": "openrouter", "id": "meta-llama/llama-3.1-8b-instruct:free", "name": "Llama 3.1 8B (Free)"},
     {"provider": "openrouter", "id": "google/gemma-3-27b-it:free", "name": "Gemma 3 27B (Free)"},
-    {"provider": "gemini",     "id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash"},
 ]
 
 def startup_check():
@@ -102,14 +143,32 @@ def log_ai_event(provider: str, model: str, result: str, start_time: float):
     print(f"[AI] {provider:10} | {model:40} | {result:15} | {latency}s")
 
 def _call_gemini_api(model_id: str, messages: List[Dict]) -> str:
-    system_text = " ".join(m["content"] for m in messages if m["role"] == "system")
-    user_text   = next((m["content"] for m in messages if m["role"] == "user"), "")
-    combined    = f"{system_text}\n\n{user_text}" if system_text else user_text
+    contents = []
+    system_instruction_text = ""
+    for m in messages:
+        if m["role"] == "system":
+            system_instruction_text = m["content"]
+        else:
+            role = "model" if m["role"] == "assistant" else "user"
+            contents.append({
+                "role": role,
+                "parts": [{"text": m["content"]}]
+            })
     
-    payload = {
-        "contents": [{"role": "user", "parts": [{"text": combined}]}],
-        "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8}
-    }
+    if not contents:
+        contents.append({
+            "role": "user",
+            "parts": [{"text": "สวัสดี"}]
+        })
+    
+    payload = {}
+    if system_instruction_text:
+        payload["systemInstruction"] = {
+            "parts": [{"text": system_instruction_text}]
+        }
+    payload["contents"] = contents
+    payload["generationConfig"] = {"maxOutputTokens": 2048, "temperature": 0.8}
+    
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={GEMINI_API_KEY}"
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"})
     
@@ -347,7 +406,7 @@ class FortuneTellerRequest(BaseModel):
 
 @app.post("/api/fortune-teller")
 def get_fortune_teller_prediction(request: FortuneTellerRequest):
-    print(f"DEBUG: Fortune Teller Request for '{request.teller_id}'")
+    print(f"DEBUG: Fortune Teller Request: teller_id={request.teller_id}, username={request.username}, dob={request.birth_date}")
     now = datetime.now()
     today_str = now.strftime("%Y-%m-%d")  # Used as seed key
     thai_days = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"]
@@ -361,8 +420,78 @@ def get_fortune_teller_prediction(request: FortuneTellerRequest):
         "อาทิตย์":  "สีแดง",
     }
     weekday_th = thai_days[now.weekday()]
-    lucky_color = day_colors[weekday_th]
     thai_date = now.strftime(f"วัน{weekday_th} ที่ %d/%m/%Y")
+
+    # Calculate birth weekday if available
+    birth_weekday_th = "ไม่ระบุ"
+    if request.birth_date:
+        try:
+            b_date = datetime.strptime(request.birth_date, "%Y-%m-%d")
+            birth_weekday_th = thai_days[b_date.weekday()]
+        except Exception:
+            pass
+
+    # Astrology lucky colors database based on Birth Day of the Week
+    astrology_colors = {
+        "อาทิตย์": {
+            "love": "สีเขียว",
+            "finance": "สีม่วง หรือ สีดำ",
+            "work": "สีชมพู",
+            "health": "สีขาว หรือ สีเหลือง",
+            "overall": "สีครีม"
+        },
+        "จันทร์": {
+            "love": "สีดำ หรือ สีม่วง",
+            "finance": "สีส้ม หรือ สีแสด",
+            "work": "สีเขียว",
+            "health": "สีชมพู",
+            "overall": "สีฟ้า"
+        },
+        "อังคาร": {
+            "love": "สีทอง หรือ สีแสด",
+            "finance": "สีเทา",
+            "work": "สีดำ หรือ สีม่วง",
+            "health": "สีเขียว",
+            "overall": "สีแดง"
+        },
+        "พุธ": {
+            "love": "สีเทา หรือ สีบรอนซ์เงิน",
+            "finance": "สีฟ้า หรือ สีน้ำเงิน",
+            "work": "สีส้ม หรือ สีทอง",
+            "health": "สีดำ หรือ สีม่วง",
+            "overall": "สีเขียว"
+        },
+        "พฤหัสบดี": {
+            "love": "สีแดง",
+            "finance": "สีส้ม หรือ สีทอง",
+            "work": "สีฟ้า หรือ สีน้ำเงิน",
+            "health": "สีเทา",
+            "overall": "สีขาว หรือ สีเหลือง"
+        },
+        "ศุกร์": {
+            "love": "สีชมพู",
+            "finance": "สีเขียว",
+            "work": "สีส้ม หรือ สีเหลือง",
+            "health": "สีแดง",
+            "overall": "สีน้ำเงิน หรือ สีฟ้า"
+        },
+        "เสาร์": {
+            "love": "สีน้ำเงิน หรือ สีฟ้า",
+            "finance": "สีแดง",
+            "work": "สีดำ หรือ สีม่วง",
+            "health": "สีส้ม หรือ สีเหลือง",
+            "overall": "สีเทา"
+        }
+    }
+
+    # Determine lucky color based on birth weekday, or fall back to today's weekday color
+    teller_key = request.teller_id if request.teller_id in ['love', 'finance', 'work', 'health', 'overall'] else 'overall'
+    
+    if birth_weekday_th in astrology_colors:
+        lucky_color = astrology_colors[birth_weekday_th][teller_key]
+    else:
+        # Fallback to today's general day color
+        lucky_color = day_colors[weekday_th]
 
     personas = {
         'love': {
@@ -394,39 +523,198 @@ def get_fortune_teller_prediction(request: FortuneTellerRequest):
 
     persona = personas.get(request.teller_id, personas['love'])
 
-    system_prompt = f"""คุณคือหมอดู AI ชื่อ "{persona['name']}" ในแอป CareFate
-วันนี้คือ{thai_date} (date_seed: {today_str})
-สีมงคลประจำวัน{weekday_th}คือ{lucky_color}
-ชื่อผู้ใช้: {request.username}
-วันเดือนปีเกิด: {request.birth_date if request.birth_date else 'ไม่ระบุ'}
+    # Fetch base raw fortune from central server's horoscope API integration
+    # To prevent static predictions, we rotate the selected base fortune daily based on the day of the month!
+    thai_days = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"]
+    lookup_weekday = birth_weekday_th if birth_weekday_th != "ไม่ระบุ" else weekday_th
+    
+    if birth_weekday_th in thai_days:
+        birth_idx = thai_days.index(birth_weekday_th)
+        # Shift index deterministically based on day of month (1-31) to fetch different raw fortunes
+        lookup_idx = (birth_idx + now.day) % 7
+        lookup_weekday = thai_days[lookup_idx]
+        
+    base_horoscope = get_base_fortune(lookup_weekday, teller_key)
+    
+    # Dynamically customize the weekday name in the text to match the user's birth weekday
+    # so they read a customized prediction without confusing contradictions!
+    if birth_weekday_th != "ไม่ระบุ":
+        base_horoscope = base_horoscope.replace(lookup_weekday, birth_weekday_th)
 
-บุคลิกและแนวทาง:
-- เรื่องที่เน้น: {persona['focus']}
-- โทนภาษา: {persona['tone']}
+    # Generate the prediction directly without AI to achieve 0 token usage and 100% stability
+    username = request.username if request.username else "คุณ"
+    
+    # Simple check in history context for matching keywords
+    health_ctx_lower = (request.history_context or "").lower()
+    
+    health_tips = {
+        'love': {
+            'sleep': "ช่วงนี้เห็นบ่นว่านอนหลับไม่ค่อยดี อย่าลืมหาสมุนไพรอุ่นๆ ดื่มก่อนนอนและแบ่งเวลาพักผ่อนเยอะๆ นะคะ แม่หมอเป็นห่วงค่า ❤️",
+            'exercise': "ช่วงนี้เหนื่อยล้าหรือออกกำลังกายหักโหมเกินไปหรือเปล่าคะ ค่อยๆ ไปทีละนิด ดูแลหัวใจตัวเองให้ชุ่มชื่นไว้เสมอนะคะ ✨",
+            'stress': "ถ้ารู้สึกเครียดๆ หรือเหนื่อยล้า ลองปล่อยวางเรื่องรอบตัวลงสักนิด แล้วไปคุยกับคนที่คุณรักเพื่อเติมพลังใจนะคะ 🥰",
+            'default': "วันนี้อย่าลืมดื่มน้ำสะอาดเยอะๆ และดูแลรักษาสุขภาพร่างกายให้สดชื่นแจ่มใสอยู่เสมอนะคะ"
+        },
+        'finance': {
+            'sleep': "ช่วงนี้หากนอนไม่ค่อยหลับ ให้หาเวลาพักผ่อนสายตาบ้างนะครับเถ้าแก่ ร่างกายแข็งแรงสมองแล่น เงินทองจะได้ไหลมาเทมาไหลลื่นครับ 💰",
+            'exercise': "สุขภาพกายที่ดีคือทุนทรัพย์ที่ประเมินค่าไม่ได้ครับ อย่าลืมออกกำลังกายเบาๆ เพื่อเสริมความกระปรี้กระเป่ารับทรัพย์ในวันนี้นะครับ",
+            'stress': "การงานการลงทุนมีความเสี่ยง ถ้ารู้สึกตึงเกินไปให้ถอยมาตั้งหลักสักนิด จิตใจมั่นคงจะช่วยประคองพอร์ตให้เฮงๆ ครับ 💸",
+            'default': "การลงทุนที่ดีที่สุดคือการดูแลตัวเองครับ วันนี้ดื่มน้ำและรักษาสุขภาพกายใจให้มั่นคงเพื่อพร้อมรับทรัพย์นะครับ"
+        },
+        'work': {
+            'sleep': "ช่วงนี้อาจมีการพักผ่อนน้อยหรือนอนหลับไม่สนิท แนะนำให้จัดสรรเวลาพักสายตาและนอนหลับให้เต็มอิ่ม เพื่อรักษาระดับสมาธิและความเป็นมืออาชีพในการทำงานค่ะ 💻",
+            'exercise': "การนั่งทำงานนานๆ อาจทำให้ปวดบ่าไหล่ แนะนำให้ทำกายบริหารยืดเส้นยืดสายระหว่างวันบ่อยๆ เพื่อป้องกันออฟฟิศซินโดรมและทำงานอย่างมีความสุขค่ะ 🌟",
+            'stress': "งานรุมเร้าอาจทำให้ระดับความเครียดสูงขึ้น แนะนำให้หยุดพักหายใจเข้าลึกๆ สัก 5 นาทีก่อนลุยงานต่อ จะช่วยเพิ่มประสิทธิภาพและวิสัยทัศน์ที่กว้างไกลค่ะ",
+            'default': "วันนี้ควรจัดสรรเวลาดื่มน้ำและขยับตัวยืดเส้นยืดสายทุกๆ 1 ชั่วโมง เพื่อสุขภาพร่างกายที่ดีและผลงานที่มีประสิทธิภาพสูงสุดค่ะ"
+        },
+        'health': {
+            'sleep': "ปู่เห็นช่วงนี้บ่นว่านอนไม่หลับรึเปล่าหลานเอ๊ย ก่อนนอนห้ามดูจอโทรศัพท์นะหลาน ปรับไฟสลัวๆ ทำจิตใจให้ร่มเย็นปู่เป็นห่วงสุขภาพหลานเสมอนะ 👴",
+            'exercise': "ออกกำลังกายขยับแข้งขยับขาเป็นเรื่องดี แต่ปู่อยากเตือนว่าระวังหัวเข่าและข้อต่อให้ดีนะเออ อย่าหักโหมจนเกินงามล่ะหลานรัก",
+            'stress': "จิตใจที่ฟุ้งซ่านจะทำให้ธาตุในกายแปรปรวนนะหลานเอ๊ย ลองหลับตาสูดหายใจเข้าลึกๆ ปล่อยวางเรื่องหนักๆ ลงบ้าง สุขภาพจะได้ยืนยาวนะ",
+            'default': "ดื่มน้ำอุ่นเยอะๆ นะหลานเอ๊ย วันนี้หลีกเลี่ยงน้ำเย็นและอาหารรสจัดเพื่อรักษาสมดุลธาตุในร่างกายให้ดีนะหลานรัก"
+        },
+        'overall': {
+            'sleep': "ช่วงนี้หากการนอนหลับไม่ปกติ พึงระลึกว่าความสงบทางกายเริ่มต้นด้วยการสงบทางจิตใจ ก่อนนอนให้ปล่อยวางความกังวลทั้งปวงลงเสีย 🧘",
+            'exercise': "การเคลื่อนไหวทางกายอย่างพอเหมาะและมีสติ จะนำมาซึ่งพลังชีวิตที่สมดุล หลีกเลี่ยงความสุดโต่งในกิจกรรมต่างๆ ในวันนี้",
+            'stress': "ความเครียดเปรียบเสมือนหมอกควันชั่วคราว ลองมองสิ่งต่างๆ ด้วยความปล่อยวางและเข้าใจ จิตใจจะพบความสงบที่แท้จริง",
+            'default': "วันนี้พึงรักษาความสงบในจิตใจ ดื่มน้ำสะอาด และก้าวเดินอย่างมีสติในทุกๆ ย่างก้าวของวัน"
+        }
+    }
+    
+    t_tips = health_tips.get(request.teller_id, health_tips['overall'])
+    chosen_tip = t_tips['default']
+    if any(k in health_ctx_lower for k in ['นอน', 'หลับ', 'sleep', 'insomnia']):
+        chosen_tip = t_tips['sleep']
+    elif any(k in health_ctx_lower for k in ['ออกกำลัง', 'เดิน', 'วิ่ง', 'exercise', 'sport', 'gym']):
+        chosen_tip = t_tips['exercise']
+    elif any(k in health_ctx_lower for k in ['เครียด', 'เหนื่อย', 'กังวล', 'stress', 'anxiety', 'busy']):
+        chosen_tip = t_tips['stress']
 
-ข้อมูลสุขภาพล่าสุด: {request.history_context if request.history_context else 'ไม่มี'}
+    # 1. Deterministic polynomial hash function to generate daily varying elements (0 tokens)
+    def get_daily_seed(today_str: str, username: str, teller_id: str) -> int:
+        seed_str = f"{today_str}_{username}_{teller_id}"
+        hash_val = 0
+        for char in seed_str:
+            hash_val = (hash_val * 31 + ord(char)) & 0xFFFFFFFF
+        return hash_val
 
-งานของคุณ: สร้างคำทำนายดวงชะตา**รายวัน**สำหรับวัน{weekday_th}นี้ (3-4 ประโยค) โดย:
-1. สำคัญที่สุด: คุณต้องคำนวณและอ้างอิงจากวันเดือนปีเกิดของผู้ใช้ ({request.birth_date if request.birth_date else 'ไม่ระบุ'}) โดยวิเคราะห์หลักโหราศาสตร์ เช่น ลัคนาราศี, วันในสัปดาห์ที่เกิด, หรือธาตุปีเกิด เพื่อคำนวณดวงชะตาเฉพาะบุคคล คำทำนายต้องส่งผลและเฉพาะเจาะจงกับพื้นดวงของผู้ใช้รายนี้เท่านั้น และต้องแตกต่างกันอย่างชัดเจนตามวันเกิดที่ผู้ใช้ระบุมา ห้ามสร้างคำทำนายกว้างๆ ที่ใช้ได้กับทุกคนเด็ดขาด
-2. กล่าวถึงสีมงคลวันนี้ ({lucky_color}) พร้อมคำแนะนำว่าสวมเสื้อหรือใช้สีนี้เพื่อส่งเสริมดวงชะตาตามวันเกิดของผู้ใช้อย่างไร
-3. ทำนายเรื่อง {persona['focus']} ให้ตรงกับพลังงานของวัน{weekday_th} โดยเชื่อมโยงกับพื้นดวงจากวันเกิดของเขา
-4. ให้คำแนะนำ 1 ข้อที่เฉพาะเจาะจงและทำได้จริงในวันนี้
+    seed_val = get_daily_seed(today_str, request.username, request.teller_id)
 
-สำคัญ: ห้ามทักทาย ห้ามมีคำนำ เริ่มต้นด้วยเรื่องสีมงคลหรือคำทำนายส่วนบุคคลได้เลย ใช้ภาษาไทยเท่านั้น"""
-
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"ขอคำทำนายดวงชะตาวัน{weekday_th}ที่ {today_str} ของฉันหน่อย"}
+    # 2. Select dynamic daily astrological aspect
+    aspects = [
+        "ดาวศุกร์เล็งหนุนดวงชะตา นำพาพลังงานแห่งความเมตตาและเสน่ห์ความสัมพันธ์ที่อบอุ่น",
+        "ดาวพฤหัสบดีโคจรสถิตในตำแหน่งส่งเสริม ทำให้สติปัญญาแจ่มใสและมีวิสัยทัศน์ชีวิตที่เปิดกว้าง",
+        "ดาวดวงธาตุประจำวันประสานงานสมดุลดีเลิศ หนุนนำจิตใจให้ราบรื่น สงบ และมีสติพร้อมเปิดรับสิ่งใหม่",
+        "วันนี้กระแสลมปราณชีวิตไหลเวียนดีเลิศ มีเกราะดาวธรรมนำโชคคอยคุ้มครองจิตใจและสติให้แจ่มใส",
+        "ดาวพุธโคจรเสวยทับดวงชะตา ส่งผลบวกต่อการสื่อสาร การคิดสร้างสรรค์ และความสัมพันธ์กับคนรอบตัว",
+        "พลังงานกระแสดาวเสาร์เคลื่อนย้ายเปิดทางสะดวก ทำให้เมฆหมอกอุปสรรคเก่าๆ คลายตัวออกอย่างน่าอัศจรรย์",
+        "ดวงดาวโคจรสถิตในตำแหน่งเปิดขุมพลังบารมี ดึงดูดความเมตตา ความช่วยเหลือ และโอกาสดีๆ เข้าหาตัว"
     ]
+    aspect = aspects[seed_val % len(aspects)]
 
-    try:
-        reply = call_ai(messages)
-        print(f"DEBUG: Fortune Teller Success: {reply[:50]}...")
-        return {"status": "success", "prediction": reply, "date": today_str}
-    except Exception as e:
-        print(f"DEBUG: Fortune Teller Error: {str(e)}")
-        fallback = f"วัน{weekday_th}นี้ สีมงคลคือ{lucky_color} แนะนำให้สวมใส่เสื้อสีนี้เพื่อเสริม{persona['focus']} ขอให้วันนี้เป็นวันที่ดีนะคะ"
-        return {"status": "success", "prediction": fallback, "date": today_str}
+    # 3. Select dynamic daily lucky number and energy score
+    lucky_number = (seed_val % 9) + 1
+    energy_score = 75 + (seed_val % 21)  # 75% to 95%
+
+    # 4. Select dynamic micro-action advice matching each teller's theme
+    micro_advices = {
+        'love': [
+            "ลองยิ้มต้อนรับวันใหม่ให้ตัวเองในกระจกตอนเช้า และส่งข้อความดีๆ ทักทายคนสนิทสั้นๆ นะคะ",
+            "วันนี้หาเวลาฟังเพลงจังหวะสบายๆ หรือเพลงรักเบาๆ เพื่อเติมพลังงานบวกและความชุ่มชื่นให้หัวใจนะคะ",
+            "หากมีโอกาส ลองซื้อเครื่องดื่มหรือขนมอร่อยๆ ไปแบ่งปันเพื่อนร่วมงานข้างๆ เพื่อสร้างมิตรภาพและเสน่ห์ที่ดีค่ะ",
+            "ลองจัดระเบียบของใช้ส่วนตัวหรือโต๊ะทำงานสั้นๆ เพื่อเปิดทางให้พลังงานเชิงบวกและความราบรื่นไหลเข้ามาหาตัวนะคะ"
+        ],
+        'finance': [
+            "เช้านี้ก่อนเริ่มใช้จ่าย ให้จัดเรียงธนบัตรในกระเป๋าเงินให้เป็นระเบียบเรียบร้อยเพื่อเปิดทางเรียกทรัพย์ครับ",
+            "หากมีโอกาส ลองทำบุญบริจาคทานเล็กๆ น้อยๆ เพื่อลดความตระหนี่และเปิดประตูแห่งโชคลาภให้ไหลคล่องตัวครับ",
+            "วันนี้ให้จดบันทึกรายรับรายจ่ายสั้นๆ เพื่อสะสมพลังการเงินและปิดรอยรั่วของการไหลออกที่ไม่จำเป็นครับ",
+            "ชะลอการตัดสินใจซื้อของชิ้นใหญ่ in วันนี้ออกไปสัก 24 ชั่วโมง เพื่อไตร่ตรองความคุ้มค่าอย่างเถ้าแก่มืออาชีพครับ"
+        ],
+        'work': [
+            "เช้านี้ลองหลับตาทำสมาธิสั้นๆ 1 นาทีก่อนเริ่มทำงาน เพื่อรวบรวมโฟกัส สติปัญญา และความมั่นใจค่ะ",
+            "จัดระเบียบไฟล์บนหน้าจอคอมพิวเตอร์และเคลียร์ถังขยะประวัติ เพื่อเพิ่มพลังสร้างสรรค์และความสมองปลอดโปร่งค่ะ",
+            "หากมีเวลาว่างระหว่างงาน ลองขยับตัว ยืดเส้นสายคอบ่าไหล่สัก 2 นาที เพื่อประจุไอเดียสดใหม่และลดความเหนื่อยล้าค่ะ",
+            "ก่อนกดส่งอีเมลหรือติดต่องานสำคัญในวันนี้ แนะนำให้ตรวจเช็กความเรียบร้อยรอบคอบอีกหนึ่งสเต็ปเพื่อความเป๊ะค่ะ"
+        ],
+        'health': [
+            "ตื่นเช้ามาอย่าลืมดื่มน้ำอุ่นสะอาดสักแก้วทันทีเพื่อปลุกระบบขับถ่ายและธาตุในกายให้สมดุลนะหลานรัก",
+            "หาเวลาเดินยืดเส้นยืดสายเบาๆ รับไอแดดอ่อนยามเช้าสัก 5 นาทีเพื่อเติมพลังปราณที่ดีนะหลานเอ๊ย",
+            "วันนี้ลองงดเว้นของทอด ของมันจัด เพื่อรักษาสมดุลธาตุกระเพาะอาหารและตับให้สบายตัวตลอดวันนะหลาน",
+            "ก่อนนอนคืนนี้ลองแช่เท้าในน้ำอุ่นๆ จะช่วยคลายกล้ามเนื้อระบบประสาทให้หลับลึกสบายขึ้นนะหลานรัก"
+        ],
+        'overall': [
+            "ตื่นนอนเช้าวันนี้ ลองสูดลมหายใจเข้าลึกๆ 3 ครั้ง สังเกตสัมผัสของลมเพื่อตั้งมั่นสติให้อยู่กับกาย",
+            "วันนี้พึงงดเว้นการบ่นหรือจับผิดสิ่งรอบตัว ลองมองหาและขอบคุณสิ่งดีๆ 3 อย่างที่มีในชีวิตตอนปัจจุบัน",
+            "หาเวลาปิดหน้าจอโทรศัพท์สัก 15 นาที นั่งปล่อยวางความกังวลหรือเดินสูดอากาศธรรมชาติเพื่อชำระจิตใจให้สงบ",
+            "จงก้าวเดินและพูดคุยอย่างใจเย็นและมีสติ สังเกตปฏิกิริยาทางอารมณ์ของตนเองแล้วปล่อยให้ไหลผ่านไป"
+        ]
+    }
+    teller_advices = micro_advices.get(request.teller_id, micro_advices['overall'])
+    micro_advice = teller_advices[seed_val % len(teller_advices)]
+
+    prediction_text = ""
+    if request.teller_id == 'love':
+        prediction_text = (
+            f"สวัสดีค่ะน้อง {username} วันนี้แม่หมอจันทรามีความยินดีอย่างยิ่งที่จะเปิดเผยดวงชะตาเรื่องความรัก ความสัมพันธ์ และเสน่ห์ "
+            f"สำหรับคนเกิดวัน{birth_weekday_th}เป็นพิเศษในวันนี้ค่ะ 💖\n\n"
+            f"🌟 **กระแสดวงความรักวันนี้**: ในวันนี้มี **{aspect}** ส่งผลให้ดวงชะตาความรักรอบตัวคุณมีระดับพลังงานบวกและเสน่ห์พุ่งสูงถึง **{energy_score}%** เลยค่ะ!\n\n"
+            f"✨ คำทำนายดวงชะตาประจำวัน: \"{base_horoscope}\"\n\n"
+            f"🎨 สีมงคลคู่กายเสริมโชคความรักและเสน่ห์ของคุณในวันนี้คือ **{lucky_color}** นะคะ "
+            f"ลองเลือกสวมใส่เครื่องแต่งกาย หรือหยิบของใช้ใกล้ตัวที่เป็นโทนสีนี้ จะช่วยหนุนดวงความสัมพันธ์รอบตัวคุณให้ไหลลื่นยิ่งขึ้นค่ะ\n\n"
+            f"🔮 เคล็ดลับเสริมดวงประจำวัน: {micro_advice}\n\n"
+            f"👩‍⚕️ คำแนะนำสุขภาพจากแม่หมอ: {chosen_tip}\n\n"
+            f"🔢 เลขนำโชคด้านความรักของคุณในวันนี้คือ: **{lucky_number}** ค่ะ"
+        )
+    elif request.teller_id == 'finance':
+        prediction_text = (
+            f"สวัสดีครับเถ้าแก่ {username}! ซินแสเศรษฐีพร้อมนำทางเปิดคลังทรัพย์และวิเคราะห์การเงิน "
+            f"ของคนเกิดวัน{birth_weekday_th}มาส่งมอบให้ในวันนี้แล้วครับ 💰\n\n"
+            f"🌟 **กระแสดวงการเงินวันนี้**: วันนี้มี **{aspect}** ช่วยประคองดวงการเงินและการเจรจาการค้าให้มีกระแสโชคลาภพุ่งสูงถึง **{energy_score}%** ครับ!\n\n"
+            f"✨ คำทำนายดวงชะตาประจำวัน: \"{base_horoscope}\"\n\n"
+            f"🎨 สีมงคลเปิดทรัพย์และเสริมโชคลาภของคุณในวันนี้คือ **{lucky_color}** ครับ "
+            f"หากจะออกไปเจรจาการค้าหรือตัดสินใจเรื่องเงินทอง ลองพกสิ่งของหรือสวมใส่เสื้อผ้าโทนสีนี้ จะช่วยปรับสมดุลธาตุ ดึงดูดทรัพย์เข้ามาไหลลื่นไม่ติดขัดครับ\n\n"
+            f"🔮 เคล็ดลับเปิดทรัพย์ประจำวัน: {micro_advice}\n\n"
+            f"👨‍⚕️ คำแนะนำสุขภาพจากซินแส: {chosen_tip}\n\n"
+            f"🔢 เลขนำโชคดึงทรัพย์ของคุณในวันนี้คือ: **{lucky_number}** ครับ"
+        )
+    elif request.teller_id == 'work':
+        prediction_text = (
+            f"สวัสดีค่ะคุณ {username} อาจารย์ดวงดาวได้ทำการวิเคราะห์ตำแหน่งดวงดาวการงานและความสำเร็จ "
+            f"ของคนเกิดวัน{birth_weekday_th}สำหรับวันนี้มาให้เรียบร้อยแล้วค่ะ 💻\n\n"
+            f"🌟 **กระแสดวงการงานวันนี้**: ในวันนี้มี **{aspect}** ส่งผลให้สมาธิ ความคิดสร้างสรรค์ และจังหวะความสำเร็จในหน้าที่การงานของคุณอยู่ที่ระดับ **{energy_score}%** ค่ะ!\n\n"
+            f"✨ คำทำนายดวงชะตาประจำวัน: \"{base_horoscope}\"\n\n"
+            f"🎨 สีมงคลนำโชคขจัดอุปสรรคและเสริมอำนาจบารมีของคุณในวันนี้คือ **{lucky_color}** ค่ะ "
+            f"แนะนำให้สวมใส่เสื้อผ้าหรือใช้สิ่งของโทนสีนี้เพื่อเพิ่มพลังความมั่นใจ ความคิดสร้างสรรค์ และดึงดูดการยอมรับและการสนับสนุนจากหัวหน้างานค่ะ\n\n"
+            f"🔮 เคล็ดลับสู่ความสำเร็จประจำวัน: {micro_advice}\n\n"
+            f"👩‍⚕️ คำแนะนำสุขภาพจากอาจารย์ดวงดาว: {chosen_tip}\n\n"
+            f"🔢 เลขนำโชคการงานของคุณในวันนี้คือ: **{lucky_number}** ค่ะ"
+        )
+    elif request.teller_id == 'health':
+        prediction_text = (
+            f"เจริญสุขนะหลานเอ๊ย! ปู่ผู้เฒ่าโอสถมาตรวจดวงชะตาร่างกายและปรับสมดุลธาตุพลังงาน "
+            f"ของหลานรักที่เกิดวัน{birth_weekday_th}ในวันนี้แล้วนะหลาน 👴\n\n"
+            f"🌟 **กระแสดวงสุขภาพวันนี้**: วันนี้มี **{aspect}** หนุนกายใจให้สดชื่นแจ่มใส มีภูมิต้านทานและพลังชีวิตเข้มแข็งถึง **{energy_score}%** เชียวนะหลานรัก!\n\n"
+            f"✨ คำทำนายดวงชะตาประจำวัน: \"{base_horoscope}\"\n\n"
+            f"🎨 สีมงคลเสริมอายุวัฒนะ ป้องกันภัย และฟื้นฟูสุขภาพพลังธาตุคือ **{lucky_color}** นะเออ "
+            f"พกสีนี้ไว้ใกล้ตัวหรือสวมใส่เสื้อผ้าโทนสีนี้ จะช่วยกระตุ้นพลังดีๆ ให้กายใจสดชื่นและมีชีวิตชีวาตลอดทั้งวันนะหลานรัก\n\n"
+            f"🔮 เคล็ดลับถนอมร่างกายประจำวัน: {micro_advice}\n\n"
+            f"👴 คำแนะนำสุขภาพจากปู่โอสถ: {chosen_tip}\n\n"
+            f"🔢 เลขมงคลเสริมพลังกายของคุณในวันนี้คือ: **{lucky_number}** นะหลานรัก"
+        )
+    else: # overall
+        prediction_text = (
+            f"เจริญพรคุณ {username} เซนมาสเตอร์ขอนำพาแสงสว่างแห่งปัญญาและแนวทางการดำเนินชีวิต "
+            f"ของคนเกิดวัน{birth_weekday_th}ในเช้าวันใหม่อันผ่องใสนี้ 🧘\n\n"
+            f"🌟 **ภาพรวมดวงชะตาวันนี้**: วันนี้มี **{aspect}** ช่วยประคองจิตใจให้ตั้งมั่น เกิดสติ และมีความสงบผ่องใสอยู่กับตัวถึง **{energy_score}%** แล้ว\n\n"
+            f"✨ คำทำนายดวงชะตาประจำวัน: \"{base_horoscope}\"\n\n"
+            f"🎨 สีมงคลเกื้อหนุนพลังชีวิต นำพาความสงบ และจิตใจที่ตั้งมั่นในวันนี้คือ **{lucky_color}** "
+            f"จงพิจารณาและเลือกใช้สีนี้ติดตัวหรือใช้ประกอบในวัน เพื่อย้ำเตือนสติให้อยู่กับปัจจุบันขณะ ผ่อนคลายอารมณ์ และรักษาจิตใจให้เบิกบาน\n\n"
+            f"🔮 เคล็ดลับขัดเกลาจิตใจประจำวัน: {micro_advice}\n\n"
+            f"🧘 คำแนะนำสุขภาพจากเซนมาสเตอร์: {chosen_tip}\n\n"
+            f"🔢 เลขนำทางปัญญาของคุณในวันนี้คือ: **{lucky_number}** เจริญพร"
+        )
+
+    print(f"DEBUG: Fortune Teller Success (Local): {prediction_text[:50]}...")
+    return {"status": "success", "prediction": prediction_text, "date": today_str}
 
 
 
@@ -465,16 +753,19 @@ def get_health_summary(request: HealthSummaryRequest):
 - ห้ามกล่าวทักทาย (ห้ามมี สวัสดีค่ะ/ครับ)
 - ห้ามมีประโยคเกริ่นนำหรือประโยคสรุปท้าย
 - ตอบเฉพาะ bullet points เท่านั้น 
+- ห้ามคิดค้น สมมุติ หรือคาดเดาข้อมูลกิจกรรม อาการ หรือ "เป้าหมาย" (Goals) ใดๆ ที่ไม่มีอยู่จริงหรือไม่ได้ปรากฏในประวัติสุขภาพ 7 วันล่าสุดที่ได้รับเด็ดขาด
+- หากผู้ใช้ยังไม่ได้ตั้งเป้าหมาย หรือไม่มีข้อมูลเป้าหมายใดๆ ในข้อความที่ส่งมา ห้ามกล่าวถึงการบรรลุเป้าหมาย หรือประเด็นเกี่ยวกับเป้าหมายอย่างเด็ดขาด
+- วิเคราะห์อย่างตรงไปตรงมาอ้างอิงจากประวัติสุขภาพที่มีอยู่จริงเท่านั้น
 
 รูปแบบที่ต้องการ:
-• [สรุปภาพรวม 1 ประโยค]
-• [คำแนะนำ 1 ประโยค]
+• [สรุปภาพรวมจากประวัติสุขภาพจริง 1 ประโยค]
+• [คำแนะนำสั้นๆ ที่เป็นประโยชน์จริง 1 ประโยค]
 
 ใช้ภาษาไทยเท่านั้น"""
 
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"ข้อมูลสุขภาพ 7 วันล่าสุด:\n{request.health_context}\n\nกรุณาสรุป 3 ข้อ"}
+        {"role": "user", "content": f"ข้อมูลสุขภาพ 7 วันล่าสุด:\n{request.health_context}\n\nกรุณาสรุปข้อมูลและให้คำแนะนำตามรูปแบบที่กำหนด"}
     ]
 
     try:
@@ -533,19 +824,31 @@ async def read_index():
 
 @app.get("/dashboard.html")
 async def read_dashboard():
-    return FileResponse(os.path.join(BASE_DIR, 'dashboard.html'))
+    return FileResponse(
+        os.path.join(BASE_DIR, 'dashboard.html'),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 @app.get("/feature-excretion.html")
 async def read_excretion():
-    return FileResponse(os.path.join(BASE_DIR, 'feature-excretion.html'))
+    return FileResponse(
+        os.path.join(BASE_DIR, 'feature-excretion.html'),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 @app.get("/history.html")
 async def read_history():
-    return FileResponse(os.path.join(BASE_DIR, 'history.html'))
+    return FileResponse(
+        os.path.join(BASE_DIR, 'history.html'),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 @app.get("/settings.html")
 async def read_settings():
-    return FileResponse(os.path.join(BASE_DIR, 'settings.html'))
+    return FileResponse(
+        os.path.join(BASE_DIR, 'settings.html'),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+    )
 
 # Explicit Static File Routes (Fix for Render/Deployment issues)
 @app.get("/style.css")
@@ -590,7 +893,10 @@ async def read_feature_selection():
 async def read_feature_page(name: str):
     file_path = os.path.join(BASE_DIR, f"feature-{name}.html")
     if os.path.exists(file_path):
-        return FileResponse(file_path)
+        return FileResponse(
+            file_path,
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+        )
     return {"status": "error", "message": "Feature page not found"}
 
 @app.get("/debug-files")

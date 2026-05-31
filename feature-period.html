@@ -419,6 +419,25 @@
                 </div>
             </div>
 
+            <!-- Calendar Card -->
+            <div class="period-card" style="padding: 1.2rem 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+                    <button onclick="prevMonth()" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 5px 10px; font-size: 1.1rem;"><i class="fa-solid fa-chevron-left"></i></button>
+                    <h3 id="calendarMonthYear" style="margin: 0; font-size: 1.1rem; color: var(--text-color); font-weight: 700;">--</h3>
+                    <button onclick="nextMonth()" style="background: none; border: none; color: var(--text-color); cursor: pointer; padding: 5px 10px; font-size: 1.1rem;"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                
+                <!-- Weekdays Header -->
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.8rem;">
+                    <div style="color: #ef4444;">อา.</div><div>จ.</div><div>อ.</div><div>พ.</div><div>พฤ.</div><div>ศ.</div><div style="color: #3b82f6;">ส.</div>
+                </div>
+                
+                <!-- Days Grid -->
+                <div id="calendarDaysGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 8px; text-align: center;">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
             <!-- Action Area -->
             <div class="period-card">
                 <h3 style="margin:0; font-size:1.1rem; color:var(--text-color);">บันทึกวันนี้</h3>
@@ -432,7 +451,14 @@
             <!-- Symptoms -->
             <div class="period-card">
                 <h3 style="margin:0; font-size:1.1rem; color:var(--text-color);">อาการวันนี้</h3>
-                <div class="symptom-grid">
+
+                <!-- Lock notice: only shown when period is NOT active -->
+                <div id="symptomLockNotice" style="display:flex; margin: 0.75rem 0 0.5rem; padding: 0.75rem 1rem; background: #fff7ed; border: 1.5px solid #fbbf24; border-radius: 14px; align-items: center; gap: 0.6rem;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; font-size:1.1rem; flex-shrink:0;"></i>
+                    <span style="font-size:0.85rem; color:#92400e; font-weight:500; line-height:1.4;">กรุณากด <strong>"บันทึกประจำเดือนมา"</strong> ก่อน จึงจะสามารถบันทึกอาการได้</span>
+                </div>
+
+                <div class="symptom-grid" id="symptomGrid" style="opacity:1; transition: opacity 0.2s;">
                     <div class="symptom-item" onclick="toggleSymptom(this, 'cramps')">
                         <div class="symptom-icon"><i class="fa-solid fa-bolt"></i></div>
                         <div class="symptom-label">ปวดท้อง</div>
@@ -522,6 +548,16 @@
             return `${year}-${month}-${day}`;
         })();
 
+        // Calendar State
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth(); // 0-11
+        let selectedDateStr = todayStr; // YYYY-MM-DD
+
+        const monthNamesThai = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.supabase) {
                 _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -536,7 +572,6 @@
                         document.body.classList.add(`theme-${user.user_metadata.theme}`);
                     }
                 } else {
-                    // Fallback to local storage theme if available or default
                     const savedTheme = localStorage.getItem('theme');
                     if (savedTheme) {
                         document.body.classList.remove('theme-youth', 'theme-working', 'theme-elder');
@@ -545,10 +580,8 @@
                 }
             } catch (e) { }
 
-            // UI Init
-            document.getElementById('todayDate').innerText = new Date().toLocaleDateString('th-TH', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            });
+            // Initialize Selected Date UI Label
+            updateSelectedDateLabel();
 
             // Status Bar Clock
             updateStatusBarTime();
@@ -568,7 +601,6 @@
                 // Sync period_cycles
                 const { data: cycles, error } = await _supabase.from('period_cycles')
                     .select('*').eq('user_id', user.id).order('start_date');
-                // Only overwrite LocalStorage if Supabase has actual data
                 if (!error && cycles && cycles.length > 0) {
                     const local = cycles.map(c => ({
                         id: c.id, start: c.start_date, end: c.end_date || null
@@ -576,12 +608,14 @@
                     localStorage.setItem('period_cycles', JSON.stringify(local));
                 }
 
-                // Sync today's symptoms
+                // Sync ALL symptoms from database into localStorage to render calendar dots correctly!
                 const { data: syms } = await _supabase.from('period_symptoms')
-                    .select('*').eq('user_id', user.id).eq('date', todayStr).maybeSingle();
+                    .select('*').eq('user_id', user.id);
                 if (syms) {
-                    const logs = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
-                    logs[todayStr] = { symptoms: syms.symptoms || [], note: syms.note || '' };
+                    const logs = {};
+                    syms.forEach(s => {
+                        logs[s.date] = { symptoms: s.symptoms || [], note: s.note || '' };
+                    });
                     localStorage.setItem('period_symptoms', JSON.stringify(logs));
                 }
             } catch (e) { console.warn('Period sync failed:', e); }
@@ -591,8 +625,7 @@
             // Load Cycles
             const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
 
-            // Determine Status
-            // Check if last cycle has no end date -> Active
+            // Determine Status based on current active period in DB
             const lastCycle = cycles[cycles.length - 1];
             if (lastCycle && !lastCycle.end) {
                 isPeriodActive = true;
@@ -603,9 +636,10 @@
             }
 
             renderStatus(cycles);
-            renderButtons();
+            renderCalendar();
+            renderButtonsForSelectedDate();
             renderHistory(cycles);
-            loadSymptoms();
+            loadSymptomsForSelectedDate();
         }
 
         function renderStatus(cycles) {
@@ -624,7 +658,7 @@
                 // Calculate day count
                 const diffTime = Math.abs(new Date() - currentCycleStart);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                periodDayCount.innerText = diffDays; // Day 1, 2, 3...
+                periodDayCount.innerText = diffDays;
 
                 document.querySelector('.status-text').innerText = "สถานะปัจจุบัน";
             } else {
@@ -636,7 +670,6 @@
 
                 const lastCycle = cycles[cycles.length - 1];
                 if (lastCycle) {
-                    // Simple logic: Start Date + 28 Days
                     const lastStart = new Date(lastCycle.start);
                     const nextDate = new Date(lastStart);
                     nextDate.setDate(lastStart.getDate() + 28);
@@ -648,14 +681,14 @@
                     if (diffDays > 0) {
                         daysCount.innerText = diffDays + " วัน";
                         dateText.innerText = "คาดการณ์: " + nextDate.toLocaleDateString('th-TH');
-                        statusCard.style.background = ""; // Reset default
+                        statusCard.style.background = "";
                     } else {
-                        daysCount.innerText = "วันนี้"; // Or overdue
+                        daysCount.innerText = "วันนี้";
                         if (diffDays <= 0) {
-                            daysCount.innerText = "วันนี้"; // Simplify for now
+                            daysCount.innerText = "วันนี้";
                             dateText.innerText = "หรือล่าช้าไป " + Math.abs(diffDays) + " วัน";
                         }
-                        statusCard.style.background = "#ef4444"; // Warning red
+                        statusCard.style.background = "#ef4444";
                     }
                 } else {
                     daysCount.innerText = "--";
@@ -664,41 +697,251 @@
             }
         }
 
-        function renderButtons() {
+        // --- Monthly Calendar Functions ---
+        function renderCalendar() {
+            const grid = document.getElementById('calendarDaysGrid');
+            const monthYearLabel = document.getElementById('calendarMonthYear');
+            if (!grid || !monthYearLabel) return;
+
+            monthYearLabel.innerText = `${monthNamesThai[currentMonth]} ${currentYear + 543}`;
+
+            grid.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevTotalDays = new Date(currentYear, currentMonth, 0).getDate();
+
+            const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
+            const symptomsLog = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
+
+            // Render Previous Month's Days (muted)
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const dayNum = prevTotalDays - i;
+                const d = new Date(currentYear, currentMonth - 1, dayNum);
+                const dateStr = formatDateISO(d);
+                grid.appendChild(createDayElement(dayNum, dateStr, true, cycles, symptomsLog));
+            }
+
+            // Render Current Month's Days
+            for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
+                const d = new Date(currentYear, currentMonth, dayNum);
+                const dateStr = formatDateISO(d);
+                grid.appendChild(createDayElement(dayNum, dateStr, false, cycles, symptomsLog));
+            }
+
+            // Render Next Month's Days (muted)
+            const gridCount = grid.children.length;
+            const remaining = 42 - gridCount;
+            for (let dayNum = 1; dayNum <= remaining; dayNum++) {
+                const d = new Date(currentYear, currentMonth + 1, dayNum);
+                const dateStr = formatDateISO(d);
+                grid.appendChild(createDayElement(dayNum, dateStr, true, cycles, symptomsLog));
+            }
+        }
+
+        function createDayElement(dayNum, dateStr, isMuted, cycles, symptomsLog) {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                position: relative;
+                height: 38px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.9rem;
+                font-weight: 500;
+                cursor: pointer;
+                border-radius: 50%;
+                margin: 0 auto;
+                width: 38px;
+                transition: all 0.2s;
+            `;
+
+            const isToday = dateStr === todayStr;
+            const isSelected = dateStr === selectedDateStr;
+
+            // Check if day is within a period cycle
+            const isPeriod = cycles.some(c => {
+                const start = c.start;
+                const end = c.end || todayStr;
+                return dateStr >= start && dateStr <= end;
+            });
+
+            // Check if day has notes/symptoms
+            const hasNotes = symptomsLog[dateStr] && (symptomsLog[dateStr].note || (symptomsLog[dateStr].symptoms && symptomsLog[dateStr].symptoms.length > 0));
+
+            // Apply Styles
+            if (isMuted) {
+                div.style.color = 'var(--text-muted)';
+                div.style.opacity = '0.4';
+            } else {
+                div.style.color = 'var(--text-color)';
+            }
+
+            if (isPeriod) {
+                div.style.background = 'linear-gradient(135deg, #f43f5e, #be123c)';
+                div.style.color = '#ffffff';
+                div.style.fontWeight = 'bold';
+            }
+
+            if (isToday) {
+                div.style.border = '2px solid #a855f7';
+            }
+
+            if (isSelected) {
+                div.style.boxShadow = '0 0 0 2.5px #be123c, 0 4px 10px rgba(190, 18, 60, 0.3)';
+                if (!isPeriod) {
+                    div.style.backgroundColor = 'rgba(190, 18, 60, 0.1)';
+                }
+            }
+
+            // Text Label
+            const label = document.createElement('span');
+            label.innerText = dayNum;
+            div.appendChild(label);
+
+            // Droplet Indicator
+            if (isPeriod) {
+                const droplet = document.createElement('span');
+                droplet.innerHTML = '🩸';
+                droplet.style.cssText = `
+                    position: absolute;
+                    bottom: 2px;
+                    font-size: 0.55rem;
+                `;
+                label.style.transform = 'translateY(-3px)';
+                div.appendChild(droplet);
+            }
+
+            // Notes Indicator Dot
+            if (hasNotes) {
+                const dot = document.createElement('span');
+                dot.style.cssText = `
+                    position: absolute;
+                    top: 4px;
+                    right: 4px;
+                    width: 5px;
+                    height: 5px;
+                    background-color: #a855f7;
+                    border-radius: 50%;
+                `;
+                if (isPeriod) {
+                    dot.style.backgroundColor = '#ffffff';
+                }
+                div.appendChild(dot);
+            }
+
+            div.onclick = () => selectDate(dateStr);
+            return div;
+        }
+
+        function formatDateISO(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        }
+
+        function selectDate(dateStr) {
+            selectedDateStr = dateStr;
+            updateSelectedDateLabel();
+            renderCalendar();
+            renderButtonsForSelectedDate();
+            loadSymptomsForSelectedDate();
+        }
+
+        function updateSelectedDateLabel() {
+            const d = new Date(selectedDateStr);
+            const dateFormatted = d.toLocaleDateString('th-TH', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            document.getElementById('todayDate').innerText = `บันทึกของ: ${dateFormatted}`;
+        }
+
+        // --- Interactive Logging Bindings ---
+        function renderButtonsForSelectedDate() {
             const container = document.getElementById('btnArea');
-            if (isPeriodActive) {
+            const lockNotice = document.getElementById('symptomLockNotice');
+            const symptomGrid = document.getElementById('symptomGrid');
+            const noteInput = document.getElementById('noteInput');
+
+            const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
+            
+            // Check if selectedDateStr falls in any completed cycle or active cycle
+            const completedCycle = cycles.find(c => c.end && selectedDateStr >= c.start && selectedDateStr <= c.end);
+            const activeCycle = cycles.find(c => !c.end && selectedDateStr >= c.start);
+
+            if (completedCycle) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #be123c; font-weight: bold; padding: 10px; font-family: 'Outfit', sans-serif;">
+                        <i class="fa-solid fa-droplet" style="font-size: 1.2rem; margin-right: 5px;"></i> อยู่ในช่วงมีประจำเดือนเรียบร้อยแล้ว
+                    </div>
+                `;
+                if (lockNotice) lockNotice.style.display = 'none';
+                if (symptomGrid) symptomGrid.style.opacity = '1';
+                if (noteInput) { noteInput.style.opacity = '1'; noteInput.style.pointerEvents = 'auto'; }
+            } else if (activeCycle) {
                 container.innerHTML = `
                     <button class="action-btn btn-end" onclick="endPeriod()">
-                        <i class="fa-solid fa-stop"></i> บันทึกประจำเดือนหมด
+                        <i class="fa-solid fa-stop"></i> บันทึกประจำเดือนหมด (ณ วันนี้)
                     </button>
-                    <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:0.5rem;">เริ่มเมื่อ: ${currentCycleStart.toLocaleDateString('th-TH')}</p>
+                    <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:0.5rem;">รอบนี้เริ่มเมื่อ: ${new Date(activeCycle.start).toLocaleDateString('th-TH')}</p>
                 `;
+                if (lockNotice) lockNotice.style.display = 'none';
+                if (symptomGrid) symptomGrid.style.opacity = '1';
+                if (noteInput) { noteInput.style.opacity = '1'; noteInput.style.pointerEvents = 'auto'; }
             } else {
                 container.innerHTML = `
                     <button class="action-btn btn-start" onclick="startPeriod()">
-                        <i class="fa-solid fa-play"></i> บันทึกประจำเดือนมา
+                        <i class="fa-solid fa-play"></i> บันทึกประจำเดือนมา (ณ วันนี้)
                     </button>
                 `;
+                if (lockNotice) lockNotice.style.display = 'flex';
+                if (symptomGrid) symptomGrid.style.opacity = '0.45';
+                if (noteInput) { noteInput.style.opacity = '0.45'; noteInput.style.pointerEvents = 'none'; }
             }
         }
 
         async function startPeriod() {
-            if (!confirm('ยืนยันบันทึกว่าประจำเดือนเริ่มมาวันนี้?')) return;
+            if (!confirm(`ยืนยันบันทึกว่าประจำเดือนเริ่มมาในวันที่ ${new Date(selectedDateStr).toLocaleDateString('th-TH')}?`)) return;
 
             const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
-            cycles.push({ start: todayStr, end: null });
+            
+            const activeCycle = cycles.find(c => !c.end);
+            if (activeCycle) {
+                alert('มีรอบเดือนที่กำลังดำเนินอยู่ กรุณาบันทึกประจำเดือนหมดก่อนเริ่มรอบใหม่');
+                return;
+            }
+
+            cycles.push({ start: selectedDateStr, end: null });
             localStorage.setItem('period_cycles', JSON.stringify(cycles));
 
-            // Save to Supabase
             try {
                 if (_supabase) {
                     const { data: { user } } = await _supabase.auth.getUser();
                     if (user) {
                         const { data: inserted, error } = await _supabase.from('period_cycles').insert([{
-                            user_id: user.id, start_date: todayStr
+                            user_id: user.id, start_date: selectedDateStr
                         }]).select();
                         if (!error && inserted) {
-                            // Update local id with Supabase UUID
                             const last = cycles.length - 1;
                             cycles[last].id = inserted[0].id;
                             localStorage.setItem('period_cycles', JSON.stringify(cycles));
@@ -707,42 +950,50 @@
                 }
             } catch (e) { console.error('Period start Supabase failed:', e); }
 
-            logToHistory('ประจำเดือนเริ่มมา', 'รอบเดือนใหม่');
+            logToHistoryForDate('ประจำเดือนเริ่มมา', 'รอบเดือนใหม่', selectedDateStr);
             loadData();
         }
 
         async function endPeriod() {
-            if (!confirm('ยืนยันบันทึกว่าประจำเดือนหมดวันนี้?')) return;
+            if (!confirm(`ยืนยันบันทึกว่าประจำเดือนหมดในวันที่ ${new Date(selectedDateStr).toLocaleDateString('th-TH')}?`)) return;
 
             const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
-            const lastIdx = cycles.length - 1;
-            if (lastIdx >= 0) {
-                cycles[lastIdx].end = todayStr;
-                localStorage.setItem('period_cycles', JSON.stringify(cycles));
+            const activeCycleIndex = cycles.findIndex(c => !c.end);
+            
+            if (activeCycleIndex === -1) {
+                alert('ไม่พบรอบเดือนที่กำลังดำเนินอยู่');
+                return;
+            }
 
-                // Save to Supabase
-                try {
-                    if (_supabase) {
-                        const { data: { user } } = await _supabase.auth.getUser();
-                        if (user) {
-                            const cycleId = cycles[lastIdx].id;
-                            const dur = getDuration(cycles[lastIdx].start, todayStr);
-                            if (cycleId) {
-                                await _supabase.from('period_cycles').update({
-                                    end_date: todayStr, duration: dur
-                                }).eq('id', cycleId).eq('user_id', user.id);
-                            } else {
-                                // Fallback: update the latest cycle without end_date
-                                await _supabase.from('period_cycles').update({
-                                    end_date: todayStr, duration: dur
-                                }).eq('user_id', user.id).is('end_date', null);
-                            }
+            const activeCycle = cycles[activeCycleIndex];
+            if (selectedDateStr < activeCycle.start) {
+                alert('วันที่ประจำเดือนหมด ต้องไม่เกิดขึ้นก่อนวันที่เริ่มมีประจำเดือน');
+                return;
+            }
+
+            cycles[activeCycleIndex].end = selectedDateStr;
+            localStorage.setItem('period_cycles', JSON.stringify(cycles));
+
+            try {
+                if (_supabase) {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    if (user) {
+                        const cycleId = activeCycle.id;
+                        const dur = getDuration(activeCycle.start, selectedDateStr);
+                        if (cycleId) {
+                            await _supabase.from('period_cycles').update({
+                                end_date: selectedDateStr, duration: dur
+                            }).eq('id', cycleId).eq('user_id', user.id);
+                        } else {
+                            await _supabase.from('period_cycles').update({
+                                end_date: selectedDateStr, duration: dur
+                            }).eq('user_id', user.id).is('end_date', null);
                         }
                     }
-                } catch (e) { console.error('Period end Supabase failed:', e); }
+                }
+            } catch (e) { console.error('Period end Supabase failed:', e); }
 
-                logToHistory('ประจำเดือนหมด', 'ระยะเวลา: ' + getDuration(cycles[lastIdx].start, todayStr) + ' วัน');
-            }
+            logToHistoryForDate('ประจำเดือนหมด', 'ระยะเวลา: ' + getDuration(activeCycle.start, selectedDateStr) + ' วัน', selectedDateStr);
             loadData();
         }
 
@@ -750,10 +1001,10 @@
             const d1 = new Date(start);
             const d2 = new Date(end);
             const diff = Math.abs(d2 - d1);
-            return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1; // Include start day
+            return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
         }
 
-        // --- Symptoms ---
+        // --- Symptoms Tracking ---
         const symptomNames = {
             cramps: 'ปวดท้อง', moody: 'หงุดหงิด', acne: 'เป็นสิว',
             fatigue: 'อ่อนเพลีย', headache: 'ปวดหัว', bloating: 'ตัวบวม',
@@ -761,37 +1012,62 @@
         };
 
         function toggleSymptom(el, symptomKey) {
+            const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
+            const isPeriodOnSelectedDate = cycles.some(c => {
+                const start = c.start;
+                const end = c.end || todayStr;
+                return selectedDateStr >= start && selectedDateStr <= end;
+            });
+
+            if (!isPeriodOnSelectedDate) {
+                el.classList.remove('active');
+                showToast('⚠️ กรุณาบันทึกประจำเดือนมาก่อนเพื่อระบุอาการ');
+                return;
+            }
+
             el.classList.toggle('active');
 
             const logs = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
-            if (!logs[todayStr]) logs[todayStr] = { symptoms: [], note: '' };
+            if (!logs[selectedDateStr]) logs[selectedDateStr] = { symptoms: [], note: '' };
 
-            const currentSymptoms = new Set(logs[todayStr].symptoms);
+            const currentSymptoms = new Set(logs[selectedDateStr].symptoms);
             if (el.classList.contains('active')) {
                 currentSymptoms.add(symptomKey);
-                // Log to health history when symptom is selected
-                logToHistory(symptomNames[symptomKey] || symptomKey, 'บันทึกอาการประจำเดือน');
+                logToHistoryForDate(symptomNames[symptomKey] || symptomKey, 'บันทึกอาการประจำเดือน', selectedDateStr);
             } else {
                 currentSymptoms.delete(symptomKey);
             }
 
-            logs[todayStr].symptoms = Array.from(currentSymptoms);
+            logs[selectedDateStr].symptoms = Array.from(currentSymptoms);
             localStorage.setItem('period_symptoms', JSON.stringify(logs));
 
-            // Sync to Supabase
-            saveSymptomToSupabase(logs[todayStr].symptoms, logs[todayStr].note);
+            saveSymptomToSupabaseForDate(logs[selectedDateStr].symptoms, logs[selectedDateStr].note, selectedDateStr);
             showToast('บันทึกอาการแล้ว');
+            renderCalendar();
         }
 
         function saveNote() {
+            const cycles = JSON.parse(localStorage.getItem('period_cycles') || '[]');
+            const isPeriodOnSelectedDate = cycles.some(c => {
+                const start = c.start;
+                const end = c.end || todayStr;
+                return selectedDateStr >= start && selectedDateStr <= end;
+            });
+
+            if (!isPeriodOnSelectedDate) {
+                showToast('⚠️ กรุณาบันทึกประจำเดือนมาก่อนเพื่อบันทึกโน้ต');
+                return;
+            }
+
             const noteCtx = document.getElementById('noteInput').value;
             const logs = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
-            if (!logs[todayStr]) logs[todayStr] = { symptoms: [], note: '' };
+            if (!logs[selectedDateStr]) logs[selectedDateStr] = { symptoms: [], note: '' };
 
-            logs[todayStr].note = noteCtx;
+            logs[selectedDateStr].note = noteCtx;
+            localStorage.setItem('noteInput', noteCtx); // Sync DOM
             localStorage.setItem('period_symptoms', JSON.stringify(logs));
 
-            // Invalidate AI Health summary cache
+            // Invalidate AI cache
             for (let i = localStorage.length - 1; i >= 0; i--) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('healthsummary_')) {
@@ -799,50 +1075,48 @@
                 }
             }
 
-            // Sync to Supabase
-            saveSymptomToSupabase(logs[todayStr].symptoms, noteCtx);
+            saveSymptomToSupabaseForDate(logs[selectedDateStr].symptoms, noteCtx, selectedDateStr);
             if (noteCtx.trim().length > 0) showToast('บันทึกโน้ตแล้ว');
+            renderCalendar();
         }
 
-        async function saveSymptomToSupabase(symptoms, note) {
+        async function saveSymptomToSupabaseForDate(symptoms, note, targetDate) {
             try {
                 if (!_supabase) return;
                 const { data: { user } } = await _supabase.auth.getUser();
                 if (!user) return;
 
-                // Check if a record for today already exists
                 const { data: existing } = await _supabase.from('period_symptoms')
-                    .select('id').eq('user_id', user.id).eq('date', todayStr).maybeSingle();
+                    .select('id').eq('user_id', user.id).eq('date', targetDate).maybeSingle();
 
                 if (existing) {
-                    // UPDATE existing record
                     await _supabase.from('period_symptoms').update({
                         symptoms: symptoms || [], note: note || null
                     }).eq('id', existing.id);
                 } else {
-                    // INSERT new record
                     await _supabase.from('period_symptoms').insert([{
-                        user_id: user.id, date: todayStr,
+                        user_id: user.id, date: targetDate,
                         symptoms: symptoms || [], note: note || null
                     }]);
                 }
             } catch (e) { console.error('Symptom save failed:', e); }
         }
 
-        function loadSymptoms() {
+        function loadSymptomsForSelectedDate() {
+            document.querySelectorAll('.symptom-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('noteInput').value = '';
+
             const logs = JSON.parse(localStorage.getItem('period_symptoms') || '{}');
-            const todayLog = logs[todayStr];
+            const selectedLog = logs[selectedDateStr];
 
-            if (todayLog) {
-                document.getElementById('noteInput').value = todayLog.note || '';
+            if (selectedLog) {
+                document.getElementById('noteInput').value = selectedLog.note || '';
 
-                // Active symptoms
                 const items = document.querySelectorAll('.symptom-item');
                 items.forEach(item => {
-                    // Extract key from onclick attr (hacky but works for inline)
                     const onclick = item.getAttribute('onclick');
                     const key = onclick.match(/'([^']+)'/)[1];
-                    if (todayLog.symptoms && todayLog.symptoms.includes(key)) {
+                    if (selectedLog.symptoms && selectedLog.symptoms.includes(key)) {
                         item.classList.add('active');
                     }
                 });
@@ -867,7 +1141,6 @@
             `;
             document.body.appendChild(toast);
 
-            // Add keyframes if not exists
             if (!document.getElementById('toast-style')) {
                 const style = document.createElement('style');
                 style.id = 'toast-style';
@@ -885,10 +1158,10 @@
             setTimeout(() => toast.remove(), 2000);
         }
 
-        // --- History ---
+        // --- History & Logs ---
         function renderHistory(cycles) {
             const list = document.getElementById('historyList');
-            const reversed = [...cycles].reverse(); // Newest first
+            const reversed = [...cycles].reverse();
 
             if (reversed.length === 0) {
                 list.innerHTML = '<p style="text-align:center; color:#999;">ยังไม่มีประวัติ</p>';
@@ -921,39 +1194,39 @@
             });
             list.innerHTML = html;
         }
-        async function logToHistory(detail, note) {
-            // Invalidate AI Health summary cache
+
+        async function logToHistoryForDate(detail, note, targetDate) {
             for (let i = localStorage.length - 1; i >= 0; i--) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('healthsummary_')) {
                     localStorage.removeItem(key);
                 }
             }
+
+            const targetIso = new Date(targetDate + 'T12:00:00').toISOString();
+
             try {
                 if (_supabase) {
                     const { data: { user } } = await _supabase.auth.getUser();
                     if (user) {
-                        const todayDate = new Date();
-                        todayDate.setHours(0, 0, 0, 0);
-                        const todayISO = todayDate.toISOString();
+                        const startOfDay = new Date(targetDate + 'T00:00:00').toISOString();
 
-                        // Check if we already logged symptoms today
+                        // Aggregated symptoms log inside Supabase for today
                         if (note === 'บันทึกอาการประจำเดือน') {
                             const { data: existingLogs } = await _supabase.from('period_logs')
                                 .select('*')
                                 .eq('user_id', user.id)
                                 .eq('note', 'บันทึกอาการประจำเดือน')
-                                .gte('created_at', todayISO)
+                                .gte('created_at', startOfDay)
+                                .lte('created_at', new Date(targetDate + 'T23:59:59').toISOString())
                                 .order('created_at', { ascending: false })
                                 .limit(1);
 
                             if (existingLogs && existingLogs.length > 0) {
-                                // Update existing log for today
                                 const logId = existingLogs[0].id;
                                 let currentDetail = existingLogs[0].detail || '';
                                 let newDetail = detail;
 
-                                // Prevent duplicate symptom names in the string
                                 if (!currentDetail.includes(detail)) {
                                     if (currentDetail && currentDetail !== '-') {
                                         newDetail = currentDetail + ', ' + detail;
@@ -961,108 +1234,60 @@
 
                                     await _supabase.from('period_logs').update({
                                         detail: newDetail,
-                                        created_at: new Date().toISOString() // Refresh time to bump to top
+                                        created_at: targetIso
                                     }).eq('id', logId);
 
-                                    // Update local storage fallback
-                                    updateLocalHistoryFallback(user.id, logId, newDetail, note);
-                                    return; // Done
+                                    updateLocalHistoryFallbackForDate(user.id, logId, newDetail, note, targetIso);
+                                    return;
                                 } else {
-                                    return; // Already includes this symptom, do nothing
+                                    return;
                                 }
                             }
                         }
 
-                        // If not a symptom update or no existing log today, insert new
                         const logData = {
                             user_id: user.id,
                             type: 'period',
                             detail: detail,
                             note: note,
-                            created_at: new Date().toISOString()
+                            created_at: targetIso
                         };
 
-                        // Supabase Insert
                         try {
                             const { data: inserted, error } = await _supabase.from('period_logs').insert([logData]).select();
-                            if (error) {
-                                console.error('Supabase error:', error);
-                            } else if (inserted && inserted.length > 0) {
-                                logData.id = inserted[0].id; // Keep real UUID for local updates
+                            if (inserted && inserted.length > 0) {
+                                logData.id = inserted[0].id;
                             }
                         } catch (err) { console.error(err); }
 
-                        // Fallback to local storage
                         const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
                         histLogs.push(logData);
                         localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
                     }
-                } else {
-                    const logData = {
-                        user_id: 'local',
-                        type: 'period',
-                        detail: detail,
-                        note: note,
-                        created_at: new Date().toISOString()
-                    };
-                    const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
-                    histLogs.push(logData);
-                    localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
                 }
-            } catch (e) {
-                // Always save to local storage as fallback
-                const logData = {
-                    user_id: 'local',
-                    type: 'period',
-                    detail: detail,
-                    note: note,
-                    created_at: new Date().toISOString()
-                };
-                const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
-                histLogs.push(logData);
-                localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
-            }
+            } catch (e) { console.error('logToHistoryForDate failed:', e); }
         }
 
-        // Helper to keep local storage aggregated too
-        function updateLocalHistoryFallback(userId, logId, newDetail, note) {
+        function updateLocalHistoryFallbackForDate(userId, logId, newDetail, note, targetIso) {
             const histLogs = JSON.parse(localStorage.getItem('period_history_logs') || '[]');
-
-            // Try to find by real ID first
             let index = histLogs.findIndex(l => l.id === logId);
-
-            // If not found by ID (maybe old record without one), find by type/note/date
-            if (index === -1) {
-                const todayDate = new Date();
-                todayDate.setHours(0, 0, 0, 0);
-
-                index = histLogs.findIndex(l => {
-                    if (l.type !== 'period' || l.note !== note) return false;
-                    const logDate = new Date(l.created_at);
-                    logDate.setHours(0, 0, 0, 0);
-                    return logDate.getTime() === todayDate.getTime();
-                });
-            }
 
             if (index !== -1) {
                 histLogs[index].detail = newDetail;
-                histLogs[index].created_at = new Date().toISOString(); // Bump time
+                histLogs[index].created_at = targetIso;
             } else {
-                // Should not happen, but just in case
                 histLogs.push({
                     id: logId,
                     user_id: userId,
                     type: 'period',
                     detail: newDetail,
                     note: note,
-                    created_at: new Date().toISOString()
+                    created_at: targetIso
                 });
             }
-
             localStorage.setItem('period_history_logs', JSON.stringify(histLogs));
         }
-
-    </script>
+</script>
 </body>
 
 </html>
