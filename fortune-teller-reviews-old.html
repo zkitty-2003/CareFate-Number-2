@@ -142,10 +142,12 @@
         body.theme-working .app-container { background: #f0f9ff !important; }
         body.theme-elder .app-container { background: #fff7ed !important; }
 
-        .app-container {
-            border: 10px solid #ffffff !important;
-            border-radius: 64px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        @media (min-width: 481px) {
+            .app-container {
+                border: 10px solid #ffffff !important;
+                border-radius: 64px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+            }
         }
 
         #loadingSpinner {

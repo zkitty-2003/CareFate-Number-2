@@ -298,7 +298,8 @@ def chat_with_ai(request: ChatRequest):
         'elder': f"You are 'Nong CareFate', a respectful, warm grandchild-like assistant for elderly people. {name_note} Use very polite Thai, simple words, be patient and caring. Speak in Thai."
     }
     
-    system_content = system_prompts.get(request.theme, system_prompts['working'])
+    disclaimer_note = "\n\nCRITICAL SAFETY WARNING: You are a general wellness assistant, NOT a medical doctor. Provide general health guidance and lifestyle advice only. Never diagnose illnesses, prescribe medication, or make clinical claims. If the user asks about serious symptoms, severe pain, or medical emergencies, explicitly state that you are an AI assistant and advise them to consult a certified medical doctor or visit a hospital immediately."
+    system_content = system_prompts.get(request.theme, system_prompts['working']) + disclaimer_note
 
     # Personalization Logic
     context_instruction = ""

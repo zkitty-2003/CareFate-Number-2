@@ -147,24 +147,26 @@
             border-radius: 4px;
         }
         /* ===== GLOBAL THEME REDESIGN (Match Dashboard Frame) ===== */
-        body.theme-youth,
-        body.theme-working,
-        body.theme-elder {
-            background: #d1d5db !important; /* Gray outer background like React preview */
-            position: relative;
-        }
+        @media (min-width: 481px) {
+            body.theme-youth,
+            body.theme-working,
+            body.theme-elder {
+                background: #d1d5db !important; /* Gray outer background like React preview */
+                position: relative;
+            }
 
-        /* App Container / Phone Frame */
-        body.theme-youth .app-container,
-        body.theme-working .app-container,
-        body.theme-elder .app-container {
-            border: 10px solid #ffffff !important;
-            border-radius: 64px !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-            backdrop-filter: none !important;
-            position: relative;
-            overflow: hidden;
-            margin: 0 auto;
+            /* App Container / Phone Frame */
+            body.theme-youth .app-container,
+            body.theme-working .app-container,
+            body.theme-elder .app-container {
+                border: 10px solid #ffffff !important;
+                border-radius: 64px !important;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+                backdrop-filter: none !important;
+                position: relative;
+                overflow: hidden;
+                margin: 0 auto;
+            }
         }
         
         body.theme-youth .app-container { background: #FAF9FF !important; }
