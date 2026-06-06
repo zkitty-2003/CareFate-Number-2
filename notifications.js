@@ -153,7 +153,7 @@ function requestNotificationPermission() {
     // Show a test notification immediately
     showInAppNotification(
         'ทดสอบการแจ้งเตือน 🔔',
-        'ระบบแจ้งเตือนทำงานปกติครับ! เมื่อถึงเวลาที่ตั้งไว้ จะมีข้อความแบบนี้เด้งขึ้นมา'
+        'ระบบแจ้งเตือนทำงานปกติ! เมื่อถึงเวลาที่ตั้งไว้ จะมีข้อความแบบนี้เด้งขึ้นมา'
     );
 
     // Also request browser permission in background

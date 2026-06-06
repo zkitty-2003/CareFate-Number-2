@@ -118,15 +118,14 @@ SECURITY DEFINER -- Runs with admin privileges to access auth.users
 AS $$
 DECLARE
     v_confirmed boolean := false;
-    v_exists boolean := false;
 BEGIN
     -- Check if the email exists in auth.users and if it is confirmed
-    SELECT (email_confirmed_at IS NOT NULL), true
-    INTO v_confirmed, v_exists
+    SELECT (email_confirmed_at IS NOT NULL)
+    INTO v_confirmed
     FROM auth.users
     WHERE email = input_email;
 
-    IF NOT v_exists THEN
+    IF NOT FOUND THEN
         RETURN json_build_object(
             'exists', false,
             'verified', false
@@ -135,7 +134,7 @@ BEGIN
 
     RETURN json_build_object(
         'exists', true,
-        'verified', v_confirmed
+        'verified', COALESCE(v_confirmed, false)
     );
 END;
 $$;

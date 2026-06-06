@@ -1197,8 +1197,8 @@
             <!-- AI Fortune Tellers (Youth Theme Only) -->
             <div class="tellers-section fade-in">
                 <div class="tellers-header" style="justify-content: space-between; display: flex;">
-                    <span style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fa-solid fa-sparkles" style="color:#9333ea;"></i> หมอดู AI
+                    <span style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <i class="fa-solid fa-sparkles" style="color:#9333ea;"></i> หมอดู <span style="font-size: 0.725rem; font-weight: normal; opacity: 0.7; margin-left: 2px;">(คลิกเพื่อดูคำทำนาย)</span>
                     </span>
                     <a href="fortune-teller-reviews.html"
                         style="font-size: 0.8rem; font-weight: 500; color: #a855f7; text-decoration: none; display: flex; align-items: center; gap: 0.25rem;">
@@ -1217,8 +1217,8 @@
                             </div>
                         </div>
                         <div class="teller-info">
-                            <div class="teller-name">แม่หมอจันทรา</div>
-                            <div class="teller-expert">ความรัก</div>
+                            <div class="teller-name">ความรัก</div>
+                            <div class="teller-expert">แม่หมอจันทรา</div>
                         </div>
                     </div>
                     <div class="teller-item" data-teller-id="finance"
@@ -1232,8 +1232,8 @@
                             </div>
                         </div>
                         <div class="teller-info">
-                            <div class="teller-name">ซินแสเศรษฐี</div>
-                            <div class="teller-expert">การเงิน</div>
+                            <div class="teller-name">การเงิน</div>
+                            <div class="teller-expert">ซินแสเศรษฐี</div>
                         </div>
                     </div>
                     <div class="teller-item" data-teller-id="work"
@@ -1247,8 +1247,8 @@
                             </div>
                         </div>
                         <div class="teller-info">
-                            <div class="teller-name">อาจารย์ดวงดาว</div>
-                            <div class="teller-expert">การงาน</div>
+                            <div class="teller-name">การงาน</div>
+                            <div class="teller-expert">อาจารย์ดวงดาว</div>
                         </div>
                     </div>
                     <div class="teller-item" data-teller-id="health"
@@ -1262,8 +1262,8 @@
                             </div>
                         </div>
                         <div class="teller-info">
-                            <div class="teller-name">ผู้เฒ่าโอสถ</div>
-                            <div class="teller-expert">สุขภาพ</div>
+                            <div class="teller-name">สุขภาพ</div>
+                            <div class="teller-expert">ผู้เฒ่าโอสถ</div>
                         </div>
                     </div>
                     <div class="teller-item" data-teller-id="overall"
@@ -1277,8 +1277,8 @@
                             </div>
                         </div>
                         <div class="teller-info">
-                            <div class="teller-name">เซนมาสเตอร์</div>
-                            <div class="teller-expert">ภาพรวม</div>
+                            <div class="teller-name">ภาพรวม</div>
+                            <div class="teller-expert">เซนมาสเตอร์</div>
                         </div>
                     </div>
                     <div style="flex-shrink: 0; width: 0.25rem;"></div> <!-- Explicit right spacer for scroll -->
@@ -1290,7 +1290,7 @@
                 <div style="flex:1;">
                     <div class="horo-title">
                         <i class="fa-solid fa-notes-medical" style="color:#a855f7; margin-right:4px;"></i>
-                        AI สุขภาพ <span
+                        สรุปสุขภาพ <span
                             style="font-size:0.7rem; color:var(--text-muted); font-weight:400; margin-left:2px;">7
                             วัน</span>
                     </div>
@@ -1683,9 +1683,75 @@
 
         async function loadHealthSummary(theme, username, userId = 'guest') {
             const el = document.getElementById('healthSummaryText');
-            const cacheKey = `healthsummary_v5_${userId}_${theme}_${new Date().toDateString()}`;
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) { el.innerHTML = cached; return; }
+
+            const todayStr = (() => {
+                const d = new Date();
+                if (d.getHours() < 5) {
+                    d.setDate(d.getDate() - 1);
+                }
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            })(); // YYYY-MM-DD
+
+            const cacheKey = `healthsummary_v5_${userId}_${theme}_${todayStr}`;
+
+            // Check if we want to bypass cache for developer testing (?nocache=true)
+            const urlParams = new URLSearchParams(window.location.search);
+            const bypassCache = urlParams.get('nocache') === 'true';
+
+            // 1. Try to load from Supabase first
+            let cachedText = null;
+            let foundInSupabase = false;
+
+            if (_supabase && userId !== 'guest' && !bypassCache) {
+                try {
+                    const { data: existing, error } = await _supabase
+                        .from('daily_fortunes')
+                        .select('prediction')
+                        .eq('user_id', userId)
+                        .eq('teller_id', `health_summary_v5_${theme}`)
+                        .eq('prediction_date', todayStr)
+                        .maybeSingle();
+
+                    if (error) {
+                        console.error("[HealthSummary] Supabase query error:", error);
+                    } else if (existing && existing.prediction) {
+                        cachedText = existing.prediction;
+                        foundInSupabase = true;
+                        console.log("[HealthSummary] Found summary in Supabase!");
+                    }
+                } catch (dbErr) {
+                    console.warn("[HealthSummary] Could not query daily_fortunes:", dbErr);
+                }
+            }
+
+            // 2. Fallback to localStorage
+            if (!cachedText && !bypassCache) {
+                cachedText = localStorage.getItem(cacheKey);
+                if (cachedText) {
+                    console.log("[HealthSummary] Found summary in localStorage fallback.");
+                }
+            }
+
+            if (cachedText) {
+                el.innerHTML = cachedText;
+
+                // SMART BACKFILL: If found in localStorage but NOT in Supabase, backfill it to Supabase
+                if (!foundInSupabase && _supabase && userId !== 'guest') {
+                    console.log("[HealthSummary] Backfilling to Supabase...");
+                    _supabase.from('daily_fortunes').insert({
+                        user_id: userId,
+                        teller_id: `health_summary_v5_${theme}`,
+                        prediction: cachedText,
+                        prediction_date: todayStr
+                    }).then(({ error }) => {
+                        if (error) console.error("[HealthSummary] Backfill error:", error);
+                    });
+                }
+                return;
+            }
 
             try {
                 const ctx = typeof window.getAIHealthContext === 'function'
@@ -1710,6 +1776,26 @@
 
                     if (!isErrorMsg) {
                         localStorage.setItem(cacheKey, formatted);
+
+                        // Save to Supabase
+                        if (_supabase && userId !== 'guest') {
+                            try {
+                                console.log("[HealthSummary] Saving summary to Supabase...");
+                                const { error: dbSaveErr } = await _supabase.from('daily_fortunes').insert({
+                                    user_id: userId,
+                                    teller_id: `health_summary_v5_${theme}`,
+                                    prediction: formatted,
+                                    prediction_date: todayStr
+                                });
+                                if (dbSaveErr) {
+                                    console.error("[HealthSummary] Supabase save error:", dbSaveErr);
+                                } else {
+                                    console.log("[HealthSummary] Saved summary to Supabase successfully!");
+                                }
+                            } catch (dbSaveErr) {
+                                console.warn("[HealthSummary] Exception saving summary to Supabase:", dbSaveErr);
+                            }
+                        }
                     }
                 } else {
                     el.textContent = 'ไม่สามารถวิเคราะห์ข้อมูลได้';

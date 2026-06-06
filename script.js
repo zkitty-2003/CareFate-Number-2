@@ -574,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             return;
                         }
                         if (!checkData.verified) {
-                            showNotification('❌ ไม่สามารถรีเซ็ตได้: บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณากดยืนยันอีเมลของคุณก่อน หรือล็อกอินด้วยอีเมล/รหัสผ่านเพื่อรับลิงก์ยืนยันตัวตนใหม่ครับ', 'error');
+                            showNotification('❌ ไม่สามารถรีเซ็ตได้: บัญชีนี้ยังไม่ได้ยืนยันอีเมล กรุณากดยืนยันอีเมลของคุณก่อน หรือล็อกอินด้วยอีเมล/รหัสผ่านเพื่อรับลิงก์ยืนยันตัวตนใหม่', 'error');
                             return;
                         }
                     } else {
@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (ce.message && ce.message.includes('does not exist')) {
                         msg += '\n(ตรวจสอบเพิ่มเติม: กรุณารันสคริปต์ SQL ใน Supabase Dashboard SQL Editor เพื่อลงทะเบียนฟังก์ชัน check_email_verified)';
                     } else {
-                        msg += '\n(กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบครับ)';
+                        msg += '\n(กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ)';
                     }
                     showNotification(msg, 'error');
                     return; // Block! Do not proceed to reset password.
@@ -682,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const existing = document.querySelector('.notification');
             if (existing) existing.remove();
 
-            showNotification(`🔒 ป้องกันสแปม (Supabase): คุณส่งคำขอถี่เกินไป กรุณารออีก ${timeDesc} เพื่อขอลิงก์ใหม่ (หรือเช็กในกล่อง Inbox/อีเมลขยะ)`, 'error');
+            showNotification(`🔒 คุณส่งคำขอถี่เกินไป กรุณารออีก ${timeDesc} เพื่อขอลิงก์ใหม่ (หรือเช็กในกล่อง Inbox/อีเมลขยะ)`, 'error');
             return;
         }
 
@@ -728,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (msg.includes('security purposes') || msg.includes('after') || msg.includes('rate_limit') || msg.includes('Rate limit')) {
                 const secondsMatch = msg.match(/\d+/);
                 const secs = secondsMatch ? secondsMatch[0] : '60';
-                msg = `⏳ ระบบความปลอดภัย: เพิ่งมีการส่งอีเมลไปเมื่อครู่ กรุณารออีกประมาณ ${secs} วินาที ก่อนลองล็อกอินใหม่อีกครั้งครับ (หรือตรวจสอบกล่อง Inbox/อีเมลขยะ)`;
+                msg = `⏳ ระบบความปลอดภัย: เพิ่งมีการส่งอีเมลไปเมื่อครู่ กรุณารออีกประมาณ ${secs} วินาที ก่อนลองล็อกอินใหม่อีกครั้ง (หรือตรวจสอบกล่อง Inbox/อีเมลขยะ)`;
             } else {
                 msg = 'อีเมลนี้ยังไม่ได้ยืนยันตัวตน แต่ไม่สามารถส่งลิงก์ใหม่ได้โดยอัตโนมัติ: ' + msg;
             }
@@ -755,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     เราได้ส่งลิงก์ยืนยันตัวตนฉบับใหม่ไปที่ <strong style="text-decoration:underline;">${email}</strong> เรียบร้อยแล้ว กรุณากดยืนยันตัวตนภายใน 24 ชม. 📬
                 </span>
                 <span style="font-size:0.725rem; line-height:1.3; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 8px; margin-top: 4px;">
-                    💡 <strong>เพื่อป้องกันสแปม:</strong> หากขอลิงก์ใหม่ครั้งถัดไป คุณจะต้องรอเป็นเวลา <strong>${nextCooldownMins} นาที</strong> ครับ
+                    💡 <strong>เพื่อป้องกันสแปม:</strong> หากขอลิงก์ใหม่ครั้งถัดไป คุณจะต้องรอเป็นเวลา <strong>${nextCooldownMins} นาที</strong>
                 </span>
             </div>
         `;

@@ -205,12 +205,12 @@ function initializeRegisterPage() {
                 } else if (checkData) {
                     if (checkData.exists) {
                         if (!checkData.verified) {
-                            showInAppNotification('อีเมลเคยสมัครแล้วแต่ยังไม่ได้ยืนยัน', 'กรุณาเช็กในกล่อง Inbox หรืออีเมลขยะเพื่อกดยืนยันตัวตนก่อนเข้าใช้งาน หรือลองเข้าสู่ระบบด้วยอีเมลและรหัสผ่านเพื่อขอรับลิงก์ยืนยันตัวตนใหม่โดยอัตโนมัติครับ 📬');
+                            showInAppNotification('อีเมลเคยสมัครแล้วแต่ยังไม่ได้ยืนยัน', 'กรุณาเช็กในกล่อง Inbox หรืออีเมลขยะเพื่อกดยืนยันตัวตนก่อนเข้าใช้งาน หรือลองเข้าสู่ระบบด้วยอีเมลและรหัสผ่านเพื่อขอรับลิงก์ยืนยันตัวตนใหม่โดยอัตโนมัติ 📬');
                             btn.innerHTML = originalContent;
                             btn.disabled = false;
                             return;
                         } else {
-                            showInAppNotification('อีเมลถูกใช้งานแล้ว', 'อีเมลนี้ได้ลงทะเบียนและยืนยันตัวตนเสร็จเรียบร้อยแล้ว หากเป็นบัญชีของคุณ สามารถกดเข้าสู่ระบบได้ทันทีครับ');
+                            showInAppNotification('อีเมลถูกใช้งานแล้ว', 'อีเมลนี้ได้ลงทะเบียนและยืนยันตัวตนเสร็จเรียบร้อยแล้ว หากเป็นบัญชีของคุณ สามารถกดเข้าสู่ระบบได้ทันที');
                             btn.innerHTML = originalContent;
                             btn.disabled = false;
                             return;
@@ -240,7 +240,7 @@ function initializeRegisterPage() {
             // Supabase returns empty identities when email is already registered
             // (it hides this for security, but we can detect it this way)
             if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
-                showInAppNotification('อีเมลถูกใช้งานแล้ว', 'หากเป็นอีเมลของคุณแต่ยังไม่ได้กดยืนยันตัวตน กรุณาตรวจสอบกล่องข้อความหรือกล่องจดหมายขยะเพื่อกดยืนยันก่อนเข้าใช้งานครับ');
+                showInAppNotification('อีเมลถูกใช้งานแล้ว', 'หากเป็นอีเมลของคุณแต่ยังไม่ได้กดยืนยันตัวตน กรุณาตรวจสอบกล่องข้อความหรือกล่องจดหมายขยะเพื่อกดยืนยันก่อนเข้าใช้งาน');
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
                 return;
